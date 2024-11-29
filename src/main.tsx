@@ -1,10 +1,71 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import "./index.css";
+import "@mantine/core/styles.css";
+import { MantineProvider } from "@mantine/core";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+import { routeTree } from "./routeTree.gen";
+import ReactDOM from "react-dom/client";
+const router = createRouter({ routeTree });
+declare module "@tanstack/react-router" {
+    interface Register {
+        router: typeof router;
+    }
+}
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+const rootElement = document.getElementById("root")!;
+
+if (!rootElement.innerHTML) {
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(
+        <StrictMode>
+            <MantineProvider
+                theme={{
+                    fontFamily: "Poppins",
+                    breakpoints: {
+                        md: "768px",
+                    },
+                    components: {
+                        TextInput: {
+                            styles: {
+                                input: {
+                                    backgroundColor: "#F2F4F6",
+                                    height: 40,
+                                    borderRadius: 5,
+                                },
+                            },
+                        },
+                        Select: {
+                            styles: {
+                                input: {
+                                    backgroundColor: "#F2F4F6",
+                                    height: 40,
+                                    borderRadius: 5,
+                                },
+                            },
+                        },
+                        Table: {
+                            styles: {
+                                table: {
+                                    borderCollapse: "collapse",
+                                },
+                                th: {
+                                    fontSize: "12px",
+                                    height: "47px",
+                                    paddingInline: "12px",
+                                },
+                                td: {
+                                    paddingBlock: "11.25px",
+                                    paddingInline: "12px",
+                                    fontSize: "12px",
+                                    color: "#002554",
+                                },
+                            },
+                        },
+                    },
+                }}
+            >
+                <RouterProvider router={router} />
+            </MantineProvider>
+        </StrictMode>
+    );
+}
