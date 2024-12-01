@@ -18,9 +18,9 @@ const AvatarIcon = () => {
             <path
                 d="M31 33.8071C31 29.9411 27.866 26.8071 24 26.8071C20.134 26.8071 17 29.9411 17 33.8071M24 23.8071C21.7909 23.8071 20 22.0163 20 19.8071C20 17.598 21.7909 15.8071 24 15.8071C26.2091 15.8071 28 17.598 28 19.8071C28 22.0163 26.2091 23.8071 24 23.8071Z"
                 stroke="white"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
             />
         </svg>
     );

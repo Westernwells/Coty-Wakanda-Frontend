@@ -40,13 +40,13 @@ const Filter = () => {
                     }}
                 >
                     <CloseButton />
-                    <span className="text-nowrap text-primary font-medium">
+                    <span className="hidden sm:inline text-nowrap text-primary font-medium">
                         Clear all
                     </span>
                 </div>
             </div>
-            <Divider className="my-6  border-primary border-opacity-50" />
-            <Group gap={20} w="100%">
+            <Divider className="my-4 sm:my-6  border-primary border-opacity-50" />
+            <Group w="100% gap-4 sm:gap-5">
                 <Select
                     aria-label="Filter brands"
                     placeholder="Filter brands"

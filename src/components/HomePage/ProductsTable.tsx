@@ -1,6 +1,7 @@
-import { Table } from "@mantine/core";
+import { Pagination, Table } from "@mantine/core";
 import PencilIcon from "../Icons/PencilIcon";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { useState } from "react";
 
 const elements = [
     {
@@ -23,11 +24,21 @@ const elements = [
 ];
 
 function ProductsTable() {
+    const [activePage, setActivePage] = useState(1);
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(elements.length / itemsPerPage);
+
+    // Get current page items
+    const getCurrentItems = () => {
+        const start = (activePage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        return elements.slice(start, end);
+    };
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
             {/* Table */}
-            <div className="border border-primary rounded-xl border-t-0">
-                <Table.ScrollContainer minWidth={1024}>
+            <div className="relative border border-primary rounded-xl border-t-0">
+                <Table.ScrollContainer minWidth={768}>
                     <Table
                         verticalSpacing="sm"
                         borderColor="transparent"
@@ -58,7 +69,7 @@ function ProductsTable() {
                                     <Table.Td>{element.distributor}</Table.Td>
                                     <Table.Td>{element.irc}</Table.Td>
                                     <Table.Td>
-                                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full">
+                                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
                                             {element.status}
                                         </span>
                                     </Table.Td>
@@ -72,31 +83,91 @@ function ProductsTable() {
                 </Table.ScrollContainer>
             </div>
 
-            <div className="flex justify-center items-center mt-6">
-                <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
-                    <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                    </span>
-                    Previous
-                </button>
-                <div className="flex items-center  mx-4">
-                    {[1, 2, 3, 4, 5, "...", 11].map((page, index) => (
-                        <button
-                            key={index}
-                            className={`${
-                                page === 2 ? "bg-green " : "bg-transparent"
-                            } rounded-full size-10 flex items-center justify-center text-primary text-sm font-medium`}
-                        >
-                            {page}
-                        </button>
-                    ))}
+            <div className="flex justify-center mt-6 w-full">
+                <div className="hidden sm:block">
+                    <Pagination.Root
+                        total={15}
+                        value={activePage}
+                        onChange={setActivePage}
+                        color="#00EBB2"
+                        radius="xl"
+                        siblings={1}
+                        boundaries={3}
+                        classNames={{
+                            root: "w-full flex justify-center items-center",
+                            control:
+                                "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
+                        }}
+                    >
+                        <Pagination.Previous
+                            icon={() => {
+                                return (
+                                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-20">
+                                        <span className="transform rotate-90">
+                                            <ChevronDownIcon />
+                                        </span>
+                                        Previous
+                                    </button>
+                                );
+                            }}
+                        />
+                        <Pagination.Items />
+                        <Pagination.Next
+                            icon={() => {
+                                return (
+                                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
+                                        Next
+                                        <span className="transform -rotate-90">
+                                            <ChevronDownIcon />
+                                        </span>
+                                    </button>
+                                );
+                            }}
+                        />
+                    </Pagination.Root>
                 </div>
-                <button className="ext-primary gap-2  text-sm font-medium flex items-center">
-                    Next
-                    <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                    </span>
-                </button>
+                <div className="sm:hidden  w-full">
+                    <Pagination.Root
+                        total={totalPages}
+                        value={activePage}
+                        onChange={setActivePage}
+                        color="#00EBB2"
+                        radius="xl"
+                        siblings={1}
+                        boundaries={1}
+                        classNames={{
+                            root: "w-full flex justify-center ",
+                            control:
+                                "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
+                        }}
+                    >
+                        <Pagination.Previous
+                            icon={() => {
+                                return (
+                                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
+                                        <span className="transform rotate-90">
+                                            <ChevronDownIcon />
+                                        </span>
+                                        Previous
+                                    </button>
+                                );
+                            }}
+                        />
+                        <Pagination.Items />
+                        <Pagination.Next
+                            icon={() => {
+                                return (
+                                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
+                                        Next
+                                        <span className="transform -rotate-90">
+                                            <ChevronDownIcon />
+                                        </span>
+                                    </button>
+                                );
+                            }}
+                        />
+                    </Pagination.Root>
+                </div>
             </div>
         </div>
     );

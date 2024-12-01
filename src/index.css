@@ -29,8 +29,19 @@ body {
     font-size: 14px;
 }
 
+.container {
+    padding-inline: 16px !important;
+}
+
 @media screen and (min-width: 768px) {
     .container {
-        padding-inline: 24px;
+        padding-inline: 24px !important;
     }
+}
+
+.custom-file-input .mantine-FileInput-section:is([data-position="right"]) {
+    width: fit-content;
+}
+.mantine-Radio-radio {
+    border-color: #002554 !important;
 }

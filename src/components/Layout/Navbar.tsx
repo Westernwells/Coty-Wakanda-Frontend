@@ -103,7 +103,7 @@ const Navbar = () => {
                 </Stack>
             </AppShell.Navbar>
             <AppShell.Main
-                className={cn("w-full p-0  pb-10", opened && "hidden")}
+                className={cn("w-full container  pb-10", opened && "hidden")}
             >
                 <Outlet />
             </AppShell.Main>

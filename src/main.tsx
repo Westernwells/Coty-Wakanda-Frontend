@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import "./index.css";
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
+
 import { MantineProvider } from "@mantine/core";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
@@ -31,10 +33,31 @@ if (!rootElement.innerHTML) {
                                     backgroundColor: "#F2F4F6",
                                     height: 40,
                                     borderRadius: 5,
+                                    borderColor: "transparent",
+                                },
+                            },
+                        },
+                        FileInput: {
+                            styles: {
+                                input: {
+                                    backgroundColor: "#F2F4F6",
+                                    height: 40,
+                                    borderRadius: 5,
+                                    borderColor: "transparent",
                                 },
                             },
                         },
                         Select: {
+                            styles: {
+                                input: {
+                                    backgroundColor: "#F2F4F6",
+                                    height: 40,
+                                    borderRadius: 5,
+                                    borderColor: "transparent",
+                                },
+                            },
+                        },
+                        DateInput: {
                             styles: {
                                 input: {
                                     backgroundColor: "#F2F4F6",
@@ -58,6 +81,13 @@ if (!rootElement.innerHTML) {
                                     paddingInline: "12px",
                                     fontSize: "12px",
                                     color: "#002554",
+                                },
+                            },
+                        },
+                        Chip: {
+                            styles: {
+                                iconWrapper: {
+                                    display: "none",
                                 },
                             },
                         },

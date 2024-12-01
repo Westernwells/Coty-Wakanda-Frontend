@@ -16,6 +16,7 @@ export default {
                 primary: "#002554",
                 blue: "#0F62FE",
                 green: "#00EBB2",
+                purple: "#9747FF",
             },
         },
     },
