@@ -29,11 +29,7 @@ function ProductsTable() {
     const totalPages = Math.ceil(elements.length / itemsPerPage);
 
     // Get current page items
-    const getCurrentItems = () => {
-        const start = (activePage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        return elements.slice(start, end);
-    };
+
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
             {/* Table */}

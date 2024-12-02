@@ -7,6 +7,7 @@ import { MantineProvider } from "@mantine/core";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 import ReactDOM from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const router = createRouter({ routeTree });
 declare module "@tanstack/react-router" {
     interface Register {
@@ -14,88 +15,101 @@ declare module "@tanstack/react-router" {
     }
 }
 
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: false,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+        },
+    },
+});
+
 const rootElement = document.getElementById("root")!;
 
 if (!rootElement.innerHTML) {
     const root = ReactDOM.createRoot(rootElement);
     root.render(
         <StrictMode>
-            <MantineProvider
-                theme={{
-                    fontFamily: "Poppins",
-                    breakpoints: {
-                        md: "768px",
-                    },
-                    components: {
-                        TextInput: {
-                            styles: {
-                                input: {
-                                    backgroundColor: "#F2F4F6",
-                                    height: 40,
-                                    borderRadius: 5,
-                                    borderColor: "transparent",
+            <QueryClientProvider client={queryClient}>
+                <MantineProvider
+                    theme={{
+                        fontFamily: "Poppins",
+                        breakpoints: {
+                            md: "768px",
+                        },
+                        components: {
+                            TextInput: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        height: 40,
+                                        borderRadius: 5,
+                                        borderColor: "transparent",
+                                    },
+                                },
+                            },
+                            FileInput: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        height: 40,
+                                        borderRadius: 5,
+                                        borderColor: "transparent",
+                                    },
+                                },
+                            },
+                            Select: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        height: 40,
+                                        borderRadius: 5,
+                                        borderColor: "transparent",
+                                    },
+                                },
+                            },
+                            DateInput: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        height: 40,
+                                        borderRadius: 5,
+                                    },
+                                },
+                            },
+                            Table: {
+                                styles: {
+                                    table: {
+                                        borderCollapse: "collapse",
+                                    },
+                                    th: {
+                                        fontSize: "12px",
+                                        height: "47px",
+                                        paddingInline: "12px",
+                                    },
+                                    td: {
+                                        paddingBlock: "11.25px",
+                                        paddingInline: "12px",
+                                        fontSize: "12px",
+                                        color: "#002554",
+                                    },
+                                },
+                            },
+                            Chip: {
+                                styles: {
+                                    iconWrapper: {
+                                        display: "none",
+                                    },
                                 },
                             },
                         },
-                        FileInput: {
-                            styles: {
-                                input: {
-                                    backgroundColor: "#F2F4F6",
-                                    height: 40,
-                                    borderRadius: 5,
-                                    borderColor: "transparent",
-                                },
-                            },
-                        },
-                        Select: {
-                            styles: {
-                                input: {
-                                    backgroundColor: "#F2F4F6",
-                                    height: 40,
-                                    borderRadius: 5,
-                                    borderColor: "transparent",
-                                },
-                            },
-                        },
-                        DateInput: {
-                            styles: {
-                                input: {
-                                    backgroundColor: "#F2F4F6",
-                                    height: 40,
-                                    borderRadius: 5,
-                                },
-                            },
-                        },
-                        Table: {
-                            styles: {
-                                table: {
-                                    borderCollapse: "collapse",
-                                },
-                                th: {
-                                    fontSize: "12px",
-                                    height: "47px",
-                                    paddingInline: "12px",
-                                },
-                                td: {
-                                    paddingBlock: "11.25px",
-                                    paddingInline: "12px",
-                                    fontSize: "12px",
-                                    color: "#002554",
-                                },
-                            },
-                        },
-                        Chip: {
-                            styles: {
-                                iconWrapper: {
-                                    display: "none",
-                                },
-                            },
-                        },
-                    },
-                }}
-            >
-                <RouterProvider router={router} />
-            </MantineProvider>
+                    }}
+                >
+                    <RouterProvider router={router} />
+                </MantineProvider>
+            </QueryClientProvider>
         </StrictMode>
     );
 }

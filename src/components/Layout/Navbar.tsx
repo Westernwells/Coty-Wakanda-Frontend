@@ -26,7 +26,7 @@ const links = [
     { link: "/", label: "Dashboard", icon: DashboardIcon },
     { link: "/forecasting", label: "Forecasting", icon: ChartAreaIcon },
     { link: "/innovations", label: "Innovations", icon: LightBulbIcon },
-    { link: "distributors", label: "Distributors", icon: GroupIcon },
+    { link: "/distributors", label: "Distributors", icon: GroupIcon },
     { link: "products", label: "Products", icon: ShoppingCart },
     { link: "orders", label: "Orders", icon: BoxIcon },
     { link: "reporting", label: "Reporting", icon: FileDocumentIcon },

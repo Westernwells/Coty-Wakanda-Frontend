@@ -11,11 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as DistributorsImport } from './routes/distributors'
 import { Route as AddProductImport } from './routes/add-product'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const DistributorsRoute = DistributorsImport.update({
+  id: '/distributors',
+  path: '/distributors',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AddProductRoute = AddProductImport.update({
   id: '/add-product',
@@ -59,6 +66,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AddProductImport
       parentRoute: typeof rootRoute
     }
+    '/distributors': {
+      id: '/distributors'
+      path: '/distributors'
+      fullPath: '/distributors'
+      preLoaderRoute: typeof DistributorsImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -68,12 +82,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof LayoutRoute
   '/add-product': typeof AddProductRoute
+  '/distributors': typeof DistributorsRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof LayoutRoute
   '/add-product': typeof AddProductRoute
+  '/distributors': typeof DistributorsRoute
 }
 
 export interface FileRoutesById {
@@ -81,14 +97,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRoute
   '/add-product': typeof AddProductRoute
+  '/distributors': typeof DistributorsRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/add-product'
+  fullPaths: '/' | '' | '/add-product' | '/distributors'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/add-product'
-  id: '__root__' | '/' | '/_layout' | '/add-product'
+  to: '/' | '' | '/add-product' | '/distributors'
+  id: '__root__' | '/' | '/_layout' | '/add-product' | '/distributors'
   fileRoutesById: FileRoutesById
 }
 
@@ -96,12 +113,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRoute
   AddProductRoute: typeof AddProductRoute
+  DistributorsRoute: typeof DistributorsRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRoute,
   AddProductRoute: AddProductRoute,
+  DistributorsRoute: DistributorsRoute,
 }
 
 export const routeTree = rootRoute
@@ -116,7 +135,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/_layout",
-        "/add-product"
+        "/add-product",
+        "/distributors"
       ]
     },
     "/": {
@@ -127,6 +147,9 @@ export const routeTree = rootRoute
     },
     "/add-product": {
       "filePath": "add-product.tsx"
+    },
+    "/distributors": {
+      "filePath": "distributors.tsx"
     }
   }
 }

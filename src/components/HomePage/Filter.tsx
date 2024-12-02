@@ -12,7 +12,7 @@ import SearchIcon from "../Icons/SearchIcon";
 import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 
-const Filter = () => {
+const Filter = ({ isProductsPage = false }: { isProductsPage?: boolean }) => {
     const searchField = useField({
         initialValue: "",
     });
@@ -73,11 +73,13 @@ const Filter = () => {
                 />
             </Group>
 
-            <Group gap={24} w="100%" className="mt-6">
-                <Checkbox label="All" size="xs" />
-                <Checkbox label="Luxury only" size="xs" />
-                <Checkbox label="Mass only" size="xs" />
-            </Group>
+            {isProductsPage && (
+                <Group gap={24} w="100%" className="mt-6">
+                    <Checkbox label="All" size="xs" />
+                    <Checkbox label="Luxury only" size="xs" />
+                    <Checkbox label="Mass only" size="xs" />
+                </Group>
+            )}
         </div>
     );
 };

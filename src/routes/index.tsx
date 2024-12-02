@@ -23,7 +23,7 @@ function RouteComponent() {
                 >
                     Add new product
                 </Button>
-                <Filter />
+                <Filter isProductsPage />
                 <ProductsTable />
             </section>
         </div>
