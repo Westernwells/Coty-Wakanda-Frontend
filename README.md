@@ -1,50 +1,33 @@
-# React + TypeScript + Vite
+This is a new React Vite project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Step 1: Install Dependencies
+First, install the required dependencies for your Vite project.
 
-Currently, two official plugins are available:
+Open your terminal then follow the steps.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Using pnpm:
 
-## Expanding the ESLint configuration
+pnpm install
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-- Configure the top-level `parserOptions` property like this:
+Step 2: Start Your Application
+Once the dependencies are installed, start the development server by running:
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+pnpm run dev
+This will start your application at http://localhost:5173. Open this URL in your browser to see the app in action.
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Step 3: Build the App for Production
+To prepare your app for deployment, generate an optimized production build by running:
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
-```
+pnpm run build
+This will create a dist directory containing the production-ready files
+
+Step 4: Run the Production Build Locally (Optional)
+To preview your production build locally and ensure it works as expected, you can use Vite's built-in preview command:
+
+pnpm run preview
+
+This will start a local server to serve the production build. By default, it will run on http://localhost:4173, but the exact port may vary. Check the terminal output for the correct URL.
+
+
