@@ -1,15 +1,21 @@
+// import { getDistributors } from "@/api/get-distributors";
 import DistributorsTable from "@/components/Distributors/Table";
 import Filter from "@/components/HomePage/Filter";
 import ImportIcon from "@/components/Icons/ImportIcon";
 import PlusIcon from "@/components/Icons/PlusIcon";
 import Headline from "@/components/Shared/Headline";
 import { Button, Group } from "@mantine/core";
+// import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/distributors")({
     component: RouteComponent,
 });
 
 function RouteComponent() {
+    // const { data, isLoading, error } = useQuery({
+    //     queryKey: ["distributors"],
+    //     queryFn: () => getDistributors({ page: 1, per_page: 10 }),
+    // });
     return (
         <div className="w-full">
             <Headline title="Distributors" />

@@ -4,7 +4,6 @@ import {
     CloseButton,
     Group,
     Stack,
-    Title,
     UnstyledButton,
 } from "@mantine/core";
 import Logo from "@/assets/logo.svg";
