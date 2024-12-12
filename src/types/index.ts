@@ -97,3 +97,8 @@ export type Pref = {
     updated_at: string;
     deleted_at: null | string;
 }
+
+export type LoginValues = {
+  email: string,
+  password: string,
+}

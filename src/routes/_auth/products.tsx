@@ -1,15 +1,22 @@
-import Filter from "@/components/HomePage/Filter";
-import ProductsTable from "@/components/HomePage/ProductsTable";
-import PlusIcon from "@/components/Icons/PlusIcon";
-import Headline from "@/components/Shared/Headline";
-import { Button } from "@mantine/core";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/")({
+import { Button } from "@mantine/core";
+import Filter from "@/components/HomePage/Filter";
+import Headline from "@/components/Shared/Headline";
+import PlusIcon from "@/components/Icons/PlusIcon";
+import ProductsTable from "@/components/HomePage/ProductsTable";
+import { useState } from "react";
+
+export const Route = createFileRoute("/_auth/products")({
     component: RouteComponent,
 });
 
 function RouteComponent() {
+    const [_, setFilters] = useState({
+        search: "",
+        region: "",
+        market: "",
+    });
     return (
         <div className="w-full">
             <Headline title="Products" />
@@ -23,7 +30,7 @@ function RouteComponent() {
                 >
                     Add new product
                 </Button>
-                <Filter isProductsPage />
+                <Filter isProductsPage setFilters={setFilters} />
                 <ProductsTable />
             </section>
         </div>

@@ -1,20 +1,27 @@
-import { StrictMode } from "react";
 import "./index.css";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 
-import { MantineProvider } from "@mantine/core";
-import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
-import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const router = createRouter({ routeTree });
+import { RouterProvider, createRouter } from "@tanstack/react-router";
+
+import { MantineProvider } from "@mantine/core";
+import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { routeTree } from "./routeTree.gen";
+import { useUserStore } from "./stores/userStore";
+
+const router = createRouter({ routeTree, context: {auth: false} });
 declare module "@tanstack/react-router" {
     interface Register {
         router: typeof router;
     }
 }
 
+function InnerApp () {
+const auth = useUserStore((state => state.isSignedIn))
+return <RouterProvider router={router} context={{ auth }} />
+}
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
@@ -25,6 +32,7 @@ export const queryClient = new QueryClient({
         },
     },
 });
+
 
 const rootElement = document.getElementById("root")!;
 
@@ -44,7 +52,17 @@ if (!rootElement.innerHTML) {
                                 styles: {
                                     input: {
                                         backgroundColor: "#F2F4F6",
-                                        height: 40,
+                                        minHeight: 40,
+                                        borderRadius: 5,
+                                        borderColor: "transparent",
+                                    },
+                                },
+                            },
+                            PasswordInput: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        minHeight: 40,
                                         borderRadius: 5,
                                         borderColor: "transparent",
                                     },
@@ -54,7 +72,7 @@ if (!rootElement.innerHTML) {
                                 styles: {
                                     input: {
                                         backgroundColor: "#F2F4F6",
-                                        height: 40,
+                                        minHeight: 40,
                                         borderRadius: 5,
                                         borderColor: "transparent",
                                     },
@@ -64,8 +82,18 @@ if (!rootElement.innerHTML) {
                                 styles: {
                                     input: {
                                         backgroundColor: "#F2F4F6",
-                                        height: 40,
+                                        minHeight: 40,
                                         borderRadius: 5,
+                                        borderColor: "transparent",
+                                    },
+                                },
+                            },
+                            MultiSelect: {
+                                styles: {
+                                    input: {
+                                        backgroundColor: "#F2F4F6",
+                                        borderRadius: 5,
+                                        minHeight: 40,
                                         borderColor: "transparent",
                                     },
                                 },
@@ -74,7 +102,7 @@ if (!rootElement.innerHTML) {
                                 styles: {
                                     input: {
                                         backgroundColor: "#F2F4F6",
-                                        height: 40,
+                                        minHeight: 40,
                                         borderRadius: 5,
                                     },
                                 },
@@ -107,7 +135,7 @@ if (!rootElement.innerHTML) {
                         },
                     }}
                 >
-                    <RouterProvider router={router} />
+                    <InnerApp />
                 </MantineProvider>
             </QueryClientProvider>
         </StrictMode>

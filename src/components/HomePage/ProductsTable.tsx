@@ -1,6 +1,8 @@
 import { Pagination, Table } from "@mantine/core";
-import PencilIcon from "../Icons/PencilIcon";
+
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import PencilIcon from "../Icons/PencilIcon";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 const elements = [
@@ -27,8 +29,7 @@ function ProductsTable() {
     const [activePage, setActivePage] = useState(1);
     const itemsPerPage = 5;
     const totalPages = Math.ceil(elements.length / itemsPerPage);
-
-    // Get current page items
+    const navigate = useNavigate();
 
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
@@ -69,7 +70,15 @@ function ProductsTable() {
                                             {element.status}
                                         </span>
                                     </Table.Td>
-                                    <Table.Td className="last:rounded-ee-xl text-center !pr-2">
+                                    <Table.Td
+                                        className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
+                                        onClick={() => {
+                                            navigate({
+                                                to: "/edit-product/$productId",
+                                                params: { productId: "123" },
+                                            });
+                                        }}
+                                    >
                                         <PencilIcon />
                                     </Table.Td>
                                 </Table.Tr>
@@ -95,10 +104,10 @@ function ProductsTable() {
                                 "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
                         }}
                     >
-                        <Pagination.Previous
+                        <Pagination.Previous className="w-auto pe-5"
                             icon={() => {
                                 return (
-                                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-20">
+                                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
                                         <span className="transform rotate-90">
                                             <ChevronDownIcon />
                                         </span>
@@ -108,10 +117,10 @@ function ProductsTable() {
                             }}
                         />
                         <Pagination.Items />
-                        <Pagination.Next
+                        <Pagination.Next className="w-auto ps-5"
                             icon={() => {
                                 return (
-                                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
+                                    <button className="text-primary gap-2  text-sm font-medium flex items-center">
                                         Next
                                         <span className="transform -rotate-90">
                                             <ChevronDownIcon />

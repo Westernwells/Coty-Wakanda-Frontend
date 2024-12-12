@@ -1,17 +1,19 @@
-import AddProductForm from "@/components/AddProduct/Form";
-import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
-import Headline from "@/components/Shared/Headline";
-import { Button } from "@mantine/core";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/add-product")({
+import AddProductForm from "@/components/AddProduct/Form";
+import { Button } from "@mantine/core";
+import { ChevronDownIcon } from "lucide-react";
+import Headline from "@/components/Shared/Headline";
+
+export const Route = createFileRoute("/_auth/edit-product/$productId")({
     component: RouteComponent,
 });
 
 function RouteComponent() {
+    // const { productId } = Route.useParams()
     return (
         <div className="w-full">
-            <Headline title="Add product" />
+            <Headline title="Edit product" />
             <section className="mt-3 sm:mt-8">
                 <Button
                     leftSection={

@@ -4,7 +4,7 @@ import Axios, { InternalAxiosRequestConfig } from "axios";
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
     // const token = Cookies.get("token");
 
-    config.headers.authorization = `Bearer 7|53qPXDCL7ZZAU0D7SCyV0y9rNy5MiYmRJE8QnhDC2d2c9d0a`;
+    config.headers.authorization = `Bearer 9|rdJbMS0f3iqcUJGtrtBc6Ts8ch3dYjPQivNoOcXld5ebac02`;
     config.headers.Accept = "application/json";
     return config;
 }

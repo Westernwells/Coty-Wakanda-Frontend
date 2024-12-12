@@ -11,22 +11,23 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
-import { Route as DistributorsImport } from './routes/distributors'
-import { Route as AddProductImport } from './routes/add-product'
+import { Route as LoginImport } from './routes/login'
 import { Route as LayoutImport } from './routes/_layout'
-import { Route as IndexImport } from './routes/index'
+import { Route as AuthImport } from './routes/_auth'
+import { Route as AuthIndexImport } from './routes/_auth/index'
+import { Route as AuthProductsImport } from './routes/_auth/products'
+import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
+import { Route as AuthDistributorsImport } from './routes/_auth/distributors'
+import { Route as AuthAddProductImport } from './routes/_auth/add-product'
+import { Route as AuthAddDistributorImport } from './routes/_auth/add-distributor'
+import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
+import { Route as AuthEditDistributorsDistributorIdImport } from './routes/_auth/edit-distributors/$distributorId'
 
 // Create/Update Routes
 
-const DistributorsRoute = DistributorsImport.update({
-  id: '/distributors',
-  path: '/distributors',
-  getParentRoute: () => rootRoute,
-} as any)
-
-const AddProductRoute = AddProductImport.update({
-  id: '/add-product',
-  path: '/add-product',
+const LoginRoute = LoginImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -35,21 +36,69 @@ const LayoutRoute = LayoutImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
-const IndexRoute = IndexImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRoute,
 } as any)
+
+const AuthIndexRoute = AuthIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthProductsRoute = AuthProductsImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthForecastingRoute = AuthForecastingImport.update({
+  id: '/forecasting',
+  path: '/forecasting',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthDistributorsRoute = AuthDistributorsImport.update({
+  id: '/distributors',
+  path: '/distributors',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthAddProductRoute = AuthAddProductImport.update({
+  id: '/add-product',
+  path: '/add-product',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthAddDistributorRoute = AuthAddDistributorImport.update({
+  id: '/add-distributor',
+  path: '/add-distributor',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthEditProductProductIdRoute = AuthEditProductProductIdImport.update({
+  id: '/edit-product/$productId',
+  path: '/edit-product/$productId',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthEditDistributorsDistributorIdRoute =
+  AuthEditDistributorsDistributorIdImport.update({
+    id: '/edit-distributors/$distributorId',
+    path: '/edit-distributors/$distributorId',
+    getParentRoute: () => AuthRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthImport
       parentRoute: typeof rootRoute
     }
     '/_layout': {
@@ -59,68 +108,191 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutImport
       parentRoute: typeof rootRoute
     }
-    '/add-product': {
-      id: '/add-product'
-      path: '/add-product'
-      fullPath: '/add-product'
-      preLoaderRoute: typeof AddProductImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
-    '/distributors': {
-      id: '/distributors'
+    '/_auth/add-distributor': {
+      id: '/_auth/add-distributor'
+      path: '/add-distributor'
+      fullPath: '/add-distributor'
+      preLoaderRoute: typeof AuthAddDistributorImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/add-product': {
+      id: '/_auth/add-product'
+      path: '/add-product'
+      fullPath: '/add-product'
+      preLoaderRoute: typeof AuthAddProductImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/distributors': {
+      id: '/_auth/distributors'
       path: '/distributors'
       fullPath: '/distributors'
-      preLoaderRoute: typeof DistributorsImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof AuthDistributorsImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/forecasting': {
+      id: '/_auth/forecasting'
+      path: '/forecasting'
+      fullPath: '/forecasting'
+      preLoaderRoute: typeof AuthForecastingImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/products': {
+      id: '/_auth/products'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthProductsImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/': {
+      id: '/_auth/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AuthIndexImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/edit-distributors/$distributorId': {
+      id: '/_auth/edit-distributors/$distributorId'
+      path: '/edit-distributors/$distributorId'
+      fullPath: '/edit-distributors/$distributorId'
+      preLoaderRoute: typeof AuthEditDistributorsDistributorIdImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/edit-product/$productId': {
+      id: '/_auth/edit-product/$productId'
+      path: '/edit-product/$productId'
+      fullPath: '/edit-product/$productId'
+      preLoaderRoute: typeof AuthEditProductProductIdImport
+      parentRoute: typeof AuthImport
     }
   }
 }
 
 // Create and export the route tree
 
+interface AuthRouteChildren {
+  AuthAddDistributorRoute: typeof AuthAddDistributorRoute
+  AuthAddProductRoute: typeof AuthAddProductRoute
+  AuthDistributorsRoute: typeof AuthDistributorsRoute
+  AuthForecastingRoute: typeof AuthForecastingRoute
+  AuthProductsRoute: typeof AuthProductsRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+  AuthEditDistributorsDistributorIdRoute: typeof AuthEditDistributorsDistributorIdRoute
+  AuthEditProductProductIdRoute: typeof AuthEditProductProductIdRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthAddDistributorRoute: AuthAddDistributorRoute,
+  AuthAddProductRoute: AuthAddProductRoute,
+  AuthDistributorsRoute: AuthDistributorsRoute,
+  AuthForecastingRoute: AuthForecastingRoute,
+  AuthProductsRoute: AuthProductsRoute,
+  AuthIndexRoute: AuthIndexRoute,
+  AuthEditDistributorsDistributorIdRoute:
+    AuthEditDistributorsDistributorIdRoute,
+  AuthEditProductProductIdRoute: AuthEditProductProductIdRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
   '': typeof LayoutRoute
-  '/add-product': typeof AddProductRoute
-  '/distributors': typeof DistributorsRoute
+  '/login': typeof LoginRoute
+  '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-product': typeof AuthAddProductRoute
+  '/distributors': typeof AuthDistributorsRoute
+  '/forecasting': typeof AuthForecastingRoute
+  '/products': typeof AuthProductsRoute
+  '/': typeof AuthIndexRoute
+  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '': typeof LayoutRoute
-  '/add-product': typeof AddProductRoute
-  '/distributors': typeof DistributorsRoute
+  '/login': typeof LoginRoute
+  '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-product': typeof AuthAddProductRoute
+  '/distributors': typeof AuthDistributorsRoute
+  '/forecasting': typeof AuthForecastingRoute
+  '/products': typeof AuthProductsRoute
+  '/': typeof AuthIndexRoute
+  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
   '/_layout': typeof LayoutRoute
-  '/add-product': typeof AddProductRoute
-  '/distributors': typeof DistributorsRoute
+  '/login': typeof LoginRoute
+  '/_auth/add-distributor': typeof AuthAddDistributorRoute
+  '/_auth/add-product': typeof AuthAddProductRoute
+  '/_auth/distributors': typeof AuthDistributorsRoute
+  '/_auth/forecasting': typeof AuthForecastingRoute
+  '/_auth/products': typeof AuthProductsRoute
+  '/_auth/': typeof AuthIndexRoute
+  '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/add-product' | '/distributors'
+  fullPaths:
+    | ''
+    | '/login'
+    | '/add-distributor'
+    | '/add-product'
+    | '/distributors'
+    | '/forecasting'
+    | '/products'
+    | '/'
+    | '/edit-distributors/$distributorId'
+    | '/edit-product/$productId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/add-product' | '/distributors'
-  id: '__root__' | '/' | '/_layout' | '/add-product' | '/distributors'
+  to:
+    | ''
+    | '/login'
+    | '/add-distributor'
+    | '/add-product'
+    | '/distributors'
+    | '/forecasting'
+    | '/products'
+    | '/'
+    | '/edit-distributors/$distributorId'
+    | '/edit-product/$productId'
+  id:
+    | '__root__'
+    | '/_auth'
+    | '/_layout'
+    | '/login'
+    | '/_auth/add-distributor'
+    | '/_auth/add-product'
+    | '/_auth/distributors'
+    | '/_auth/forecasting'
+    | '/_auth/products'
+    | '/_auth/'
+    | '/_auth/edit-distributors/$distributorId'
+    | '/_auth/edit-product/$productId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
   LayoutRoute: typeof LayoutRoute
-  AddProductRoute: typeof AddProductRoute
-  DistributorsRoute: typeof DistributorsRoute
+  LoginRoute: typeof LoginRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  AuthRoute: AuthRouteWithChildren,
   LayoutRoute: LayoutRoute,
-  AddProductRoute: AddProductRoute,
-  DistributorsRoute: DistributorsRoute,
+  LoginRoute: LoginRoute,
 }
 
 export const routeTree = rootRoute
@@ -133,23 +305,61 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
+        "/_auth",
         "/_layout",
-        "/add-product",
-        "/distributors"
+        "/login"
       ]
     },
-    "/": {
-      "filePath": "index.tsx"
+    "/_auth": {
+      "filePath": "_auth.tsx",
+      "children": [
+        "/_auth/add-distributor",
+        "/_auth/add-product",
+        "/_auth/distributors",
+        "/_auth/forecasting",
+        "/_auth/products",
+        "/_auth/",
+        "/_auth/edit-distributors/$distributorId",
+        "/_auth/edit-product/$productId"
+      ]
     },
     "/_layout": {
       "filePath": "_layout.tsx"
     },
-    "/add-product": {
-      "filePath": "add-product.tsx"
+    "/login": {
+      "filePath": "login.tsx"
     },
-    "/distributors": {
-      "filePath": "distributors.tsx"
+    "/_auth/add-distributor": {
+      "filePath": "_auth/add-distributor.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/add-product": {
+      "filePath": "_auth/add-product.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/distributors": {
+      "filePath": "_auth/distributors.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/forecasting": {
+      "filePath": "_auth/forecasting.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/products": {
+      "filePath": "_auth/products.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/": {
+      "filePath": "_auth/index.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/edit-distributors/$distributorId": {
+      "filePath": "_auth/edit-distributors/$distributorId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/edit-product/$productId": {
+      "filePath": "_auth/edit-product/$productId.tsx",
+      "parent": "/_auth"
     }
   }
 }
