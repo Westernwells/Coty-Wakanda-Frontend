@@ -1,5 +1,5 @@
 import {
-    Button,
+  Button,
   Checkbox,
   CloseButton,
   Divider,
@@ -26,9 +26,7 @@ const ForecastingFilters = ({
 }: {
   setFilters: (filters: any) => void;
 }) => {
-  const [
-    { data: brandsData, error: brandsError },
-  ] = useQueries({
+  const [{ data: brandsData, error: brandsError }] = useQueries({
     queries: [
       { queryKey: ["brands"], queryFn: getBrands },
       { queryKey: ["regions"], queryFn: getRegions },
@@ -66,7 +64,7 @@ const ForecastingFilters = ({
   const brandPillarField = useField<string>({
     initialValue: "",
   });
-  const distributersField = useField<string>({
+  const distributorsField = useField<string>({
     initialValue: "",
   });
   const launchIdField = useField<string>({
@@ -86,7 +84,7 @@ const ForecastingFilters = ({
       brand: brandField.getInputProps().value,
       productType: productTypeField.getInputProps().value,
       pillar: brandPillarField.getInputProps().value,
-      distributer: distributersField.getInputProps().value,
+      distributor: distributorsField.getInputProps().value,
       launchId: launchIdField.getInputProps().value,
       startDate: startDateField.getInputProps().value,
       endDate: endDateField.getInputProps().value,
@@ -97,7 +95,7 @@ const ForecastingFilters = ({
     marketField.getInputProps().value,
     brandField.getInputProps().value,
     brandPillarField.getInputProps().value,
-    distributersField.getInputProps().value,
+    distributorsField.getInputProps().value,
     launchIdField.getInputProps().value,
     productTypeField.getInputProps().value,
     startDateField.getInputProps().value,
@@ -126,22 +124,40 @@ const ForecastingFilters = ({
       <Title order={2} className="text-primary font-semibold text-xl">
         Refine your results
       </Title>
-      <div className="flex items-center gap-x-5 mt-6">
+      <div className="flex items-center gap-x-5 mt-6 flex-wrap">
         <TextInput
           {...searchField.getInputProps()}
           aria-label="Search"
           placeholder="Search for..."
-          className="w-full"
+          className="flex-grow"
           leftSection={<SearchIcon />}
         />
-        <CSVLink data={[]}>
-        <Button variant="outline" className="text-primary border-primary" leftSection={<FileDownloadIcon />}>
+        <div
+          className={twMerge(
+            "flex sm:hidden items-center gap-x-2 cursor-pointer",
+            !searchField.getValue().length && "invisible"
+          )}
+          onClick={() => {
+            searchField.setValue("");
+            regionField.setValue("");
+            marketField.setValue("");
+            brandField.setValue("");
+            productTypeField.setValue("all");
+          }}
+        >
+          <CloseButton />
+          <span className="hidden sm:inline text-nowrap text-primary font-medium">
+            Clear all
+          </span>
+        </div>
+        <CSVLink data={[]} className="w-full sm:w-auto">
+        <Button variant="outline" className="text-primary border-primary w-full mt-2 sm:mt-0 sm:w-auto" leftSection={<FileDownloadIcon />}>
           Download CSV
         </Button>
         </CSVLink>
         <div
           className={twMerge(
-            "flex items-center gap-x-2 cursor-pointer",
+            "hidden sm:flex items-center gap-x-2 cursor-pointer",
             !searchField.getValue().length && "invisible"
           )}
           onClick={() => {
@@ -198,9 +214,9 @@ const ForecastingFilters = ({
             rightSection={<ChevronDownIcon />}
           />
           <Select
-            {...distributersField.getInputProps()}
-            aria-label="Filter by distributer"
-            placeholder="Filter by distributer"
+            {...distributorsField.getInputProps()}
+            aria-label="Filter by distributor"
+            placeholder="Filter by distributor"
             data={brandOptions}
             clearable
             className="grow"

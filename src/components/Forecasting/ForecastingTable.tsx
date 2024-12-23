@@ -11,6 +11,7 @@ import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { useEffect, useMemo, useState } from "react";
 import { useField } from "@mantine/form";
 import EyeIcon from "../Icons/EyeIcon";
+import { useNavigate } from "@tanstack/react-router";
 
 const elements = [
   {
@@ -18,7 +19,7 @@ const elements = [
     pillar: "Distributor example",
     sku: "SKU Example",
     launchId: "Brand-SubBrand-Year-Format-LaunchName",
-    distributer: "dist1, dist2, dist3",
+    distributor: "dist1, dist2, dist3",
     offeringNumber: "160439542",
     date1: "00",
     date2: "00",
@@ -33,7 +34,7 @@ const elements = [
     pillar: "Distributor example",
     sku: "SKU Example",
     launchId: "Brand-SubBrand-Year-Format-LaunchName",
-    distributer: "dist1, dist2, dist3",
+    distributor: "dist1, dist2, dist3",
     offeringNumber: "160439542",
     date1: "00",
     date2: "00",
@@ -53,7 +54,7 @@ function ForecastingTable({
     // endDate: Date;
     brand: string;
     pillar: string;
-    distributer: string;
+    distributor: string;
     launchId: string;
   };
 }) {
@@ -62,7 +63,7 @@ function ForecastingTable({
   const [itemsPerPage, setItemsPerPage] = useState("5");
   const [activeTab, setActiveTab] = useState<string | null>("Innovation");
   const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
-  console.log(totalPages);
+  const navigate = useNavigate();
 
   const forecastTypeField = useField<string>({
     initialValue: "",
@@ -120,13 +121,13 @@ function ForecastingTable({
         item.pillar.toLowerCase().includes(searchTerm) ||
         item.sku.toLowerCase().includes(searchTerm) ||
         item.launchId.toLowerCase().includes(searchTerm) ||
-        item.distributer.toLowerCase().includes(searchTerm) ||
+        item.distributor.toLowerCase().includes(searchTerm) ||
         item.offeringNumber.toLowerCase().includes(searchTerm);
 
       const filterMatch =
         (!filters.brand || item.brand === filters.brand) &&
         (!filters.pillar || item.pillar === filters.pillar) &&
-        (!filters.distributer || item.distributer === filters.distributer) &&
+        (!filters.distributor || item.distributor === filters.distributor) &&
         (!filters.launchId || item.launchId === filters.launchId);
 
       return searchMatch && filterMatch;
@@ -269,7 +270,7 @@ function ForecastingTable({
                   <Table.Td>{element.pillar}</Table.Td>
                   <Table.Td>{element.sku}</Table.Td>
                   <Table.Td>{element.launchId}</Table.Td>
-                  <Table.Td>{element.distributer}</Table.Td>
+                  <Table.Td>{element.distributor}</Table.Td>
                   <Table.Td>{element.offeringNumber}</Table.Td>
                   <Table.Td>{element.date1}</Table.Td>
                   <Table.Td>{element.date2}</Table.Td>
@@ -280,7 +281,7 @@ function ForecastingTable({
                   <Table.Td
                     className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
                     onClick={() => {
-                      console.log("clicked");
+                      navigate({to: "/forecast-details/$forecastId", params: {forecastId: element.sku}})
                     }}
                   >
                     <EyeIcon />

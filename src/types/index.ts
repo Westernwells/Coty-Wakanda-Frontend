@@ -1,104 +1,104 @@
-
-
 export type Meta = {
-    page: number;
-    total: number;
-    perPage: number;
-}
+  page: number;
+  total: number;
+  perPage: number;
+};
 
 export type Distributor = {
-    id: number;
-    name: string;
-    type: string;
-    company_registration_number: string;
-    currency: string;
-    contact_person: string;
-    contact_email: string;
-    mirror: Mirror;
-    regions: Region[];
-    markets: Market[];
-    categories: Category[];
-    brands: Brand[];
-    coefficients: Coefficient[];
-}
+  id: number;
+  name: string;
+  type: string;
+  company_registration_number: string;
+  currency: string;
+  contact_person: string;
+  contact_email: string;
+  mirror: Mirror;
+  regions: Region[];
+  markets: Market[];
+  categories: Category[];
+  brands: Brand[];
+  coefficients: Coefficient[];
+  brand_pillars: BrandPillar[];
+};
 
 export type Mirror = {
-    group_one: number;
-    group_two: number;
-}
+  group_one: number;
+  group_two: number;
+};
 
 export type Region = {
-    id: number;
-    name: string;
-    active: boolean;
-    created_at: string;
-    updated_at: string;
-    deleted_at: null | string;
-    pivot: {
-        distributor_id: number;
-        region_id: number;
-    };
-}
+  id: number;
+  name: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  pivot: {
+    distributor_id: number;
+    region_id: number;
+  };
+};
 
 export type Market = {
-    id: number;
-    region_id: number;
-    name: string;
-    active: boolean;
-    created_at: string;
-    updated_at: string;
-    deleted_at: null | string;
-    pivot: {
-        distributor_id: number;
-        market_id: number;
-    };
-}
+  id: number;
+  region_id: number;
+  name: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  pivot: {
+    distributor_id: number;
+    market_id: number;
+  };
+};
 
 export type Category = {
-    id: number;
-    name: string;
-    active: boolean;
-    created_at: string;
-    updated_at: string;
-    deleted_at: null | string;
-    pivot: {
-        distributor_id: number;
-        category_id: number;
-    };
-}
+  id: number;
+  name: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  pivot: {
+    distributor_id: number;
+    category_id: number;
+  };
+};
 
 export type Brand = {
-    id: number;
-    brand_type_id: number;
-    name: string;
-    active: boolean;
-    created_at: string;
-    updated_at: string;
-    deleted_at: null | string;
-    pivot: {
-        distributor_id: number;
-        brand_id: number;
-    };
-}
+  id: number;
+  brand_type_id: number;
+  name: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  pivot: {
+    distributor_id: number;
+    brand_id: number;
+  };
+};
+
+export type BrandPillar = {
+  brand: Brand;
+  created_at: string;
+  id: number;
+  name: string;
+};
 
 export type Coefficient = {
-    id: number;
-    value: string;
-    brand: Brand;
-    category: Category;
-    pref: Pref;
-}
+  id: number;
+  value: string;
+  brand: Brand;
+  category: Category;
+  pref: Pref;
+  description?: string;
+};
 
-export type Pref = {
-    id: number;
-    name: string;
-    active: boolean;
-    created_at: string;
-    updated_at: string;
-    deleted_at: null | string;
-}
+export type Pref = "pref" | "non-pref"
 
 export type LoginValues = {
-  email: string,
-  password: string,
-}
+  email: string;
+  password: string;
+};

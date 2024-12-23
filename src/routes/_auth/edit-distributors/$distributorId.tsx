@@ -1,28 +1,28 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from "@tanstack/react-router";
 
-import AddDistributorForm from '@/components/Distributors/AddDistributorForm'
-import { Button } from '@mantine/core'
-import ChevronDownIcon from '@/components/Icons/ChevronDownIcon'
-import Headline from '@/components/Shared/Headline'
-import LoadingSpinner from '@/components/Shared/LoadingSpinner'
-import { getDistributor } from '@/api/get-distributor'
-import { useQuery } from '@tanstack/react-query'
+import AddDistributorForm from "@/components/Distributors/AddDistributorForm";
+import { Button } from "@mantine/core";
+import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
+import Headline from "@/components/Shared/Headline";
+import LoadingSpinner from "@/components/Shared/LoadingSpinner";
+import { getDistributor } from "@/api/distributors/get-distributor";
+import { useQuery } from "@tanstack/react-query";
 
-export const Route = createFileRoute('/_auth/edit-distributors/$distributorId')(
+export const Route = createFileRoute("/_auth/edit-distributors/$distributorId")(
   {
     component: RouteComponent,
-  },
-)
+  }
+);
 
 function RouteComponent() {
-  const { distributorId } = Route.useParams()
+  const { distributorId } = Route.useParams();
   const { data, isLoading } = useQuery({
-    queryKey: ['/distributors/$distributorId', distributorId],
+    queryKey: ["distributors", distributorId],
     queryFn: () => getDistributor(distributorId),
-  })
+  });
 
   if (isLoading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
@@ -45,5 +45,5 @@ function RouteComponent() {
       </section>
       <AddDistributorForm formData={data?.data} isEdit />
     </div>
-  )
+  );
 }

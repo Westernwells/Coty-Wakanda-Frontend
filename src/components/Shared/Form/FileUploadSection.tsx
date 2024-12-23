@@ -8,9 +8,14 @@ import { useRef } from "react";
 
 interface FileUploadSectionProps {
     form: UseFormReturnType<any>;
+    id: string;
+    multiple?: boolean;
+    accept?: string;
+    span?: object
+    label?: string
 }
 
-export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
+export const FileUploadSection = ({ form, id, multiple, accept, span, label }: FileUploadSectionProps) => {
     const fileUploadRef = useRef<HTMLButtonElement>(null);
     return (
         <Grid
@@ -20,15 +25,14 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
             }}
         >
             <Grid.Col
-                span={{
-                    sm: 4,
-                    base: 12,
-                }}
+                span={span}
             >
                 <FileInput
-                    {...form.getInputProps("document")}
+                    {...form.getInputProps(id)}
+                    multiple={multiple}
+                    accept={accept}
                     ref={fileUploadRef}
-                    label="Select documents to upload"
+                    label={label ? label : "Select documents to upload"}
                     placeholder="Select documents"
                     classNames={{
                         label: "text-primary font-medium text-sm mb-1",
@@ -46,16 +50,19 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
                     }
                 />
             </Grid.Col>
-            {form.values.document && (
+            {form.values[id] && (
                 <Grid.Col span={12} className="custom-file-input">
+                    <div className=" flex justify-between bg-white border !border-primary !rounded-[10px] p-1 pe-2">
                     <FileInput
-                        {...form.getInputProps("document")}
+                        {...form.getInputProps(id)}
                         aria-label="Select documents to upload"
                         classNames={{
-                            input: "text-primary !bg-white border !border-primary !rounded-[10px] p-[10px] pl-8",
+                            input: "text-primary !bg-transparent",
+                            root: "max-w-[30%] sm:max-w-[calc(100%-200px)]"
                         }}
-                        rightSection={
-                            <div className="flex items-center pr-[10px]">
+                        leftSection={<FileBankIcon />}
+                    />
+                                            <div className="flex items-center pr-[10px]">
                                 <div
                                     className="flex items-center gap-x-[10px] text-sm text-primary cursor-pointer"
                                     onClick={() => {
@@ -72,16 +79,14 @@ export const FileUploadSection = ({ form }: FileUploadSectionProps) => {
                                 <div
                                     className="flex items-center gap-x-[10px] text-sm text-primary cursor-pointer"
                                     onClick={() => {
-                                        form.setFieldValue("document", "");
+                                        form.setFieldValue(id, "");
                                     }}
                                 >
                                     <TrashIcon />
                                     Delete
                                 </div>
                             </div>
-                        }
-                        leftSection={<FileBankIcon />}
-                    />
+                            </div>
                 </Grid.Col>
             )}
         </Grid>

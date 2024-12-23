@@ -1,4 +1,5 @@
-import { Distributor, } from "@/types";
+import { Distributor } from "@/types";
+
 import { axios } from "@/lib/axios";
 
 export type ApiResponse = {

@@ -1,0 +1,290 @@
+import { Group, Pagination, Select, Table } from "@mantine/core";
+import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { useEffect, useMemo, useState } from "react";
+import { DateInput } from "@mantine/dates";
+import DateIcon from "../Icons/DateIcon";
+
+const elements = [
+  {
+    id: 1,
+    brand: "Brand example",
+    brandPillars: "Brand Pillar example",
+    sku: "SKU Example",
+    cost: "00$",
+    monthlyTotals: "00$",
+    date1: "00",
+    date2: "00",
+    date3: "00",
+    date4: "00",
+    date5: "00",
+    date6: "00",
+    subtotal: "00",
+  },
+  ...Array(10).fill({
+    id: 2,
+    brand: "Brand example2",
+    brandPillars: "Brand Pillar example3",
+    sku: "SKU Example4",
+    cost: "10$",
+    monthlyTotals: "10$",
+    date1: "01",
+    date2: "02",
+    date3: "03",
+    date4: "04",
+    date5: "05",
+    date6: "06",
+    subtotal: "00",
+  }),
+];
+
+function BaseForecastsTable() {
+  const [activePage, setActivePage] = useState(1);
+  const [sortBy, setSortBy] = useState<string | null>("");
+  const [itemsPerPage, setItemsPerPage] = useState("5");
+  const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
+
+  const sortOptions = [
+    {
+      value: "brand",
+      label: "Brand",
+    },
+    {
+      value: "offeringNumber",
+      label: "Offering number",
+    },
+    {
+      value: "status",
+      label: "Status",
+    },
+  ];
+
+  const showOptions = [
+    {
+      value: "5",
+      label: "Show 5",
+    },
+    {
+      value: "10",
+      label: "Show 10",
+    },
+    {
+      value: "50",
+      label: "Show 50",
+    },
+    {
+      value: "100",
+      label: "Show 100",
+    },
+  ];
+
+  // Filter data based on search and filters
+  const filteredData = useMemo(() => {
+    if (!elements) return [];
+    if (sortBy) {
+      return [
+        ...elements.sort((a, b) =>
+          a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
+        ),
+      ];
+    }
+    return elements;
+  }, [sortBy]);
+
+  // Calculate paginated data
+  const paginatedData = useMemo(() => {
+    const startIndex = (activePage - 1) * parseInt(itemsPerPage);
+    return filteredData.slice(startIndex, startIndex + parseInt(itemsPerPage));
+  }, [filteredData, activePage, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setActivePage(1);
+  }, [sortBy, itemsPerPage]);
+
+  return (
+    <div className="bg-white shadow-md rounded-lg p-6 mt-5">
+      {/* Table */}
+      <Group justify="space-between" className="mb-4">
+        <Group className="grow">
+          <DateInput
+            aria-label="Start Date"
+            placeholder="Start Date"
+            clearable
+            variant="filled"
+            className="grow"
+            rightSection={<DateIcon />}
+          />
+          <DateInput
+            aria-label="End Date"
+            placeholder="End Date"
+            clearable
+            variant="filled"
+            className="grow"
+            rightSection={<DateIcon />}
+          />
+          <Select
+            aria-label="Sort by"
+            placeholder="Sort by"
+            data={sortOptions}
+            value={sortBy}
+            onChange={(v) => setSortBy(v)}
+            clearable
+            className="grow"
+            rightSection={<ChevronDownIcon />}
+          />
+          <Select
+            aria-label="Show 100"
+            placeholder="Show 100"
+            data={showOptions}
+            value={itemsPerPage}
+            onChange={(v) => v && setItemsPerPage(v)}
+            clearable
+            className="grow"
+            rightSection={<ChevronDownIcon />}
+          />
+        </Group>
+      </Group>
+      <div className="relative border border-primary rounded-xl border-t-0">
+        <Table.ScrollContainer minWidth={768}>
+          <Table
+            verticalSpacing="sm"
+            borderColor="transparent"
+            striped="even"
+            stripedColor="#F2F4F6"
+          >
+            <Table.Thead>
+              <Table.Tr className="bg-primary text-white">
+                <Table.Th className="rounded-ss-xl">Brand</Table.Th>
+                <Table.Th>Brand Pillar</Table.Th>
+                <Table.Th>SKU</Table.Th>
+                <Table.Th>Cost</Table.Th>
+                <Table.Th>Monthly Totals</Table.Th>
+                <Table.Th>Jan 25</Table.Th>
+                <Table.Th>Feb 25</Table.Th>
+                <Table.Th>Mar 25</Table.Th>
+                <Table.Th>Apr 25</Table.Th>
+                <Table.Th>May 25</Table.Th>
+                <Table.Th>Jun 25</Table.Th>
+                <Table.Th className="rounded-se-xl">Sub Total</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {paginatedData.map((element, index) => (
+                <Table.Tr key={index}>
+                  <Table.Td className="first:rounded-es-xl">
+                    {element.brand}
+                  </Table.Td>
+                  <Table.Td>{element.brandPillars}</Table.Td>
+                  <Table.Td>{element.sku}</Table.Td>
+                  <Table.Td>{element.cost}</Table.Td>
+                  <Table.Td>{element.monthlyTotals}</Table.Td>
+                  <Table.Td>{element.date1}</Table.Td>
+                  <Table.Td>{element.date2}</Table.Td>
+                  <Table.Td>{element.date3}</Table.Td>
+                  <Table.Td>{element.date4}</Table.Td>
+                  <Table.Td>{element.date5}</Table.Td>
+                  <Table.Td>{element.date6}</Table.Td>
+                  <Table.Td className="last:rounded-ee-xl text-center !pr-2">
+                    {element.subtotal}
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 w-full">
+          <div className="hidden sm:block">
+            <Pagination.Root
+              total={totalPages}
+              value={activePage}
+              onChange={setActivePage}
+              color="#00EBB2"
+              radius="xl"
+              siblings={1}
+              boundaries={3}
+              classNames={{
+                root: "w-full flex justify-center items-center",
+                control:
+                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
+              }}
+            >
+              <Pagination.Previous
+                className="w-auto pe-5"
+                icon={() => {
+                  return (
+                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
+                      <span className="transform rotate-90">
+                        <ChevronDownIcon />
+                      </span>
+                      Previous
+                    </button>
+                  );
+                }}
+              />
+              <Pagination.Items />
+              <Pagination.Next
+                className="w-auto ps-5"
+                icon={() => {
+                  return (
+                    <button className="text-primary gap-2  text-sm font-medium flex items-center">
+                      Next
+                      <span className="transform -rotate-90">
+                        <ChevronDownIcon />
+                      </span>
+                    </button>
+                  );
+                }}
+              />
+            </Pagination.Root>
+          </div>
+          <div className="sm:hidden  w-full">
+            <Pagination.Root
+              total={totalPages}
+              value={activePage}
+              onChange={setActivePage}
+              color="#00EBB2"
+              radius="xl"
+              siblings={1}
+              boundaries={1}
+              classNames={{
+                root: "w-full flex justify-center ",
+                control:
+                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
+              }}
+            >
+              <Pagination.Previous
+                icon={() => {
+                  return (
+                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
+                      <span className="transform rotate-90">
+                        <ChevronDownIcon />
+                      </span>
+                      Previous
+                    </button>
+                  );
+                }}
+              />
+              <Pagination.Items />
+              <Pagination.Next
+                icon={() => {
+                  return (
+                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
+                      Next
+                      <span className="transform -rotate-90">
+                        <ChevronDownIcon />
+                      </span>
+                    </button>
+                  );
+                }}
+              />
+            </Pagination.Root>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default BaseForecastsTable;

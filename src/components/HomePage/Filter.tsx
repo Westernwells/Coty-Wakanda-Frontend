@@ -7,21 +7,26 @@ import {
     TextInput,
     Title,
 } from "@mantine/core";
-
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { useField } from "@mantine/form";
 import SearchIcon from "../Icons/SearchIcon";
+import { twMerge } from "tailwind-merge";
+import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { useEffect } from "react";
+import { useQueries } from "@tanstack/react-query";
+// import { getBrands } from "@/api/get-brands";
 import { getMarkets } from "@/api/get-markets";
 import { getRegions } from "@/api/get-regions";
-import { twMerge } from "tailwind-merge";
-import { useEffect } from "react";
-import { useField } from "@mantine/form";
-import { useQueries } from "@tanstack/react-query";
 
 const Filter = ({
     setFilters,
     isProductsPage = false,
 }: {
-    setFilters: (filters: any) => void;
+    setFilters: React.Dispatch<React.SetStateAction<{
+        search: string;
+        region: string;
+        market: string;
+        type?: string;
+    }>>;
     isProductsPage?: boolean;
 }) => {
     const [
@@ -74,7 +79,6 @@ const Filter = ({
             search: searchField.getInputProps().value,
             region: regionField.getInputProps().value,
             market: marketField.getInputProps().value,
-            brand: brandField.getInputProps().value,
             ...(isProductsPage && {
                 productType: productTypeField.getInputProps().value,
             }),
@@ -115,7 +119,7 @@ const Filter = ({
                     {...searchField.getInputProps()}
                     aria-label="Search"
                     placeholder="Search for..."
-                    className="w-full"
+                    className="flex-grow"
                     leftSection={<SearchIcon />}
                 />
                 <div

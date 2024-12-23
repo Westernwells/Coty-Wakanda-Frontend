@@ -6,7 +6,7 @@ import Filter from '@/components/HomePage/Filter'
 import Headline from '@/components/Shared/Headline'
 import ImportIcon from '@/components/Icons/ImportIcon'
 import PlusIcon from '@/components/Icons/PlusIcon'
-import { getDistributors } from '@/api/get-distributors'
+import { getDistributors } from '@/api/distributors/get-distributors'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 

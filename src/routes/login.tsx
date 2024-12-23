@@ -1,6 +1,5 @@
-import { userLogin } from "@/api/post-login";
+import { useUserLogin } from "@/api/post-login";
 import { useUserStore } from "@/stores/userStore";
-import { LoginValues } from "@/types";
 import {
   Box,
   Button,
@@ -13,9 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
 import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
@@ -45,35 +42,29 @@ function RouteComponent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const login = useUserStore((state) => state.signIn);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<string>();
-
-  const handleSubmit = async (values: LoginValues) => {
-    setIsLoading(true);
-    try {
-      const res = await userLogin(values);
-      const { data } = res;
-      login(data.user);
-    } catch (e) {
-      // result = e.message; // error under useUnknownInCatchVariables
-      if (typeof e === "string") {
-        setErrors(e); // works, `e` narrowed to string
-      } else if (e instanceof Error) {
-        setErrors(e.message); // works, `e` narrowed to string
-      }
-    } finally {
-      setIsLoading(false);
-    }
-    await navigate({ to: search.redirect || "/" });
-  };
+  const userLoginMutations = useUserLogin({
+    mutationConfig: {
+      onSuccess: (e) => {
+        login(e.data.data.user, e.data.data.token);
+        navigate({ to: search.redirect || "/" });
+      },
+    },
+  });
   return (
-    <Container size={420} className="flex flex-col align-middle justify-center h-screen pt-[60px] md:pt-0">
+    <Container
+      size={420}
+      className="flex flex-col align-middle justify-center h-screen pt-[60px] md:pt-0"
+    >
       <Title ta="center" className="font-extrabold">
         Welcome back!
       </Title>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-        <form onSubmit={form.onSubmit((values) => handleSubmit(values))}>
+        <form
+          onSubmit={form.onSubmit((values) =>
+            userLoginMutations.mutate({ data: values })
+          )}
+        >
           <TextInput
             label="Email"
             placeholder="you@mantine.dev"
@@ -93,17 +84,21 @@ function RouteComponent() {
             type="submit"
             variant="outline"
             className="border-primary w-full mt-6 bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:text-primary hover:bg-opacity-40 transition-all ease-in-out duration-300"
-            disabled={isLoading}
+            disabled={userLoginMutations.isPending}
           >
             Sign in
           </Button>
-             {errors && <Text className="text-[#fa5252]" size="sm">Your Email or Password are incorrect</Text>}
+          {userLoginMutations.isError && (
+            <Text className="text-[#fa5252]" size="sm">
+              Your Email or Password are incorrect
+            </Text>
+          )}
         </form>
       </Paper>
-      {isLoading && (
+      {userLoginMutations.isPending && (
         <Box pos="absolute" top={0} left={0} w="100%" h="100%">
           <LoadingOverlay
-            visible={isLoading}
+            visible={userLoginMutations.isPending}
             zIndex={1000}
             overlayProps={{ radius: "sm", blur: 2 }}
           />

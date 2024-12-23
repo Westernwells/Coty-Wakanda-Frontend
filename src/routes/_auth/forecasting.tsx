@@ -17,7 +17,7 @@ function RouteComponent() {
     // endDate: "",
     brand: "",
     pillar: "",
-    distributer: "",
+    distributor: "",
     launchId: "",
   });
   const [activeTab, setActiveTab] = useState<string | null>('Total');

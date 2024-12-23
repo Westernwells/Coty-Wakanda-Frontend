@@ -15,11 +15,20 @@ import { Route as LoginImport } from './routes/login'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as AuthIndexImport } from './routes/_auth/index'
+import { Route as AuthSettingsImport } from './routes/_auth/settings'
+import { Route as AuthProfileImport } from './routes/_auth/profile'
 import { Route as AuthProductsImport } from './routes/_auth/products'
+import { Route as AuthInnovationsImport } from './routes/_auth/innovations'
+import { Route as AuthInnovationForecastsImport } from './routes/_auth/innovation-forecasts'
 import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
 import { Route as AuthDistributorsImport } from './routes/_auth/distributors'
+import { Route as AuthBaseForecastsImport } from './routes/_auth/base-forecasts'
 import { Route as AuthAddProductImport } from './routes/_auth/add-product'
+import { Route as AuthAddOfferingImport } from './routes/_auth/add-offering'
+import { Route as AuthAddInnovationImport } from './routes/_auth/add-innovation'
 import { Route as AuthAddDistributorImport } from './routes/_auth/add-distributor'
+import { Route as AuthInnovationForcastsSubmitForecastIdImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
+import { Route as AuthForecastDetailsForecastIdImport } from './routes/_auth/forecast-details/$forecastId'
 import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
 import { Route as AuthEditDistributorsDistributorIdImport } from './routes/_auth/edit-distributors/$distributorId'
 
@@ -47,9 +56,33 @@ const AuthIndexRoute = AuthIndexImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
+const AuthSettingsRoute = AuthSettingsImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthProfileRoute = AuthProfileImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthRoute,
+} as any)
+
 const AuthProductsRoute = AuthProductsImport.update({
   id: '/products',
   path: '/products',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthInnovationsRoute = AuthInnovationsImport.update({
+  id: '/innovations',
+  path: '/innovations',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthInnovationForecastsRoute = AuthInnovationForecastsImport.update({
+  id: '/innovation-forecasts',
+  path: '/innovation-forecasts',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -65,9 +98,27 @@ const AuthDistributorsRoute = AuthDistributorsImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
+const AuthBaseForecastsRoute = AuthBaseForecastsImport.update({
+  id: '/base-forecasts',
+  path: '/base-forecasts',
+  getParentRoute: () => AuthRoute,
+} as any)
+
 const AuthAddProductRoute = AuthAddProductImport.update({
   id: '/add-product',
   path: '/add-product',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthAddOfferingRoute = AuthAddOfferingImport.update({
+  id: '/add-offering',
+  path: '/add-offering',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthAddInnovationRoute = AuthAddInnovationImport.update({
+  id: '/add-innovation',
+  path: '/add-innovation',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -76,6 +127,20 @@ const AuthAddDistributorRoute = AuthAddDistributorImport.update({
   path: '/add-distributor',
   getParentRoute: () => AuthRoute,
 } as any)
+
+const AuthInnovationForcastsSubmitForecastIdRoute =
+  AuthInnovationForcastsSubmitForecastIdImport.update({
+    id: '/innovation-forcasts-submit/$forecastId',
+    path: '/innovation-forcasts-submit/$forecastId',
+    getParentRoute: () => AuthRoute,
+  } as any)
+
+const AuthForecastDetailsForecastIdRoute =
+  AuthForecastDetailsForecastIdImport.update({
+    id: '/forecast-details/$forecastId',
+    path: '/forecast-details/$forecastId',
+    getParentRoute: () => AuthRoute,
+  } as any)
 
 const AuthEditProductProductIdRoute = AuthEditProductProductIdImport.update({
   id: '/edit-product/$productId',
@@ -122,11 +187,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthAddDistributorImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/add-innovation': {
+      id: '/_auth/add-innovation'
+      path: '/add-innovation'
+      fullPath: '/add-innovation'
+      preLoaderRoute: typeof AuthAddInnovationImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/add-offering': {
+      id: '/_auth/add-offering'
+      path: '/add-offering'
+      fullPath: '/add-offering'
+      preLoaderRoute: typeof AuthAddOfferingImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/add-product': {
       id: '/_auth/add-product'
       path: '/add-product'
       fullPath: '/add-product'
       preLoaderRoute: typeof AuthAddProductImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/base-forecasts': {
+      id: '/_auth/base-forecasts'
+      path: '/base-forecasts'
+      fullPath: '/base-forecasts'
+      preLoaderRoute: typeof AuthBaseForecastsImport
       parentRoute: typeof AuthImport
     }
     '/_auth/distributors': {
@@ -143,11 +229,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForecastingImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/innovation-forecasts': {
+      id: '/_auth/innovation-forecasts'
+      path: '/innovation-forecasts'
+      fullPath: '/innovation-forecasts'
+      preLoaderRoute: typeof AuthInnovationForecastsImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/innovations': {
+      id: '/_auth/innovations'
+      path: '/innovations'
+      fullPath: '/innovations'
+      preLoaderRoute: typeof AuthInnovationsImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/products': {
       id: '/_auth/products'
       path: '/products'
       fullPath: '/products'
       preLoaderRoute: typeof AuthProductsImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/profile': {
+      id: '/_auth/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthProfileImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/settings': {
+      id: '/_auth/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthSettingsImport
       parentRoute: typeof AuthImport
     }
     '/_auth/': {
@@ -171,6 +285,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEditProductProductIdImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/forecast-details/$forecastId': {
+      id: '/_auth/forecast-details/$forecastId'
+      path: '/forecast-details/$forecastId'
+      fullPath: '/forecast-details/$forecastId'
+      preLoaderRoute: typeof AuthForecastDetailsForecastIdImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/innovation-forcasts-submit/$forecastId': {
+      id: '/_auth/innovation-forcasts-submit/$forecastId'
+      path: '/innovation-forcasts-submit/$forecastId'
+      fullPath: '/innovation-forcasts-submit/$forecastId'
+      preLoaderRoute: typeof AuthInnovationForcastsSubmitForecastIdImport
+      parentRoute: typeof AuthImport
+    }
   }
 }
 
@@ -178,25 +306,44 @@ declare module '@tanstack/react-router' {
 
 interface AuthRouteChildren {
   AuthAddDistributorRoute: typeof AuthAddDistributorRoute
+  AuthAddInnovationRoute: typeof AuthAddInnovationRoute
+  AuthAddOfferingRoute: typeof AuthAddOfferingRoute
   AuthAddProductRoute: typeof AuthAddProductRoute
+  AuthBaseForecastsRoute: typeof AuthBaseForecastsRoute
   AuthDistributorsRoute: typeof AuthDistributorsRoute
   AuthForecastingRoute: typeof AuthForecastingRoute
+  AuthInnovationForecastsRoute: typeof AuthInnovationForecastsRoute
+  AuthInnovationsRoute: typeof AuthInnovationsRoute
   AuthProductsRoute: typeof AuthProductsRoute
+  AuthProfileRoute: typeof AuthProfileRoute
+  AuthSettingsRoute: typeof AuthSettingsRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthEditDistributorsDistributorIdRoute: typeof AuthEditDistributorsDistributorIdRoute
   AuthEditProductProductIdRoute: typeof AuthEditProductProductIdRoute
+  AuthForecastDetailsForecastIdRoute: typeof AuthForecastDetailsForecastIdRoute
+  AuthInnovationForcastsSubmitForecastIdRoute: typeof AuthInnovationForcastsSubmitForecastIdRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthAddDistributorRoute: AuthAddDistributorRoute,
+  AuthAddInnovationRoute: AuthAddInnovationRoute,
+  AuthAddOfferingRoute: AuthAddOfferingRoute,
   AuthAddProductRoute: AuthAddProductRoute,
+  AuthBaseForecastsRoute: AuthBaseForecastsRoute,
   AuthDistributorsRoute: AuthDistributorsRoute,
   AuthForecastingRoute: AuthForecastingRoute,
+  AuthInnovationForecastsRoute: AuthInnovationForecastsRoute,
+  AuthInnovationsRoute: AuthInnovationsRoute,
   AuthProductsRoute: AuthProductsRoute,
+  AuthProfileRoute: AuthProfileRoute,
+  AuthSettingsRoute: AuthSettingsRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthEditDistributorsDistributorIdRoute:
     AuthEditDistributorsDistributorIdRoute,
   AuthEditProductProductIdRoute: AuthEditProductProductIdRoute,
+  AuthForecastDetailsForecastIdRoute: AuthForecastDetailsForecastIdRoute,
+  AuthInnovationForcastsSubmitForecastIdRoute:
+    AuthInnovationForcastsSubmitForecastIdRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -205,26 +352,44 @@ export interface FileRoutesByFullPath {
   '': typeof LayoutRoute
   '/login': typeof LoginRoute
   '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-innovation': typeof AuthAddInnovationRoute
+  '/add-offering': typeof AuthAddOfferingRoute
   '/add-product': typeof AuthAddProductRoute
+  '/base-forecasts': typeof AuthBaseForecastsRoute
   '/distributors': typeof AuthDistributorsRoute
   '/forecasting': typeof AuthForecastingRoute
+  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/innovations': typeof AuthInnovationsRoute
   '/products': typeof AuthProductsRoute
+  '/profile': typeof AuthProfileRoute
+  '/settings': typeof AuthSettingsRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
+  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
 }
 
 export interface FileRoutesByTo {
   '': typeof LayoutRoute
   '/login': typeof LoginRoute
   '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-innovation': typeof AuthAddInnovationRoute
+  '/add-offering': typeof AuthAddOfferingRoute
   '/add-product': typeof AuthAddProductRoute
+  '/base-forecasts': typeof AuthBaseForecastsRoute
   '/distributors': typeof AuthDistributorsRoute
   '/forecasting': typeof AuthForecastingRoute
+  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/innovations': typeof AuthInnovationsRoute
   '/products': typeof AuthProductsRoute
+  '/profile': typeof AuthProfileRoute
+  '/settings': typeof AuthSettingsRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
+  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
 }
 
 export interface FileRoutesById {
@@ -233,13 +398,22 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRoute
   '/login': typeof LoginRoute
   '/_auth/add-distributor': typeof AuthAddDistributorRoute
+  '/_auth/add-innovation': typeof AuthAddInnovationRoute
+  '/_auth/add-offering': typeof AuthAddOfferingRoute
   '/_auth/add-product': typeof AuthAddProductRoute
+  '/_auth/base-forecasts': typeof AuthBaseForecastsRoute
   '/_auth/distributors': typeof AuthDistributorsRoute
   '/_auth/forecasting': typeof AuthForecastingRoute
+  '/_auth/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/_auth/innovations': typeof AuthInnovationsRoute
   '/_auth/products': typeof AuthProductsRoute
+  '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/settings': typeof AuthSettingsRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/_auth/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
+  '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
 }
 
 export interface FileRouteTypes {
@@ -248,38 +422,65 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/add-distributor'
+    | '/add-innovation'
+    | '/add-offering'
     | '/add-product'
+    | '/base-forecasts'
     | '/distributors'
     | '/forecasting'
+    | '/innovation-forecasts'
+    | '/innovations'
     | '/products'
+    | '/profile'
+    | '/settings'
     | '/'
     | '/edit-distributors/$distributorId'
     | '/edit-product/$productId'
+    | '/forecast-details/$forecastId'
+    | '/innovation-forcasts-submit/$forecastId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | ''
     | '/login'
     | '/add-distributor'
+    | '/add-innovation'
+    | '/add-offering'
     | '/add-product'
+    | '/base-forecasts'
     | '/distributors'
     | '/forecasting'
+    | '/innovation-forecasts'
+    | '/innovations'
     | '/products'
+    | '/profile'
+    | '/settings'
     | '/'
     | '/edit-distributors/$distributorId'
     | '/edit-product/$productId'
+    | '/forecast-details/$forecastId'
+    | '/innovation-forcasts-submit/$forecastId'
   id:
     | '__root__'
     | '/_auth'
     | '/_layout'
     | '/login'
     | '/_auth/add-distributor'
+    | '/_auth/add-innovation'
+    | '/_auth/add-offering'
     | '/_auth/add-product'
+    | '/_auth/base-forecasts'
     | '/_auth/distributors'
     | '/_auth/forecasting'
+    | '/_auth/innovation-forecasts'
+    | '/_auth/innovations'
     | '/_auth/products'
+    | '/_auth/profile'
+    | '/_auth/settings'
     | '/_auth/'
     | '/_auth/edit-distributors/$distributorId'
     | '/_auth/edit-product/$productId'
+    | '/_auth/forecast-details/$forecastId'
+    | '/_auth/innovation-forcasts-submit/$forecastId'
   fileRoutesById: FileRoutesById
 }
 
@@ -314,13 +515,22 @@ export const routeTree = rootRoute
       "filePath": "_auth.tsx",
       "children": [
         "/_auth/add-distributor",
+        "/_auth/add-innovation",
+        "/_auth/add-offering",
         "/_auth/add-product",
+        "/_auth/base-forecasts",
         "/_auth/distributors",
         "/_auth/forecasting",
+        "/_auth/innovation-forecasts",
+        "/_auth/innovations",
         "/_auth/products",
+        "/_auth/profile",
+        "/_auth/settings",
         "/_auth/",
         "/_auth/edit-distributors/$distributorId",
-        "/_auth/edit-product/$productId"
+        "/_auth/edit-product/$productId",
+        "/_auth/forecast-details/$forecastId",
+        "/_auth/innovation-forcasts-submit/$forecastId"
       ]
     },
     "/_layout": {
@@ -333,8 +543,20 @@ export const routeTree = rootRoute
       "filePath": "_auth/add-distributor.tsx",
       "parent": "/_auth"
     },
+    "/_auth/add-innovation": {
+      "filePath": "_auth/add-innovation.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/add-offering": {
+      "filePath": "_auth/add-offering.tsx",
+      "parent": "/_auth"
+    },
     "/_auth/add-product": {
       "filePath": "_auth/add-product.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/base-forecasts": {
+      "filePath": "_auth/base-forecasts.tsx",
       "parent": "/_auth"
     },
     "/_auth/distributors": {
@@ -345,8 +567,24 @@ export const routeTree = rootRoute
       "filePath": "_auth/forecasting.tsx",
       "parent": "/_auth"
     },
+    "/_auth/innovation-forecasts": {
+      "filePath": "_auth/innovation-forecasts.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/innovations": {
+      "filePath": "_auth/innovations.tsx",
+      "parent": "/_auth"
+    },
     "/_auth/products": {
       "filePath": "_auth/products.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/profile": {
+      "filePath": "_auth/profile.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/settings": {
+      "filePath": "_auth/settings.tsx",
       "parent": "/_auth"
     },
     "/_auth/": {
@@ -359,6 +597,14 @@ export const routeTree = rootRoute
     },
     "/_auth/edit-product/$productId": {
       "filePath": "_auth/edit-product/$productId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/forecast-details/$forecastId": {
+      "filePath": "_auth/forecast-details/$forecastId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/innovation-forcasts-submit/$forecastId": {
+      "filePath": "_auth/innovation-forcasts-submit/$forecastId.tsx",
       "parent": "/_auth"
     }
   }
