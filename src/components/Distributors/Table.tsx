@@ -2,7 +2,7 @@ import { Pagination, Table } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import { Distributor } from "@/types";
+import { Distributor, Filters } from "@/types";
 import PencilIcon from "../Icons/PencilIcon";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -11,11 +11,7 @@ function DistributorsTable({
     filters,
 }: {
     data: Distributor[] | undefined;
-    filters: {
-        search: string;
-        region: string;
-        market: string;
-    };
+    filters: Filters;
 }) {
     const [activePage, setActivePage] = useState(1);
     const itemsPerPage = 10;

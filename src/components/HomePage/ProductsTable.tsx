@@ -3,44 +3,57 @@ import { Pagination, Table } from "@mantine/core";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-
-const elements = [
-  {
-    brand: "Brand example",
-    pillar: "Distributor example",
-    description: "Description example",
-    distributor: "dist1, dist2, dist3",
-    irc: "99350214927",
-    status: "Status example",
-  },
-  // Repeat or dynamically generate rows as needed
-  ...Array(8).fill({
-    brand: "Brand example",
-    pillar: "Distributor example",
-    description: "Description example",
-    distributor: "dist1, dist2, dist3",
-    irc: "99350214927",
-    status: "Status example",
-  }),
-];
+import { useEffect, useMemo, useState } from "react";
+import { useUserStore } from "@/stores/userStore";
+import EyeIcon from "../Icons/EyeIcon";
+import { Filters, Product } from "@/types";
 
 function ProductsTable({
   filters,
+  data,
 }: {
-  filters: {
-    search: string;
-    region: string;
-    market: string;
-    type?: string;
-  };
+  data: Product[];
+  filters: Filters;
 }) {
   const [activePage, setActivePage] = useState(1);
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(elements.length / itemsPerPage);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
-  console.log(filters)
-  
+  const role = useUserStore((state) => state.user)?.role;
+
+  // Filter data based on search and filters
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+
+    return data.filter((item) => {
+      // Search filter (case-insensitive)
+      const searchTerm = filters.search.toLowerCase();
+      const searchMatch =
+        !filters.search ||
+        item.category.name.toLowerCase().includes(searchTerm) ||
+        item.house.toLowerCase().includes(searchTerm) ||
+        item.gender.toLowerCase().includes(searchTerm);
+
+      // brand filter
+      const brandMatch =
+        !filters.brand ||
+        item.brand.name.toLowerCase() === filters.brand.toLowerCase();
+
+      return searchMatch && brandMatch;
+    });
+  }, [data, filters]);
+
+  // Calculate paginated data
+  const paginatedData = useMemo(() => {
+    const startIndex = (activePage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, activePage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setActivePage(1);
+  }, [filters]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6 mt-5">
@@ -65,31 +78,45 @@ function ProductsTable({
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {elements.map((element, index) => (
+              {paginatedData.map((product, index) => (
                 <Table.Tr key={index}>
                   <Table.Td className="first:rounded-es-xl">
-                    {element.brand}
+                    {product.brand.name}
                   </Table.Td>
-                  <Table.Td>{element.pillar}</Table.Td>
-                  <Table.Td>{element.description}</Table.Td>
-                  <Table.Td>{element.distributor}</Table.Td>
-                  <Table.Td>{element.irc}</Table.Td>
+                  <Table.Td>{product.brand.name}</Table.Td>
+                  <Table.Td>{product.material_description}</Table.Td>
+                  <Table.Td>{product.factory}</Table.Td>
+                  <Table.Td>{product.irc}</Table.Td>
                   <Table.Td>
                     <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
-                      {element.status}
+                      {product.pref}
                     </span>
                   </Table.Td>
-                  <Table.Td
-                    className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                    onClick={() => {
-                      navigate({
-                        to: "/edit-product/$productId",
-                        params: { productId: "123" },
-                      });
-                    }}
-                  >
-                    <PencilIcon />
-                  </Table.Td>
+                  {role === "admin" ? (
+                    <Table.Td
+                      className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
+                      onClick={() => {
+                        navigate({
+                          to: "/edit-product/$productId",
+                          params: { productId: `${product.id}` },
+                        });
+                      }}
+                    >
+                      <PencilIcon />
+                    </Table.Td>
+                  ) : (
+                    <Table.Td
+                      className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
+                      onClick={() => {
+                        navigate({
+                          to: "/products/$productId",
+                          params: { productId: `${product.id}` },
+                        });
+                      }}
+                    >
+                      <EyeIcon />
+                    </Table.Td>
+                  )}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -97,94 +124,87 @@ function ProductsTable({
         </Table.ScrollContainer>
       </div>
 
-      <div className="flex justify-center mt-6 w-full">
-        <div className="hidden sm:block">
-          <Pagination.Root
-            total={15}
-            value={activePage}
-            onChange={setActivePage}
-            color="#00EBB2"
-            radius="xl"
-            siblings={1}
-            boundaries={3}
-            classNames={{
-              root: "w-full flex justify-center items-center",
-              control:
-                "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
-            }}
-          >
-            <Pagination.Previous
-              className="w-auto pe-5"
-              icon={() => {
-                return (
-                  <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 w-full">
+          <div className="hidden sm:block">
+            <Pagination.Root
+              total={totalPages}
+              value={activePage}
+              onChange={setActivePage}
+              color="#00EBB2"
+              radius="xl"
+              siblings={1}
+              boundaries={3}
+              classNames={{
+                root: "w-full flex justify-center items-center",
+                control:
+                  "text-primary text-sm font-medium data-[active=true]:bg-green border-none size-10",
+              }}
+            >
+              <Pagination.Previous
+                icon={() => (
+                  <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-20">
                     <span className="transform rotate-90">
                       <ChevronDownIcon />
                     </span>
                     Previous
                   </button>
-                );
-              }}
-            />
-            <Pagination.Items />
-            <Pagination.Next
-              className="w-auto ps-5"
-              icon={() => {
-                return (
-                  <button className="text-primary gap-2  text-sm font-medium flex items-center">
+                )}
+              />
+              <Pagination.Items />
+              <Pagination.Next
+                icon={() => (
+                  <button className="text-primary gap-2 text-sm font-medium flex items-center pl-4">
                     Next
                     <span className="transform -rotate-90">
                       <ChevronDownIcon />
                     </span>
                   </button>
-                );
+                )}
+              />
+            </Pagination.Root>
+          </div>
+          {/* Mobile pagination */}
+          <div className="sm:hidden w-full">
+            <Pagination.Root
+              total={totalPages}
+              value={activePage}
+              onChange={setActivePage}
+              color="#00EBB2"
+              radius="xl"
+              siblings={1}
+              boundaries={1}
+              classNames={{
+                root: "w-full flex justify-center",
+                control:
+                  "text-primary text-sm font-medium data-[active=true]:bg-green border-none",
               }}
-            />
-          </Pagination.Root>
-        </div>
-        <div className="sm:hidden  w-full">
-          <Pagination.Root
-            total={totalPages}
-            value={activePage}
-            onChange={setActivePage}
-            color="#00EBB2"
-            radius="xl"
-            siblings={1}
-            boundaries={1}
-            classNames={{
-              root: "w-full flex justify-center ",
-              control:
-                "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
-            }}
-          >
-            <Pagination.Previous
-              icon={() => {
-                return (
+            >
+              <Pagination.Previous
+                icon={() => (
                   <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
                     <span className="transform rotate-90">
                       <ChevronDownIcon />
                     </span>
                     Previous
                   </button>
-                );
-              }}
-            />
-            <Pagination.Items />
-            <Pagination.Next
-              icon={() => {
-                return (
-                  <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
+                )}
+              />
+              <Pagination.Items />
+              <Pagination.Next
+                icon={() => (
+                  <button className="text-primary gap-2 text-sm font-medium flex items-center pl-4">
                     Next
                     <span className="transform -rotate-90">
                       <ChevronDownIcon />
                     </span>
                   </button>
-                );
-              }}
-            />
-          </Pagination.Root>
+                )}
+              />
+            </Pagination.Root>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

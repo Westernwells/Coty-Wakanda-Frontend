@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
@@ -42,6 +43,7 @@ function RouteComponent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const login = useUserStore((state) => state.signIn);
+  const user = useUserStore((state) => state.user);
   const userLoginMutations = useUserLogin({
     mutationConfig: {
       onSuccess: (e) => {
@@ -50,6 +52,12 @@ function RouteComponent() {
       },
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      navigate({ to: search.redirect || "/" });
+    }
+  }, [user]);
   return (
     <Container
       size={420}

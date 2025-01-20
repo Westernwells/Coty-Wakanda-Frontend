@@ -1,202 +1,231 @@
 import {
-    Checkbox,
-    CloseButton,
-    Divider,
-    Group,
-    Select,
-    TextInput,
-    Title,
+  CloseButton,
+  Divider,
+  Group,
+  Radio,
+  Select,
+  TextInput,
+  Title,
 } from "@mantine/core";
-import { useField } from "@mantine/form";
+import { useForm } from "@mantine/form";
 import SearchIcon from "../Icons/SearchIcon";
 import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import { useEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
-// import { getBrands } from "@/api/get-brands";
 import { getMarkets } from "@/api/get-markets";
 import { getRegions } from "@/api/get-regions";
+import { getBrands } from "@/api/get-brands";
+import { getBrandPillars } from "@/api/get-brandPillars";
+import { getDistributors } from "@/api/distributors/get-distributors";
+import { Filters } from "@/types";
 
 const Filter = ({
-    setFilters,
-    isProductsPage = false,
+  setFilters,
+  isProductsPage = false,
 }: {
-    setFilters: React.Dispatch<React.SetStateAction<{
-        search: string;
-        region: string;
-        market: string;
-        type?: string;
-    }>>;
-    isProductsPage?: boolean;
+  setFilters: React.Dispatch<
+    React.SetStateAction<Filters>
+  >;
+  isProductsPage?: boolean;
 }) => {
-    const [
-        { data: marketsData, error: marketsError },
-        { data: regionsData, error: regionsError },
-    ] = useQueries({
-        queries: [
-            { queryKey: ["markets"], queryFn: getMarkets },
-            { queryKey: ["regions"], queryFn: getRegions },
-        ],
-    });
+  const [
+    { data: marketsData, error: marketsError },
+    { data: regionsData, error: regionsError },
+    { data: brandsData, error: brandsError },
+    { data: brandPillarsData, error: brandPillarsError },
+    { data: distributorsData, error: distributorsError },
+  ] = useQueries({
+    queries: [
+      { queryKey: ["markets"], queryFn: getMarkets },
+      { queryKey: ["regions"], queryFn: getRegions },
+      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+      {
+        queryKey: ["distributors"],
+        queryFn: () => getDistributors({ page: 1, per_page: 9999999999 }),
+      },
+    ],
+  });
+  // const isDistributor = useUserStore((state) => state.user?.role === "admin");
+  // Transform data for select components
+  const marketOptions =
+    marketsData?.data?.map((market) => ({
+      value: market.name,
+      label: market.name,
+    })) || [];
 
-    // Transform data for select components
-    const marketOptions =
-        marketsData?.data?.map((market) => ({
-            value: market.name,
-            label: market.name,
-        })) || [];
+  const regionOptions =
+    regionsData?.data?.map((region) => ({
+      value: region.name,
+      label: region.name,
+    })) || [];
 
-    const regionOptions =
-        regionsData?.data?.map((region) => ({
-            value: region.name,
-            label: region.name,
-        })) || [];
+  const brandOptions =
+    brandsData?.data?.map((brand) => ({
+      value: brand.name,
+      label: brand.name,
+    })) || [];
+  const brandPillarOptions =
+    brandPillarsData?.data?.map((pillar) => ({
+      value: pillar.name,
+      label: pillar.name,
+    })) || [];
+  const distributorOptions =
+    distributorsData?.data?.map((dist) => ({
+      value: dist.name,
+      label: dist.name,
+    })) || [];
+  const form = useForm({
+    mode: "uncontrolled",
+    initialValues: {
+      search: "",
+      region: "",
+      market: "",
+      brand: "",
+      brandPillar: "",
+      distributor: "",
+      productType: "",
+    },
 
-    // Initialize fields with proper typing
-    const searchField = useField<string>({
-        initialValue: "",
-    });
+    onValuesChange: (values) => {
+      setFilters((prev) => ({
+        prev, ...values
+      }));
+    },
+  });
 
-    const regionField = useField<string>({
-        initialValue: "",
-    });
+  const hasError = marketsError || regionsError || brandsError || brandPillarsError || distributorsError;
 
-    const marketField = useField<string>({
-        initialValue: "",
-    });
-
-    const brandField = useField<string>({
-        initialValue: "",
-    });
-
-    const productTypeField = useField<"all" | "luxury" | "mass">({
-        initialValue: "all",
-    });
-
-    // Update parent filters when any field changes
-    useEffect(() => {
-        setFilters({
-            search: searchField.getInputProps().value,
-            region: regionField.getInputProps().value,
-            market: marketField.getInputProps().value,
-            ...(isProductsPage && {
-                productType: productTypeField.getInputProps().value,
-            }),
-        });
-    }, [
-        searchField.getInputProps().value,
-        regionField.getInputProps().value,
-        marketField.getInputProps().value,
-        brandField.getInputProps().value,
-        productTypeField.getInputProps().value,
-        setFilters,
-        isProductsPage,
-    ]);
-
-    const handleProductTypeChange = (value: "all" | "luxury" | "mass") => {
-        productTypeField.setValue(value);
-    };
-
-    const hasError = marketsError || regionsError;
-
-    if (hasError) {
-        return (
-            <div className="bg-white w-full rounded-[20px] p-6 mt-5">
-                <div className="text-red-500">
-                    Error loading filter data. Please try again later.
-                </div>
-            </div>
-        );
-    }
-
+  if (hasError) {
     return (
-        <div className="bg-white w-full rounded-[20px] p-6 mt-5">
-            <Title order={2} className="text-primary font-semibold text-xl">
-                Refine your results
-            </Title>
-            <div className="flex items-center gap-x-5 mt-6">
-                <TextInput
-                    {...searchField.getInputProps()}
-                    aria-label="Search"
-                    placeholder="Search for..."
-                    className="flex-grow"
-                    leftSection={<SearchIcon />}
-                />
-                <div
-                    className={twMerge(
-                        "flex items-center gap-x-2 cursor-pointer",
-                        !searchField.getValue().length && "invisible"
-                    )}
-                    onClick={() => {
-                        searchField.setValue("");
-                        regionField.setValue("");
-                        marketField.setValue("");
-                        brandField.setValue("");
-                        if (isProductsPage) {
-                            productTypeField.setValue("all");
-                        }
-                    }}
-                >
-                    <CloseButton />
-                    <span className="hidden sm:inline text-nowrap text-primary font-medium">
-                        Clear all
-                    </span>
-                </div>
-            </div>
-            <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-            <Group w="100% gap-4 sm:gap-5">
-                <>
-                    <Select
-                        {...regionField.getInputProps()}
-                        aria-label="Filter by region"
-                        placeholder="Filter by region"
-                        data={regionOptions}
-                        clearable
-                        className="grow"
-                        rightSection={<ChevronDownIcon />}
-                    />
-                    <Select
-                        {...marketField.getInputProps()}
-                        aria-label="Filter by market"
-                        placeholder="Filter by market"
-                        data={marketOptions}
-                        clearable
-                        className="grow"
-                        rightSection={<ChevronDownIcon />}
-                    />
-                </>
-            </Group>
-
-            {isProductsPage && (
-                <Group gap={24} w="100%" className="mt-6">
-                    <Checkbox
-                        label="All"
-                        size="xs"
-                        checked={
-                            productTypeField.getInputProps().value === "all"
-                        }
-                        onChange={() => handleProductTypeChange("all")}
-                    />
-                    <Checkbox
-                        label="Luxury only"
-                        size="xs"
-                        checked={
-                            productTypeField.getInputProps().value === "luxury"
-                        }
-                        onChange={() => handleProductTypeChange("luxury")}
-                    />
-                    <Checkbox
-                        label="Mass only"
-                        size="xs"
-                        checked={
-                            productTypeField.getInputProps().value === "mass"
-                        }
-                        onChange={() => handleProductTypeChange("mass")}
-                    />
-                </Group>
-            )}
+      <div className="bg-white w-full rounded-[20px] p-6 mt-5">
+        <div className="text-red-500">
+          Error loading filter data. Please try again later.
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="bg-white w-full rounded-[20px] p-6 mt-5">
+      <Title order={2} className="text-primary font-semibold text-xl">
+        Refine your results
+      </Title>
+      <div className="flex items-center gap-x-5 mt-6">
+        <TextInput
+          {...form.getInputProps("search")}
+          aria-label="Search"
+          placeholder="Search for..."
+          className="flex-grow"
+          leftSection={<SearchIcon />}
+        />
+        <div
+          className={twMerge(
+            "flex items-center gap-x-2 cursor-pointer",
+            !form.getValues().search.length && "invisible"
+          )}
+          onClick={() => form.reset()}
+        >
+          <CloseButton />
+          <span className="hidden sm:inline text-nowrap text-primary font-medium">
+            Clear all
+          </span>
+        </div>
+      </div>
+      <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
+      <Group w="100% gap-4 sm:gap-5">
+        {isProductsPage ? (
+          <>
+            <Select
+              {...form.getInputProps("brand")}
+              aria-label="Filter by brand"
+              placeholder="Filter by brand"
+              data={brandOptions}
+              clearable
+              className="grow"
+              rightSection={<ChevronDownIcon />}
+            />
+            <Select
+              {...form.getInputProps("brandPillar")}
+              aria-label="Filter by brand pillar"
+              placeholder="Filter by brand pillar"
+              data={brandPillarOptions}
+              clearable
+              className="grow"
+              rightSection={<ChevronDownIcon />}
+            />
+            <Select
+              {...form.getInputProps("distributor")}
+              aria-label="Filter by distributor"
+              placeholder="Filter by distributor"
+              data={distributorOptions}
+              clearable
+              className="grow"
+              rightSection={<ChevronDownIcon />}
+            />
+          </>
+        ) : (
+          <>
+            <Select
+              {...form.getInputProps("region")}
+              aria-label="Filter by region"
+              placeholder="Filter by region"
+              data={regionOptions}
+              clearable
+              className="grow"
+              rightSection={<ChevronDownIcon />}
+            />
+            <Select
+              {...form.getInputProps("market")}
+              aria-label="Filter by market"
+              placeholder="Filter by market"
+              data={marketOptions}
+              clearable
+              className="grow"
+              rightSection={<ChevronDownIcon />}
+            />
+          </>
+        )}
+      </Group>
+
+      {isProductsPage && (
+        <Group gap={24} w="100%" className="mt-6">
+          <Radio.Group
+            name="productType"
+            {...form.getInputProps("productType")}
+          >
+            <Group
+              gap={24}
+              w="100%"
+              className="mt-[10px] flex-col sm:flex-row  items-start "
+            >
+              <Radio
+                value="all"
+                label="All"
+                classNames={{
+                  label: "text-primary text-sm pl-[5px] sm:pl-2",
+                }}
+              />
+              <Radio
+                value="mass"
+                label="Mass"
+                classNames={{
+                  label: "text-primary text-sm pl-[5px] sm:pl-2",
+                }}
+              />
+              <Radio
+                value="luxury"
+                label="Luxury"
+                classNames={{
+                  label: "text-primary text-sm pl-[5px] sm:pl-2",
+                }}
+              />
+            </Group>
+          </Radio.Group>
+        </Group>
+      )}
+    </div>
+  );
 };
 
 export default Filter;

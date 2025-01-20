@@ -5,9 +5,13 @@ import RefreshIcon from "../Icons/RefreshIcon";
 const SubmitModal = ({
   opened,
   close,
+  title = "Submit",
+  onSubmit,
 }: {
   opened: boolean;
   close: () => void;
+  title?: string;
+  onSubmit?: () => void;
 }) => {
   return (
     <Modal.Root
@@ -24,9 +28,7 @@ const SubmitModal = ({
       <Modal.Content className="!items-center min-w-[70%]">
         <Modal.Body>
           <div className="bg-white rounded-2xl p-6 mt-6">
-            <h2 className="text-xl font-semibold mb-6 text-primary">
-              Submit forecast
-            </h2>
+            <h2 className="text-xl font-semibold mb-6 text-primary">{title}</h2>
             <div className="space-y-6">
               <p>
                 No edits can be made after submitting, are you sure you want to
@@ -48,6 +50,9 @@ const SubmitModal = ({
                   className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
                   // disabled={addCoefficientMutations.isPending}
                   onClick={() => {
+                    if (onSubmit) {
+                      onSubmit();
+                    }
                     close();
                   }}
                 >

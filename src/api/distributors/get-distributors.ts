@@ -13,7 +13,7 @@ export type ApiResponse = {
     meta: Meta;
 }
 
-export const getDistributors = async (params: GetDistributorsParams): Promise<ApiResponse> => {
+export const getDistributors = async (params?: GetDistributorsParams): Promise<ApiResponse> => {
     const response = await axios.get("/distributors", { params });
     return response.data;
 }

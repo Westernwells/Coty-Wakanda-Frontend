@@ -9,6 +9,7 @@ import PlusIcon from '@/components/Icons/PlusIcon'
 import { getDistributors } from '@/api/distributors/get-distributors'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Filters } from '@/types'
 
 export const Route = createFileRoute('/_auth/distributors')({
   component: RouteComponent,
@@ -20,10 +21,14 @@ function RouteComponent() {
     queryFn: () => getDistributors({ page: 1, per_page: 9999999 }),
   })
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<Filters>({
     search: '',
     region: '',
     market: '',
+    brand: '',
+    brandPillar: '',
+    distributor: '',
+    productType: '',
   })
 
   if (error) {

@@ -59,6 +59,7 @@ const Navbar = () => {
           },
           { link: "products", label: "Products", icon: ShoppingCart },
           { link: "orders", label: "Orders", icon: BoxIcon },
+          { link: "stock-on-hand", label: "Stock On Hand", icon: BoxIcon },
           { link: "sales", label: "Sales", icon: BoxIcon },
         ];
 
@@ -113,7 +114,7 @@ const Navbar = () => {
 
           <Stack className="gap-[10px]">
             {links.map((link) => {
-              const isActive = matchRoute({ to: link.link });
+              const isActive = matchRoute({ to: link.link, fuzzy: true });
               return (
                 <Link
                   to={link.link}

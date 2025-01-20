@@ -15,9 +15,11 @@ import { Route as LoginImport } from './routes/login'
 import { Route as LayoutImport } from './routes/_layout'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as AuthIndexImport } from './routes/_auth/index'
+import { Route as AuthStockOnHandImport } from './routes/_auth/stock-on-hand'
 import { Route as AuthSettingsImport } from './routes/_auth/settings'
+import { Route as AuthSalesImport } from './routes/_auth/sales'
 import { Route as AuthProfileImport } from './routes/_auth/profile'
-import { Route as AuthProductsImport } from './routes/_auth/products'
+import { Route as AuthOrdersImport } from './routes/_auth/orders'
 import { Route as AuthInnovationsImport } from './routes/_auth/innovations'
 import { Route as AuthInnovationForecastsImport } from './routes/_auth/innovation-forecasts'
 import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
@@ -27,6 +29,8 @@ import { Route as AuthAddProductImport } from './routes/_auth/add-product'
 import { Route as AuthAddOfferingImport } from './routes/_auth/add-offering'
 import { Route as AuthAddInnovationImport } from './routes/_auth/add-innovation'
 import { Route as AuthAddDistributorImport } from './routes/_auth/add-distributor'
+import { Route as AuthProductsIndexImport } from './routes/_auth/products/index'
+import { Route as AuthProductsProductIdImport } from './routes/_auth/products/$productId'
 import { Route as AuthInnovationForcastsSubmitForecastIdImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
 import { Route as AuthForecastDetailsForecastIdImport } from './routes/_auth/forecast-details/$forecastId'
 import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
@@ -56,9 +60,21 @@ const AuthIndexRoute = AuthIndexImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
+const AuthStockOnHandRoute = AuthStockOnHandImport.update({
+  id: '/stock-on-hand',
+  path: '/stock-on-hand',
+  getParentRoute: () => AuthRoute,
+} as any)
+
 const AuthSettingsRoute = AuthSettingsImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthSalesRoute = AuthSalesImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -68,9 +84,9 @@ const AuthProfileRoute = AuthProfileImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
-const AuthProductsRoute = AuthProductsImport.update({
-  id: '/products',
-  path: '/products',
+const AuthOrdersRoute = AuthOrdersImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -125,6 +141,18 @@ const AuthAddInnovationRoute = AuthAddInnovationImport.update({
 const AuthAddDistributorRoute = AuthAddDistributorImport.update({
   id: '/add-distributor',
   path: '/add-distributor',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthProductsIndexRoute = AuthProductsIndexImport.update({
+  id: '/products/',
+  path: '/products/',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthProductsProductIdRoute = AuthProductsProductIdImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -243,11 +271,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthInnovationsImport
       parentRoute: typeof AuthImport
     }
-    '/_auth/products': {
-      id: '/_auth/products'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof AuthProductsImport
+    '/_auth/orders': {
+      id: '/_auth/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthOrdersImport
       parentRoute: typeof AuthImport
     }
     '/_auth/profile': {
@@ -257,11 +285,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProfileImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/sales': {
+      id: '/_auth/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthSalesImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/settings': {
       id: '/_auth/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthSettingsImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/stock-on-hand': {
+      id: '/_auth/stock-on-hand'
+      path: '/stock-on-hand'
+      fullPath: '/stock-on-hand'
+      preLoaderRoute: typeof AuthStockOnHandImport
       parentRoute: typeof AuthImport
     }
     '/_auth/': {
@@ -299,6 +341,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthInnovationForcastsSubmitForecastIdImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/products/$productId': {
+      id: '/_auth/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof AuthProductsProductIdImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/products/': {
+      id: '/_auth/products/'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthProductsIndexImport
+      parentRoute: typeof AuthImport
+    }
   }
 }
 
@@ -314,14 +370,18 @@ interface AuthRouteChildren {
   AuthForecastingRoute: typeof AuthForecastingRoute
   AuthInnovationForecastsRoute: typeof AuthInnovationForecastsRoute
   AuthInnovationsRoute: typeof AuthInnovationsRoute
-  AuthProductsRoute: typeof AuthProductsRoute
+  AuthOrdersRoute: typeof AuthOrdersRoute
   AuthProfileRoute: typeof AuthProfileRoute
+  AuthSalesRoute: typeof AuthSalesRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
+  AuthStockOnHandRoute: typeof AuthStockOnHandRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthEditDistributorsDistributorIdRoute: typeof AuthEditDistributorsDistributorIdRoute
   AuthEditProductProductIdRoute: typeof AuthEditProductProductIdRoute
   AuthForecastDetailsForecastIdRoute: typeof AuthForecastDetailsForecastIdRoute
   AuthInnovationForcastsSubmitForecastIdRoute: typeof AuthInnovationForcastsSubmitForecastIdRoute
+  AuthProductsProductIdRoute: typeof AuthProductsProductIdRoute
+  AuthProductsIndexRoute: typeof AuthProductsIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
@@ -334,9 +394,11 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthForecastingRoute: AuthForecastingRoute,
   AuthInnovationForecastsRoute: AuthInnovationForecastsRoute,
   AuthInnovationsRoute: AuthInnovationsRoute,
-  AuthProductsRoute: AuthProductsRoute,
+  AuthOrdersRoute: AuthOrdersRoute,
   AuthProfileRoute: AuthProfileRoute,
+  AuthSalesRoute: AuthSalesRoute,
   AuthSettingsRoute: AuthSettingsRoute,
+  AuthStockOnHandRoute: AuthStockOnHandRoute,
   AuthIndexRoute: AuthIndexRoute,
   AuthEditDistributorsDistributorIdRoute:
     AuthEditDistributorsDistributorIdRoute,
@@ -344,6 +406,8 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthForecastDetailsForecastIdRoute: AuthForecastDetailsForecastIdRoute,
   AuthInnovationForcastsSubmitForecastIdRoute:
     AuthInnovationForcastsSubmitForecastIdRoute,
+  AuthProductsProductIdRoute: AuthProductsProductIdRoute,
+  AuthProductsIndexRoute: AuthProductsIndexRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -360,14 +424,18 @@ export interface FileRoutesByFullPath {
   '/forecasting': typeof AuthForecastingRoute
   '/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/innovations': typeof AuthInnovationsRoute
-  '/products': typeof AuthProductsRoute
+  '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
+  '/sales': typeof AuthSalesRoute
   '/settings': typeof AuthSettingsRoute
+  '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/products/$productId': typeof AuthProductsProductIdRoute
+  '/products': typeof AuthProductsIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -382,14 +450,18 @@ export interface FileRoutesByTo {
   '/forecasting': typeof AuthForecastingRoute
   '/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/innovations': typeof AuthInnovationsRoute
-  '/products': typeof AuthProductsRoute
+  '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
+  '/sales': typeof AuthSalesRoute
   '/settings': typeof AuthSettingsRoute
+  '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/products/$productId': typeof AuthProductsProductIdRoute
+  '/products': typeof AuthProductsIndexRoute
 }
 
 export interface FileRoutesById {
@@ -406,14 +478,18 @@ export interface FileRoutesById {
   '/_auth/forecasting': typeof AuthForecastingRoute
   '/_auth/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/_auth/innovations': typeof AuthInnovationsRoute
-  '/_auth/products': typeof AuthProductsRoute
+  '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/sales': typeof AuthSalesRoute
   '/_auth/settings': typeof AuthSettingsRoute
+  '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
   '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/_auth/forecast-details/$forecastId': typeof AuthForecastDetailsForecastIdRoute
   '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/_auth/products/$productId': typeof AuthProductsProductIdRoute
+  '/_auth/products/': typeof AuthProductsIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -430,14 +506,18 @@ export interface FileRouteTypes {
     | '/forecasting'
     | '/innovation-forecasts'
     | '/innovations'
-    | '/products'
+    | '/orders'
     | '/profile'
+    | '/sales'
     | '/settings'
+    | '/stock-on-hand'
     | '/'
     | '/edit-distributors/$distributorId'
     | '/edit-product/$productId'
     | '/forecast-details/$forecastId'
     | '/innovation-forcasts-submit/$forecastId'
+    | '/products/$productId'
+    | '/products'
   fileRoutesByTo: FileRoutesByTo
   to:
     | ''
@@ -451,14 +531,18 @@ export interface FileRouteTypes {
     | '/forecasting'
     | '/innovation-forecasts'
     | '/innovations'
-    | '/products'
+    | '/orders'
     | '/profile'
+    | '/sales'
     | '/settings'
+    | '/stock-on-hand'
     | '/'
     | '/edit-distributors/$distributorId'
     | '/edit-product/$productId'
     | '/forecast-details/$forecastId'
     | '/innovation-forcasts-submit/$forecastId'
+    | '/products/$productId'
+    | '/products'
   id:
     | '__root__'
     | '/_auth'
@@ -473,14 +557,18 @@ export interface FileRouteTypes {
     | '/_auth/forecasting'
     | '/_auth/innovation-forecasts'
     | '/_auth/innovations'
-    | '/_auth/products'
+    | '/_auth/orders'
     | '/_auth/profile'
+    | '/_auth/sales'
     | '/_auth/settings'
+    | '/_auth/stock-on-hand'
     | '/_auth/'
     | '/_auth/edit-distributors/$distributorId'
     | '/_auth/edit-product/$productId'
     | '/_auth/forecast-details/$forecastId'
     | '/_auth/innovation-forcasts-submit/$forecastId'
+    | '/_auth/products/$productId'
+    | '/_auth/products/'
   fileRoutesById: FileRoutesById
 }
 
@@ -523,14 +611,18 @@ export const routeTree = rootRoute
         "/_auth/forecasting",
         "/_auth/innovation-forecasts",
         "/_auth/innovations",
-        "/_auth/products",
+        "/_auth/orders",
         "/_auth/profile",
+        "/_auth/sales",
         "/_auth/settings",
+        "/_auth/stock-on-hand",
         "/_auth/",
         "/_auth/edit-distributors/$distributorId",
         "/_auth/edit-product/$productId",
         "/_auth/forecast-details/$forecastId",
-        "/_auth/innovation-forcasts-submit/$forecastId"
+        "/_auth/innovation-forcasts-submit/$forecastId",
+        "/_auth/products/$productId",
+        "/_auth/products/"
       ]
     },
     "/_layout": {
@@ -575,16 +667,24 @@ export const routeTree = rootRoute
       "filePath": "_auth/innovations.tsx",
       "parent": "/_auth"
     },
-    "/_auth/products": {
-      "filePath": "_auth/products.tsx",
+    "/_auth/orders": {
+      "filePath": "_auth/orders.tsx",
       "parent": "/_auth"
     },
     "/_auth/profile": {
       "filePath": "_auth/profile.tsx",
       "parent": "/_auth"
     },
+    "/_auth/sales": {
+      "filePath": "_auth/sales.tsx",
+      "parent": "/_auth"
+    },
     "/_auth/settings": {
       "filePath": "_auth/settings.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/stock-on-hand": {
+      "filePath": "_auth/stock-on-hand.tsx",
       "parent": "/_auth"
     },
     "/_auth/": {
@@ -605,6 +705,14 @@ export const routeTree = rootRoute
     },
     "/_auth/innovation-forcasts-submit/$forecastId": {
       "filePath": "_auth/innovation-forcasts-submit/$forecastId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/products/$productId": {
+      "filePath": "_auth/products/$productId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/products/": {
+      "filePath": "_auth/products/index.tsx",
       "parent": "/_auth"
     }
   }

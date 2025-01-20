@@ -1,8 +1,19 @@
-import { Group, Pagination, Select, Table } from "@mantine/core";
+import {
+  Grid,
+  Loader,
+  Pagination,
+  Select,
+  Table,
+  TextInput,
+} from "@mantine/core";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { useEffect, useMemo, useState } from "react";
 import { DateInput } from "@mantine/dates";
 import DateIcon from "../Icons/DateIcon";
+import DateChanger from "../Shared/DateChanger";
+import { addMonthsToDate, dateToLocalString } from "@/lib/utils";
+import { ForecastData, ForecastSubmitInput } from "@/types";
+import { UseFormReturnType } from "@mantine/form";
 
 const elements = [
   {
@@ -37,23 +48,34 @@ const elements = [
   }),
 ];
 
-function BaseForecastsTable() {
+function BaseForecastsTable({
+  showDateChanger = false,
+  isSales = false,
+  data,
+  form,
+}: {
+  showDateChanger?: boolean;
+  isSales?: boolean;
+  data: ForecastData[] | undefined;
+  form:  UseFormReturnType<ForecastSubmitInput[], (values: ForecastSubmitInput[]) => ForecastSubmitInput[]>
+}) {
   const [activePage, setActivePage] = useState(1);
-  const [sortBy, setSortBy] = useState<string | null>("");
+  const [sortBy, setSortBy] = useState<keyof ForecastData | null>(null);
   const [itemsPerPage, setItemsPerPage] = useState("5");
   const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
+  const [date, setDate] = useState<Date>(new Date());
 
-  const sortOptions = [
+  const sortOptions: { value: keyof ForecastData; label: string }[] = [
     {
-      value: "brand",
+      value: "monthly_total",
       label: "Brand",
     },
     {
-      value: "offeringNumber",
-      label: "Offering number",
+      value: "cost",
+      label: "cost",
     },
     {
-      value: "status",
+      value: "sub_total",
       label: "Status",
     },
   ];
@@ -77,18 +99,25 @@ function BaseForecastsTable() {
     },
   ];
 
+  useEffect(() => {
+    if (data) {
+      const newDate = new Date(`1 ${Object.keys(data[0].items)[0]}`);
+      setDate(newDate);
+    }
+  }, [data]);
+
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
-    if (!elements) return [];
+    if (!data) return [];
     if (sortBy) {
       return [
-        ...elements.sort((a, b) =>
+        ...data.sort((a, b) =>
           a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
         ),
       ];
     }
-    return elements;
-  }, [sortBy]);
+    return data;
+  }, [sortBy, data]);
 
   // Calculate paginated data
   const paginatedData = useMemo(() => {
@@ -101,11 +130,22 @@ function BaseForecastsTable() {
     setActivePage(1);
   }, [sortBy, itemsPerPage]);
 
+  if (!data) {
+    return <Loader />;
+  }
+
   return (
     <div className="bg-white shadow-md rounded-lg p-6 mt-5">
       {/* Table */}
-      <Group justify="space-between" className="mb-4">
-        <Group className="grow">
+      <Grid justify="space-between" className="mb-4">
+        <Grid.Col
+          span={{
+            base: 12,
+            md: 8,
+            lg: 9,
+          }}
+          className="flex gap-4"
+        >
           <DateInput
             aria-label="Start Date"
             placeholder="Start Date"
@@ -127,7 +167,7 @@ function BaseForecastsTable() {
             placeholder="Sort by"
             data={sortOptions}
             value={sortBy}
-            onChange={(v) => setSortBy(v)}
+            onChange={(v) => setSortBy(v as keyof ForecastData)}
             clearable
             className="grow"
             rightSection={<ChevronDownIcon />}
@@ -142,8 +182,20 @@ function BaseForecastsTable() {
             className="grow"
             rightSection={<ChevronDownIcon />}
           />
-        </Group>
-      </Group>
+        </Grid.Col>
+        {showDateChanger && (
+          <Grid.Col
+            className="md:justify-end justify-center items-center flex"
+            span={{
+              base: 12,
+              md: 4,
+              lg: 3,
+            }}
+          >
+            <DateChanger date={date} setDate={setDate} />
+          </Grid.Col>
+        )}
+      </Grid>
       <div className="relative border border-primary rounded-xl border-t-0">
         <Table.ScrollContainer minWidth={768}>
           <Table
@@ -158,13 +210,23 @@ function BaseForecastsTable() {
                 <Table.Th>Brand Pillar</Table.Th>
                 <Table.Th>SKU</Table.Th>
                 <Table.Th>Cost</Table.Th>
-                <Table.Th>Monthly Totals</Table.Th>
-                <Table.Th>Jan 25</Table.Th>
-                <Table.Th>Feb 25</Table.Th>
-                <Table.Th>Mar 25</Table.Th>
-                <Table.Th>Apr 25</Table.Th>
-                <Table.Th>May 25</Table.Th>
-                <Table.Th>Jun 25</Table.Th>
+                {!isSales && <Table.Th>Monthly Totals</Table.Th>}
+                <Table.Th>{dateToLocalString(date)}</Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 1))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 2))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 3))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 4))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 5))}
+                </Table.Th>
                 <Table.Th className="rounded-se-xl">Sub Total</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -172,20 +234,27 @@ function BaseForecastsTable() {
               {paginatedData.map((element, index) => (
                 <Table.Tr key={index}>
                   <Table.Td className="first:rounded-es-xl">
-                    {element.brand}
+                    {element.product.brand.name}
                   </Table.Td>
-                  <Table.Td>{element.brandPillars}</Table.Td>
-                  <Table.Td>{element.sku}</Table.Td>
+                  <Table.Td>{element.product.brand.name}</Table.Td>
+                  <Table.Td>{element.product.offering_number}</Table.Td>
                   <Table.Td>{element.cost}</Table.Td>
-                  <Table.Td>{element.monthlyTotals}</Table.Td>
-                  <Table.Td>{element.date1}</Table.Td>
-                  <Table.Td>{element.date2}</Table.Td>
-                  <Table.Td>{element.date3}</Table.Td>
-                  <Table.Td>{element.date4}</Table.Td>
-                  <Table.Td>{element.date5}</Table.Td>
-                  <Table.Td>{element.date6}</Table.Td>
-                  <Table.Td className="last:rounded-ee-xl text-center !pr-2">
-                    {element.subtotal}
+                  {!isSales && <Table.Td>{element.monthly_total}</Table.Td>}
+                  {Object.keys(element.items).map((_item, idx) => {
+                    return (
+                      <Table.Td key={`${index}-${idx}`}>
+                        <TextInput
+                          size="xs"
+                          classNames={{ input: "!bg-transparent !w-[80px]" }}
+                          {...form.getInputProps(
+                            `${index}.items.${idx}.value`
+                          )}
+                        />
+                      </Table.Td>
+                    );
+                  })}
+                  <Table.Td className="last:rounded-ee-xl !pr-2">
+                    {element.sub_total}
                   </Table.Td>
                 </Table.Tr>
               ))}

@@ -10,6 +10,11 @@ export const textInputStyles = {
   label: "text-primary font-medium text-sm mb-1",
 };
 
+export const tableTextInputStyles = {
+  input: "!bg-transparent border-0 text-sm",
+  label: "text-primary font-medium text-sm mb-1",
+};
+
 export const textAreaStyles = {
   input: "bg-[#f2f4f6] border-0 text-sm",
   label: "text-primary font-medium text-sm mb-1",

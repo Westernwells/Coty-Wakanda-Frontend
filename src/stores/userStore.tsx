@@ -5,11 +5,13 @@ interface UserStore {
   user: User | null;
   token?: string;
   isSignedIn: boolean;
+  loading: boolean,
   signIn: (user: User, token: string) => void;
   signOut: () => void;
+  setLoading: (isLoading: boolean) => void;
 }
 
-export const useUserStore = create<UserStore>((set) => ({
+export const useUserStore = create<UserStore>(((set) => ({
   user: null,
   isSignedIn: false,
   loading: false,
@@ -20,4 +22,9 @@ export const useUserStore = create<UserStore>((set) => ({
   signOut: () => {
     set({ user: null, isSignedIn: false, token: "" });
   },
-}));
+  setLoading: (isLoading) => {
+    set({loading: isLoading})
+  }
+})));
+
+
