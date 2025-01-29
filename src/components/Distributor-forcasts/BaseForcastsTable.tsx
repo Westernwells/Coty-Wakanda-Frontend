@@ -1,11 +1,4 @@
-import {
-  Grid,
-  Loader,
-  Pagination,
-  Select,
-  Table,
-  TextInput,
-} from "@mantine/core";
+import { Grid, NumberInput, Select, Table } from "@mantine/core";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { useEffect, useMemo, useState } from "react";
 import { DateInput } from "@mantine/dates";
@@ -14,39 +7,8 @@ import DateChanger from "../Shared/DateChanger";
 import { addMonthsToDate, dateToLocalString } from "@/lib/utils";
 import { ForecastData, ForecastSubmitInput } from "@/types";
 import { UseFormReturnType } from "@mantine/form";
-
-const elements = [
-  {
-    id: 1,
-    brand: "Brand example",
-    brandPillars: "Brand Pillar example",
-    sku: "SKU Example",
-    cost: "00$",
-    monthlyTotals: "00$",
-    date1: "00",
-    date2: "00",
-    date3: "00",
-    date4: "00",
-    date5: "00",
-    date6: "00",
-    subtotal: "00",
-  },
-  ...Array(10).fill({
-    id: 2,
-    brand: "Brand example2",
-    brandPillars: "Brand Pillar example3",
-    sku: "SKU Example4",
-    cost: "10$",
-    monthlyTotals: "10$",
-    date1: "01",
-    date2: "02",
-    date3: "03",
-    date4: "04",
-    date5: "05",
-    date6: "06",
-    subtotal: "00",
-  }),
-];
+import get from "lodash.get";
+import PaginationComponent from "../Shared/Pagination";
 
 function BaseForecastsTable({
   showDateChanger = false,
@@ -57,26 +19,33 @@ function BaseForecastsTable({
   showDateChanger?: boolean;
   isSales?: boolean;
   data: ForecastData[] | undefined;
-  form:  UseFormReturnType<ForecastSubmitInput[], (values: ForecastSubmitInput[]) => ForecastSubmitInput[]>
+  form: UseFormReturnType<
+    {
+      forecast: ForecastSubmitInput[];
+    },
+    (values: { forecast: ForecastSubmitInput[] }) => {
+      forecast: ForecastSubmitInput[];
+    }
+  >;
 }) {
   const [activePage, setActivePage] = useState(1);
-  const [sortBy, setSortBy] = useState<keyof ForecastData | null>(null);
+  const [sortBy, setSortBy] = useState<string | null>("");
   const [itemsPerPage, setItemsPerPage] = useState("5");
-  const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
+  const [totalPages, setTotalPages] = useState(0);
   const [date, setDate] = useState<Date>(new Date());
 
-  const sortOptions: { value: keyof ForecastData; label: string }[] = [
+  const sortOptions = [
     {
-      value: "monthly_total",
+      value: "product.brand.name",
       label: "Brand",
+    },
+    {
+      value: "product.offering_number",
+      label: "Offering Number",
     },
     {
       value: "cost",
       label: "cost",
-    },
-    {
-      value: "sub_total",
-      label: "Status",
     },
   ];
 
@@ -103,6 +72,7 @@ function BaseForecastsTable({
     if (data) {
       const newDate = new Date(`1 ${Object.keys(data[0].items)[0]}`);
       setDate(newDate);
+      setTotalPages(Math.ceil(data.length / parseInt(itemsPerPage)));
     }
   }, [data]);
 
@@ -112,7 +82,11 @@ function BaseForecastsTable({
     if (sortBy) {
       return [
         ...data.sort((a, b) =>
-          a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
+          get(a, sortBy) > get(b, sortBy)
+            ? 1
+            : get(b, sortBy) > get(a, sortBy)
+              ? -1
+              : 0
         ),
       ];
     }
@@ -129,10 +103,6 @@ function BaseForecastsTable({
   useEffect(() => {
     setActivePage(1);
   }, [sortBy, itemsPerPage]);
-
-  if (!data) {
-    return <Loader />;
-  }
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6 mt-5">
@@ -237,18 +207,24 @@ function BaseForecastsTable({
                     {element.product.brand.name}
                   </Table.Td>
                   <Table.Td>{element.product.brand.name}</Table.Td>
-                  <Table.Td>{element.product.offering_number}</Table.Td>
+                  <Table.Td>{element.product.sku}</Table.Td>
                   <Table.Td>{element.cost}</Table.Td>
                   {!isSales && <Table.Td>{element.monthly_total}</Table.Td>}
                   {Object.keys(element.items).map((_item, idx) => {
                     return (
                       <Table.Td key={`${index}-${idx}`}>
-                        <TextInput
-                          size="xs"
-                          classNames={{ input: "!bg-transparent !w-[80px]" }}
+                        <NumberInput
                           {...form.getInputProps(
-                            `${index}.items.${idx}.value`
+                            `forecast.${index}.items.${idx}.value`
                           )}
+                          size="xs"
+                          classNames={{
+                            input: "!bg-transparent border-none !w-[80px]",
+                          }}
+                          hideControls
+                          allowDecimal={false}
+                          allowNegative={false}
+                          required
                         />
                       </Table.Td>
                     );
@@ -262,96 +238,11 @@ function BaseForecastsTable({
           </Table>
         </Table.ScrollContainer>
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 w-full">
-          <div className="hidden sm:block">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={3}
-              classNames={{
-                root: "w-full flex justify-center items-center",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
-              }}
-            >
-              <Pagination.Previous
-                className="w-auto pe-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                className="w-auto ps-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-          <div className="sm:hidden  w-full">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={1}
-              classNames={{
-                root: "w-full flex justify-center ",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
-              }}
-            >
-              <Pagination.Previous
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-        </div>
-      )}
+      <PaginationComponent
+        activePage={activePage}
+        setActivePage={setActivePage}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

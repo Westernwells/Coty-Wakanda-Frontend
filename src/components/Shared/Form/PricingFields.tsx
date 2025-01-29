@@ -2,34 +2,40 @@ import { Grid, Select, TextInput } from "@mantine/core";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import { UseFormReturnType } from "@mantine/form";
 import { getCurrencies } from "@/api/get-currencies";
-import { getDistributor } from "@/api/distributors/get-distributor";
 import { useQueries } from "@tanstack/react-query";
+import { ProductDistributor, ProductInput } from "@/types";
 // import { useEffect } from "react";
 
 interface PricingFieldsProps {
-  form: UseFormReturnType<any>;
+  form:  UseFormReturnType<Partial<ProductInput>, (values: Partial<ProductInput>) => Partial<ProductInput>>;
   prefix?: string;
-  distributorId: string;
+  coefficientsData: ProductDistributor['coefficients'];
+  isMirror?: boolean;
+  distributorId?: number;
 }
 
 export const PricingFields = ({
   form,
   prefix = "",
-  distributorId,
+  coefficientsData,
+  isMirror=false,
+  distributorId
 }: PricingFieldsProps) => {
-  const [{ data: currenciesData }, { data: distributorData }] = useQueries({
+  const [{ data: currenciesData }] = useQueries({
     queries: [
       { queryKey: ["currencies"], queryFn: getCurrencies },
-      {
-        queryKey: ["distributor", distributorId],
-        queryFn: () => getDistributor(distributorId),
-      },
     ],
   });
 
-//   useEffect(() => {
-//     form.setFieldValue(`${prefix}.distributor_id`, distributorId)
-//   }, [])
+  // useEffect(() => {
+  //   if(!isMirror) {
+  //     console.log(prefix)
+  //     form.setFieldValue(prefix, {
+  //       distributor_id: distributorId
+  //     })
+  //   }
+  // }, [])
+
   return (
     <>
       <Grid.Col
@@ -38,13 +44,15 @@ export const PricingFields = ({
           base: 8,
         }}
       >
+        <TextInput hidden className="hidden" value={distributorId} {...form.getInputProps(`${prefix}.distributor_id`)} disabled />
         <Select
           label="Select co-efficient"
           placeholder="Select co-efficient"
+          disabled={isMirror}
           {...form.getInputProps(`${prefix}.coefficient_id`)}
           key={form.key(`${prefix}.coefficient_id`)}
           data={
-            distributorData?.data?.coefficients.map((coeff) => ({
+            coefficientsData.map((coeff) => ({
               value: coeff.id.toString(),
               label: coeff.id.toString(),
             })) || []
@@ -69,6 +77,7 @@ export const PricingFields = ({
         }}
       >
         <TextInput
+          disabled={isMirror}
           {...form.getInputProps(`${prefix}.preactive_rrsp`)}
           key={form.key(`${prefix}.preactive_rrsp`)}
           label="Pre-active RRSP"
@@ -84,6 +93,7 @@ export const PricingFields = ({
         }}
       >
         <TextInput
+          disabled={isMirror}
           {...form.getInputProps(`${prefix}.active_rrsp`)}
           key={form.key(`${prefix}.active_rrsp`)}
           label="Active RRSP"
@@ -99,6 +109,7 @@ export const PricingFields = ({
         }}
       >
         <TextInput
+          disabled={isMirror}
           {...form.getInputProps(`${prefix}.billing`)}
           key={form.key(`${prefix}.billing`)}
           label="Billing"
@@ -114,6 +125,7 @@ export const PricingFields = ({
         }}
       >
         <Select
+          disabled={isMirror}
           {...form.getInputProps(`${prefix}.currency`)}
           key={form.key(`${prefix}.currency`)}
           label="Currency"

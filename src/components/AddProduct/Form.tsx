@@ -1,12 +1,4 @@
-import {
-  Button,
-  Divider,
-  Grid,
-  Group,
-  Radio,
-  Select,
-  TextInput,
-} from "@mantine/core";
+import { Button, Grid, Group, Radio, Select, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { DateInput } from "@mantine/dates";
 import { FormSection } from "../Shared/Form/Section";
@@ -19,16 +11,17 @@ import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { PricingFields } from "../Shared/Form/PricingFields";
 import { useQueries } from "@tanstack/react-query";
 import { getMarkets } from "@/api/get-markets";
-import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/get-categories";
 import { getBrands } from "@/api/get-brands";
 import { getCountries } from "@/api/get-countries";
 import { PriceBenchmark, Product, ProductInput } from "@/types";
 import { useUpdateProduct } from "@/api/products/update-product";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAddProduct } from "@/api/products/add-product";
 import { useAddDocument } from "@/api/products/add-document";
 import { ApiResponseFiles } from "@/api/products/upload-document";
+import { getProductDistributors } from "@/api/products/get-product-distributors";
+import { queryClient } from "@/main";
 import { getProducts } from "@/api/products/get-products";
 
 const AddProductForm = ({
@@ -38,6 +31,39 @@ const AddProductForm = ({
   isEdit?: boolean;
   product?: Product;
 }) => {
+  const [changed, setChanged] = useState<{ pref: boolean; brand_id: boolean }>({
+    pref: false,
+    brand_id: false,
+  });
+
+  let productToEdit;
+
+  if (product) {
+    const { brand, market, country, subcategory, category, ...flatProduct } =
+      product;
+    productToEdit = {
+      ...flatProduct,
+      brand_id: brand.id.toString(),
+      market_id: market.id.toString(),
+      country_id: country.id.toString(),
+      category_id: category.id.toString(),
+      subcategory_id: subcategory.id.toString(),
+      launch_date: new Date(product.launch_date),
+      discontinue_date: new Date(product.discontinue_date),
+      price_benchmark: {...flatProduct.price_benchmark, brand_id: product.price_benchmark?.brand?.id.toString(), product_id: flatProduct.price_benchmark?.product?.id.toString()}
+    };
+  }
+
+  const form = useForm<Partial<ProductInput>>({
+    mode: "uncontrolled",
+    initialValues: isEdit
+      ? productToEdit
+      : {
+          price_benchmark: {},
+          distributor_pricing: [],
+        },
+  });
+
   const [
     { data: marketsData },
     { data: categoriesData },
@@ -46,18 +72,29 @@ const AddProductForm = ({
     // { data: currenciesData },
     // { data: brandPillarsData },
     { data: productsListData },
+    { data: productDistributorsData },
   ] = useQueries({
     queries: [
       { queryKey: ["markets"], queryFn: getMarkets },
       { queryKey: ["categories"], queryFn: getCategories },
       { queryKey: ["brands"], queryFn: getBrands },
-      { queryKey: ["regions"], queryFn: getRegions },
       { queryKey: ["countriues"], queryFn: getCountries },
       // { queryKey: ["currencies"], queryFn: getCurrencies },
       // { queryKey: ["brandPillars"], queryFn: getBrandPillars },
       {
         queryKey: ["products"],
-        queryFn: () => getProducts({ page: 1, per_page: 20 }),
+        queryFn: () => getProducts({ page: 1, per_page: 999999 }),
+      },
+      {
+        queryKey: ["product-distributor"],
+        queryFn: () =>
+          getProductDistributors(
+            form.getValues().brand_id as string,
+            form.getValues().pref as string
+          ),
+        enabled:
+          form.getValues().brand_id !== undefined &&
+          form.getValues().pref !== undefined,
       },
     ],
   });
@@ -74,52 +111,56 @@ const AddProductForm = ({
     mutationConfig: {},
   });
 
-  const form = useForm<Partial<ProductInput>>({
-    initialValues: isEdit
-      ? {}
-      : {
-          price_benchmark: {
-            product_id: "1",
-          },
-          distributor_pricing: [
-            {
-              active_rrsp: "",
-              billing: "",
-              coefficient_id: "",
-              currency: "",
-              distributor_id: "1",
-              preactive_rrsp: "",
-            },
-          ],
-        },
+  form.watch("brand_id", ({ value }) => {
+    setChanged((prev) => {
+      return {
+        ...prev,
+        brand_id: value ? true : false,
+      };
+    });
+  });
+
+  form.watch("pref", ({ value }) => {
+    setChanged((prev) => {
+      return {
+        ...prev,
+        pref: value ? true : false,
+      };
+    });
   });
 
   useEffect(() => {
-    if (isEdit && product) {
-      const { brand, market, country, subcategory, category, ...flatProduct } =
-        product;
-      const productToEdit = {
-        ...flatProduct,
-        brand_id: brand.id.toString(),
-        market_id: market.id.toString(),
-        country_id: country.id.toString(),
-        category_id: category.id.toString(),
-        subcategory_id: subcategory.id.toString(),
-        launch_date: new Date(product?.launch_date),
-        discontinue_date: new Date(product.discontinue_date),
-        price_benchmark: flatProduct.price_benchmark || {},
-      };
-      form.setInitialValues(productToEdit);
-      form.reset();
-    }
-  }, []);
+    const fetchProductDistributors = async () => {
+      const { brand_id, pref } = form.getValues();
+      if (brand_id && pref) {
+        if (changed.brand_id || changed.pref) {
+          await queryClient.invalidateQueries({
+            queryKey: ["product-distributor"],
+            exact: true,
+            refetchType: "all",
+          });
+          setChanged({
+            brand_id: false,
+            pref: false,
+          });
+          productDistributorsData?.data.map((dist, idx) => {
+            if (dist.coefficients.length > 0) {
+              form.setFieldValue(`distributor_pricing.${idx}`, {
+                distributor_id: dist.id,
+              });
+            }
+          });
+        }
+      }
+    };
+    fetchProductDistributors();
+  }, [changed.brand_id, changed.pref, form]);
 
   return (
     <form
       onSubmit={form.onSubmit(async (values) => {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { documentsPlaceholder, documents, ...toSubmit } = values;
-        console.log(values);
         if (isEdit) {
           const promises: Promise<ApiResponseFiles>[] = [];
           documents?.map((doc) => {
@@ -162,7 +203,7 @@ const AddProductForm = ({
       <FormSection title="Product details" className="mt-2 sm:mt-5">
         <Radio.Group
           {...form.getInputProps("pref")}
-          name="preference"
+          name="pref"
           label="Pref/non-pref"
           classNames={{
             label: "text-primary font-medium text-sm",
@@ -197,21 +238,21 @@ const AddProductForm = ({
               <Radio.Group {...form.getInputProps("grouping")} name="grouping">
                 <Group gap={24} w="100%" className="mt-[10px]">
                   <Radio
-                    value={"1"}
+                    value={1}
                     label="Group 1"
                     classNames={{
                       label: "text-primary text-sm pl-[5px] sm:pl-2",
                     }}
                   />
                   <Radio
-                    value={"2"}
+                    value={2}
                     label="Group 2"
                     classNames={{
                       label: "text-primary text-sm pl-[5px] sm:pl-2",
                     }}
                   />
                   <Radio
-                    value={"3"}
+                    value={3}
                     label="Group 3 (TR exclusive)"
                     classNames={{
                       label: "text-primary text-sm pl-[5px] sm:pl-2",
@@ -793,6 +834,8 @@ const AddProductForm = ({
             <Select
               label="Product"
               placeholder="Select Product"
+              key={form.key("price_benchmark.product_id")}
+              {...form.getInputProps("price_benchmark.product_id")}
               data={
                 productsListData?.data?.map((product) => ({
                   value: product.id.toString(),
@@ -843,88 +886,67 @@ const AddProductForm = ({
       </FormSection>
 
       <FormSection title="Distributors Pricing">
-        <Grid
-          gutter={{
-            sm: 24,
-            base: 16,
-          }}
-        >
-          <Grid.Col span={12} className="gap-6 flex items-center">
-            <StatusCard title="W AIR" chipType="blue">
-              <PricingFields
-                form={form}
-                prefix="distributor_pricing.0"
-                distributorId="1"
-              />
-            </StatusCard>
-          </Grid.Col>
-        </Grid>
-
-        <Divider className="border-primary border-opacity-50" />
-
-        <Grid
-          gutter={{
-            sm: 24,
-            base: 16,
-          }}
-        >
-          <Grid.Col span={12}>
-            <div className="flex flex-col gap-6">
-              <div className="flex items-start gap-6 ">
-                <StatusCard
-                  title="DOM"
-                  chipType="green"
-                  chipLabels={{
-                    primary: "Formal",
-                    secondary: "Not registered",
-                  }}
-                >
-                  <PricingFields
-                    form={form}
-                    prefix="distributor_pricing.1"
-                    distributorId="2"
-                  />
-                </StatusCard>
+        {productDistributorsData?.data.map((item, item_idx) => (
+          <Grid
+            gutter={{
+              sm: 24,
+              base: 16,
+            }}
+            key={`${item.name}-${item_idx}`}
+          >
+            <Grid.Col span={12}>
+              <div className="flex flex-col gap-6">
+                <div className="flex items-start gap-6 ">
+                  <StatusCard
+                    title={item.name}
+                    chipType="green"
+                    chipLabels={{
+                      primary: item.type,
+                      secondary: item.registered
+                        ? "registered"
+                        : "not registered",
+                    }}
+                  >
+                    <PricingFields
+                      form={form}
+                      prefix={`distributor_pricing.${item_idx}`}
+                      coefficientsData={item.coefficients}
+                      distributorId={item.id}
+                      isMirror={!(item.coefficients.length > 0)}
+                    />
+                  </StatusCard>
+                </div>
+                {item.mirrors &&
+                  item.mirrors.map((mirror, mirror_idx) => {
+                    return (
+                      <div
+                        className="flex items-start gap-4 "
+                        key={`${mirror.name}-${mirror_idx}`}
+                      >
+                        <CornerDownRightIcon />
+                        <StatusCard
+                          title={item.name}
+                          chipType="green"
+                          isChild
+                          chipLabels={{
+                            primary: item.type,
+                            secondary: item.registered,
+                          }}
+                        >
+                          <PricingFields
+                            isMirror
+                            form={form}
+                            prefix={`distributor_pricing.${item_idx}.mirrors.${mirror_idx}`}
+                            coefficientsData={mirror.coefficients}
+                          />
+                        </StatusCard>
+                      </div>
+                    );
+                  })}
               </div>
-              <div className="flex items-start gap-4 ">
-                <CornerDownRightIcon />
-                <StatusCard
-                  title="OLKA"
-                  chipType="green"
-                  isChild
-                  chipLabels={{
-                    primary: "Formal",
-                    secondary: "Not registered",
-                  }}
-                >
-                  <PricingFields
-                    form={form}
-                    prefix="distributor_pricing.2"
-                    distributorId="3"
-                  />
-                </StatusCard>
-              </div>
-              <div className="flex items-start gap-4">
-                <CornerDownRightIcon />
-                <StatusCard
-                  title="MAVEN"
-                  chipType="purple"
-                  isChild
-                  chipLabels={{
-                    primary: "Regional",
-                    secondary: "Not registered",
-                  }}
-                >
-                  <PricingFields
-                    form={form}
-                    prefix="distributor_pricing.3"
-                    distributorId="4"
-                  />
-                </StatusCard>
-              </div>
-            </div>
-          </Grid.Col>
-        </Grid>
+            </Grid.Col>
+          </Grid>
+        ))}
       </FormSection>
 
       <FormSection title="Upload documents">

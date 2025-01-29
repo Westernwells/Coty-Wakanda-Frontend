@@ -1,76 +1,57 @@
-import { Grid, Pagination, Select, Table } from "@mantine/core";
+import { Grid, NumberInput, Select, Table } from "@mantine/core";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { DateInput } from "@mantine/dates";
 import DateIcon from "../Icons/DateIcon";
 import DateChanger from "../Shared/DateChanger";
 import { addMonthsToDate, dateToLocalString } from "@/lib/utils";
 import OrderFilter from "../DistributorPages/orders/OrdersFilters";
+import { ForecastSubmitInput, OrderData } from "@/types";
+import { UseFormReturnType } from "@mantine/form";
+import get from "lodash.get";
+import PaginationComponent from "../Shared/Pagination";
 
-const elements = [
-  {
-    id: 1,
-    brand: "Brand example",
-    brandPillars: "Brand Pillar example",
-    sku: "SKU Example",
-    cost: "00$",
-    monthlyTotals: "00$",
-    date1: "00",
-    date2: "00",
-    date3: "00",
-    date4: "00",
-    date5: "00",
-    date6: "00",
-    subtotal: "00",
-  },
-  ...Array(10).fill({
-    id: 2,
-    brand: "Brand example2",
-    brandPillars: "Brand Pillar example3",
-    sku: "SKU Example4",
-    cost: "10$",
-    monthlyTotals: "10$",
-    date1: "01",
-    date2: "02",
-    date3: "03",
-    date4: "04",
-    date5: "05",
-    date6: "06",
-    subtotal: "00",
-  }),
-];
-
-function OrdersTable() {
+function OrdersTable({
+  data,
+  form,
+}: {
+  data: OrderData[];
+  form: UseFormReturnType<
+    {
+      order: ForecastSubmitInput[];
+    },
+    (values: { order: ForecastSubmitInput[] }) => {
+      order: ForecastSubmitInput[];
+    }
+  >;
+}) {
   const [activePage, setActivePage] = useState(1);
   const [sortBy, setSortBy] = useState<string | null>("");
   const [itemsPerPage, setItemsPerPage] = useState("5");
-  const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
+  const totalPages = Math.ceil(data.length / parseInt(itemsPerPage));
   const [date, setDate] = useState<Date>(new Date());
   const [filters, setFilters] = useState({
-    brand: '',
-    brandPillar: '',
-    distributor: '',
-    launchId: '',
+    brand: "",
+    brandPillar: "",
+    distributor: "",
+    launchId: "",
   });
-  {
-    console.log(filters);
-  }
+  console.log(filters);
 
   const sortOptions = [
     {
-      value: "brand",
+      value: "product.brand.name",
       label: "Brand",
     },
     {
-      value: "offeringNumber",
-      label: "Offering number",
+      value: "product.offering_number",
+      label: "Offering Number",
     },
     {
-      value: "status",
-      label: "Status",
+      value: "cost",
+      label: "cost",
     },
   ];
-
   const showOptions = [
     {
       value: "5",
@@ -92,16 +73,20 @@ function OrdersTable() {
 
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
-    if (!elements) return [];
+    if (!data) return [];
     if (sortBy) {
       return [
-        ...elements.sort((a, b) =>
-          a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
+        ...data.sort((a, b) =>
+          get(a, sortBy) > get(b, sortBy)
+            ? 1
+            : get(b, sortBy) > get(a, sortBy)
+              ? -1
+              : 0
         ),
       ];
     }
-    return elements;
-  }, [sortBy]);
+    return data;
+  }, [sortBy, data]);
 
   // Calculate paginated data
   const paginatedData = useMemo(() => {
@@ -167,11 +152,11 @@ function OrdersTable() {
             base: 12,
           }}
         >
-          <Grid w={'100%'}>
-            <Grid.Col span={{base: 9}}>
+          <Grid w={"100%"}>
+            <Grid.Col span={{ base: 9 }}>
               <OrderFilter setFilters={setFilters} />
             </Grid.Col>
-            <Grid.Col span={{base: 3}}>
+            <Grid.Col span={{ base: 3 }}>
               <DateChanger date={date} setDate={setDate} />
             </Grid.Col>
           </Grid>
@@ -229,28 +214,38 @@ function OrdersTable() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {paginatedData.map((element, index) => (
+              {paginatedData.map((order, index) => (
                 <Table.Tr key={index}>
                   <Table.Td className="first:rounded-es-xl">
-                    {element.brand}
+                    {order.product.brand.name}
                   </Table.Td>
-                  <Table.Td>{element.brandPillars}</Table.Td>
-                  <Table.Td>{element.sku}</Table.Td>
-                  <Table.Td>{element.cost}</Table.Td>
-                  <Table.Td>{element.date1}</Table.Td>
-                  <Table.Td>{element.date1}</Table.Td>
-                  <Table.Td>{element.date2}</Table.Td>
-                  <Table.Td>{element.date2}</Table.Td>
-                  <Table.Td>{element.date3}</Table.Td>
-                  <Table.Td>{element.date3}</Table.Td>
-                  <Table.Td>{element.date4}</Table.Td>
-                  <Table.Td>{element.date4}</Table.Td>
-                  <Table.Td>{element.date5}</Table.Td>
-                  <Table.Td>{element.date5}</Table.Td>
-                  <Table.Td>{element.date6}</Table.Td>
-                  <Table.Td>{element.date6}</Table.Td>
+                  <Table.Td>{order.product.brand.name}</Table.Td>
+                  <Table.Td>{order.product.sku}</Table.Td>
+                  <Table.Td>{order.cost}</Table.Td>
+                  {Object.keys(order.items).map((item, idx) => {
+                    return (
+                      <Fragment key={`${index}-${idx}`}>
+                        <Table.Td>{order.items[item].forecast_value}</Table.Td>
+                        <Table.Td>
+                          <NumberInput
+                            {...form.getInputProps(
+                              `order.${index}.items.${idx}.value`
+                            )}
+                            size="xs"
+                            classNames={{
+                              input: "!bg-transparent border-none !w-[80px]",
+                            }}
+                            hideControls
+                            allowDecimal={false}
+                            allowNegative={false}
+                            required
+                          />
+                        </Table.Td>
+                      </Fragment>
+                    );
+                  })}
                   <Table.Td className="last:rounded-ee-xl text-center !pr-2">
-                    {element.subtotal}
+                    {order.sub_total}
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -258,96 +253,11 @@ function OrdersTable() {
           </Table>
         </Table.ScrollContainer>
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 w-full">
-          <div className="hidden sm:block">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={3}
-              classNames={{
-                root: "w-full flex justify-center items-center",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
-              }}
-            >
-              <Pagination.Previous
-                className="w-auto pe-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                className="w-auto ps-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-          <div className="sm:hidden  w-full">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={1}
-              classNames={{
-                root: "w-full flex justify-center ",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
-              }}
-            >
-              <Pagination.Previous
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-        </div>
-      )}
+      <PaginationComponent
+        activePage={activePage}
+        setActivePage={setActivePage}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

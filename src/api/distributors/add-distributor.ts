@@ -16,8 +16,8 @@ export const addDistributorInputSchema = z.object({
   brand_pillars: z.string().array(),
   currency: z.string(),
   mirror: z.object({
-    group_one: z.number(),
-    group_two: z.number(),
+    group_one: z.string().nullable(),
+    group_two: z.string().nullable(),
   }).optional(),
   coefficients: z.object({
         value: z.string(),

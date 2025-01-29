@@ -1,5 +1,5 @@
 import { Title } from "@mantine/core";
-import Graphs from "@/assets/placeholderGraph.png"
+import ForecastChart from "../HomePage/ForecastChart";
 
 const ForecastingGraphs = () => {
   return (
@@ -7,7 +7,7 @@ const ForecastingGraphs = () => {
       <Title order={2} className="text-primary font-semibold text-xl mb-5">
         1 March 2024 - 31 March 2024
       </Title>
-      <img src={Graphs} alt="placeholder graphs" width="100%" />
+      <ForecastChart />
     </div>
   );
 };

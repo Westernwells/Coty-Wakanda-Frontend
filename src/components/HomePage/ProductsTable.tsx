@@ -1,12 +1,11 @@
-import { Pagination, Table } from "@mantine/core";
-
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { Table } from "@mantine/core";
 import PencilIcon from "../Icons/PencilIcon";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useUserStore } from "@/stores/userStore";
 import EyeIcon from "../Icons/EyeIcon";
 import { Filters, Product } from "@/types";
+import PaginationComponent from "../Shared/Pagination";
 
 function ProductsTable({
   filters,
@@ -123,88 +122,11 @@ function ProductsTable({
           </Table>
         </Table.ScrollContainer>
       </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 w-full">
-          <div className="hidden sm:block">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={3}
-              classNames={{
-                root: "w-full flex justify-center items-center",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green border-none size-10",
-              }}
-            >
-              <Pagination.Previous
-                icon={() => (
-                  <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-20">
-                    <span className="transform rotate-90">
-                      <ChevronDownIcon />
-                    </span>
-                    Previous
-                  </button>
-                )}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                icon={() => (
-                  <button className="text-primary gap-2 text-sm font-medium flex items-center pl-4">
-                    Next
-                    <span className="transform -rotate-90">
-                      <ChevronDownIcon />
-                    </span>
-                  </button>
-                )}
-              />
-            </Pagination.Root>
-          </div>
-          {/* Mobile pagination */}
-          <div className="sm:hidden w-full">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={1}
-              classNames={{
-                root: "w-full flex justify-center",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green border-none",
-              }}
-            >
-              <Pagination.Previous
-                icon={() => (
-                  <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
-                    <span className="transform rotate-90">
-                      <ChevronDownIcon />
-                    </span>
-                    Previous
-                  </button>
-                )}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                icon={() => (
-                  <button className="text-primary gap-2 text-sm font-medium flex items-center pl-4">
-                    Next
-                    <span className="transform -rotate-90">
-                      <ChevronDownIcon />
-                    </span>
-                  </button>
-                )}
-              />
-            </Pagination.Root>
-          </div>
-        </div>
-      )}
+      <PaginationComponent
+        activePage={activePage}
+        setActivePage={setActivePage}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

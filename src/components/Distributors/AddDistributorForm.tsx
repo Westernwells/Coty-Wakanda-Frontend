@@ -33,9 +33,9 @@ import {
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
 import { useAddDistributor } from "@/api/distributors/add-distributor";
-import { Navigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 
-type FormValues = updateDistributorInput & {
+export type FormValues = updateDistributorInput & {
   coefficients: Array<{
     value: string;
     brand_id: number;
@@ -65,8 +65,13 @@ const AddDistributorForm = ({
       brand_pillars: [],
       currency: "",
       coefficients: [],
+      mirror: {
+        group_one: null,
+        group_two: null,
+      }
     },
   });
+  const navigate = useNavigate();
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -106,20 +111,30 @@ const AddDistributorForm = ({
           category_id: coefficient.category.id,
           pref: coefficient.pref,
         })),
+        mirror: {
+          group_one: formData.mirror.group_one?.toString(),
+          group_two: formData.mirror.group_two?.toString(),
+        }
       });
     }
   }, [formData, isEdit]);
 
   const updateDistributorMutations = useUpdateDistributor({
     mutationConfig: {
-      onSuccess: () => Navigate({ to: "/distributors" }),
+      onSuccess: () => navigate({ to: "/distributors" }),
     },
   });
   const addDistributorMutations = useAddDistributor({
     mutationConfig: {
-      onSuccess: () => Navigate({ to: "/distributors" }),
+      onSuccess: () => navigate({ to: "/distributors" }),
     },
   });
+
+  const mirrorOptions = [
+    {value: 1, label: '1'},
+    {value: 2, label: '2'},
+    {value: 3, label: '3'},
+  ]
 
   return (
     <>
@@ -133,13 +148,11 @@ const AddDistributorForm = ({
           <form
             onSubmit={form.onSubmit((values) => {
               if (isEdit) {
-                console.log(values, formData?.coefficients);
                 updateDistributorMutations.mutate({
                   distributorId: formData?.id as number,
                   data: values,
                 });
               } else {
-                console.log(values);
                 addDistributorMutations.mutate({
                   data: values,
                 });
@@ -348,10 +361,16 @@ const AddDistributorForm = ({
                 <Grid gutter={24}>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <Select
-                      {...form.getInputProps("group_1_mirror")}
+                      {...form.getInputProps("mirror.group_one")}
+                      key={form.key('mirror.group_one')}
                       label="Group 1 pricing mirror (optional)"
                       placeholder="Select distributor"
-                      data={[]}
+                      data={
+                        mirrorOptions.map((mirror) => ({
+                          value: mirror.value.toString(),
+                          label: mirror.label,
+                        })) || []
+                      }
                       rightSection={<ChevronDownIcon />}
                       classNames={selectStyles}
                       clearable
@@ -360,10 +379,15 @@ const AddDistributorForm = ({
                   </Grid.Col>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <Select
-                      {...form.getInputProps("group_2_mirror")}
+                      {...form.getInputProps("mirror.group_two")}
                       label="Group 2 pricing mirror (optional)"
                       placeholder="Select distributor"
-                      data={[]} // This would need distributor data
+                      data={
+                        mirrorOptions.map((mirror) => ({
+                          value: mirror.value.toString(),
+                          label: mirror.label,
+                        })) || []
+                      }
                       rightSection={<ChevronDownIcon />}
                       classNames={selectStyles}
                       clearable
@@ -376,7 +400,7 @@ const AddDistributorForm = ({
 
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-lg font-semibold mb-6">Co-efficients</h2>
-              {formData?.coefficients && (
+              {Array.isArray(formData?.coefficients) && formData?.coefficients.length > 0 && (
                 <CoefficientsTable
                   data={formData?.coefficients}
                   distributorId={formData.id}

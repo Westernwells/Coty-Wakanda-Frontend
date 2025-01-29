@@ -1,7 +1,7 @@
 import { getForecasts } from "@/api/forecasts/get-forcasts";
 import BaseForecastsTable from "@/components/Distributor-forcasts/BaseForcastsTable";
 import DeadlineHeader from "@/components/DistributorPages/Shared/DeadlineHeader";
-import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooter";
+import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooterBaseForecast";
 import Headline from "@/components/Shared/Headline";
 import { ForecastSubmitInput } from "@/types";
 import { useForm } from "@mantine/form";
@@ -17,7 +17,7 @@ function RouteComponent() {
     queryKey: ["base-forcasts"],
     queryFn: getForecasts,
   });
-  const form = useForm<ForecastSubmitInput[]>();
+  const form = useForm<{forecast: ForecastSubmitInput[]}>();
   return (
     <div>
       <Headline title="Sales" />

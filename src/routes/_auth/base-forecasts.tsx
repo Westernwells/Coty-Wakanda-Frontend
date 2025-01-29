@@ -1,5 +1,5 @@
 import BaseForecastsTable from "@/components/Distributor-forcasts/BaseForcastsTable";
-import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooter";
+import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooterBaseForecast";
 import DeadlineHeader from "@/components/DistributorPages/Shared/DeadlineHeader";
 import Headline from "@/components/Shared/Headline";
 import { createFileRoute } from "@tanstack/react-router";
@@ -8,17 +8,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import { ForecastSubmitInput } from "@/types";
+import ErrorCard from "@/components/Shared/ErrorCard";
+import { Loader } from "@mantine/core";
 
 export const Route = createFileRoute("/_auth/base-forecasts")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { data } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["base-forcasts"],
     queryFn: getForecasts,
   });
-  const form = useForm<ForecastSubmitInput[]>();
+  const form = useForm<{forecast: ForecastSubmitInput[]}>();
 
   useEffect(() => {
     if (data) {
@@ -30,8 +32,7 @@ function RouteComponent() {
         })),
       }));
 
-      form.setValues([...transformedData]);
-      console.log(form.getValues());
+      form.setValues({forecast: [...transformedData]});
     }
   }, [data]);
 
@@ -39,7 +40,18 @@ function RouteComponent() {
     <div>
       <Headline title="Base forecasts" />
       <DeadlineHeader title="Forecast Deadline" />
-      <BaseForecastsTable data={data?.data.forecast} form={form} />
+      {isError ? (
+        <ErrorCard errorText="an error occured fetching data" />
+      ) : isLoading ? (
+        <div className="bg-white shadow-md rounded-lg p-6 mt-5">
+          <div className="flex justify-center items-center mt-6">
+            <Loader />
+          </div>
+        </div>
+      ) : (
+        <BaseForecastsTable data={data?.data.forecast} form={form} />
+      )}
+
       <SubmitFooter title="Submit Forecast" form={form} />
     </div>
   );

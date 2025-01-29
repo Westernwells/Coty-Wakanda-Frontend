@@ -26,7 +26,7 @@ import { Brand, getBrands } from "@/api/get-brands";
 import { useQueries } from "@tanstack/react-query";
 import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
 import { useEffect } from "react";
-import { addDistributorInput } from "@/api/distributors/add-distributor";
+import { FormValues } from "./AddDistributorForm";
 
 function CoefficientsForm({
   opened,
@@ -39,7 +39,7 @@ function CoefficientsForm({
   close: () => void;
   data?: Coefficient | null;
   distributorId?: number;
-  form?: UseFormReturnType<addDistributorInput>;
+  form?: UseFormReturnType<FormValues>;
 }) {
   const [{ data: categoriesData }, { data: brandsData }] = useQueries({
     queries: [

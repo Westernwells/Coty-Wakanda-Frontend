@@ -88,9 +88,7 @@ const Filter = ({
     },
 
     onValuesChange: (values) => {
-      setFilters((prev) => ({
-        prev, ...values
-      }));
+      setFilters(values);
     },
   });
 

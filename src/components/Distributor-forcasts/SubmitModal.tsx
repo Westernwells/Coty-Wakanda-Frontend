@@ -11,7 +11,7 @@ const SubmitModal = ({
   opened: boolean;
   close: () => void;
   title?: string;
-  onSubmit?: () => void;
+  onSubmit?: (type: "save" | "submit") => void;
 }) => {
   return (
     <Modal.Root
@@ -39,7 +39,9 @@ const SubmitModal = ({
                   variant="outline"
                   className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
                   leftSection={<ExitIcon />}
-                  onClick={close}
+                  onClick={() => {
+                    close();
+                  }}
                 >
                   Cancel
                 </Button>
@@ -51,7 +53,7 @@ const SubmitModal = ({
                   // disabled={addCoefficientMutations.isPending}
                   onClick={() => {
                     if (onSubmit) {
-                      onSubmit();
+                      onSubmit("submit");
                     }
                     close();
                   }}

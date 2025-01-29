@@ -1,7 +1,7 @@
 import {
   Checkbox,
   Group,
-  Pagination,
+  Loader,
   Select,
   Table,
   Tabs,
@@ -12,6 +12,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useField } from "@mantine/form";
 import EyeIcon from "../Icons/EyeIcon";
 import { useNavigate } from "@tanstack/react-router";
+import { getForecasts } from "@/api/forecasts/get-forcasts";
+import { useQuery } from "@tanstack/react-query";
+import { addMonthsToDate, dateToLocalString } from "@/lib/utils";
+import get from "lodash.get";
+import ErrorCard from "../Shared/ErrorCard";
+import PaginationComponent from "../Shared/Pagination";
 
 const elements = [
   {
@@ -62,8 +68,15 @@ function ForecastingTable({
   const [sortBy, setSortBy] = useState<string | null>("");
   const [itemsPerPage, setItemsPerPage] = useState("5");
   const [activeTab, setActiveTab] = useState<string | null>("Innovation");
+  const [date, setDate] = useState<Date>(new Date());
   const totalPages = Math.ceil(elements.length / parseInt(itemsPerPage));
   const navigate = useNavigate();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["base-forcasts"],
+    queryFn: getForecasts,
+  });
+
+  const baseForecastData = data?.data.forecast;
 
   const forecastTypeField = useField<string>({
     initialValue: "",
@@ -77,16 +90,16 @@ function ForecastingTable({
 
   const sortOptions = [
     {
-      value: "brand",
+      value: "product.brand.name",
       label: "Brand",
     },
     {
-      value: "pillar",
-      label: "Pillar",
+      value: "product.offering_number",
+      label: "Offering Number",
     },
     {
-      value: "sku",
-      label: "SKU",
+      value: "cost",
+      label: "cost",
     },
   ];
 
@@ -111,34 +124,40 @@ function ForecastingTable({
 
   // Filter data based on search and filters
   const filteredData = useMemo(() => {
-    if (!elements) return [];
-    const newArr = elements.filter((item) => {
+    if (!baseForecastData) return [];
+    const newArr = baseForecastData.filter((item) => {
       // Search filter (case-insensitive)
       const searchTerm = filters.search.toLowerCase();
       const searchMatch =
         !filters.search ||
-        item.brand.toLowerCase().includes(searchTerm) ||
-        item.pillar.toLowerCase().includes(searchTerm) ||
-        item.sku.toLowerCase().includes(searchTerm) ||
-        item.launchId.toLowerCase().includes(searchTerm) ||
-        item.distributor.toLowerCase().includes(searchTerm) ||
-        item.offeringNumber.toLowerCase().includes(searchTerm);
+        item.product.brand.name.toLowerCase().includes(searchTerm) ||
+        // item.pillar.toLowerCase().includes(searchTerm) ||
+        // item.sku.toLowerCase().includes(searchTerm) ||
+        // item.launchId.toLowerCase().includes(searchTerm) ||
+        item.distributor?.name.toLowerCase().includes(searchTerm) ||
+        item.product.offering_number.toLowerCase().includes(searchTerm);
 
       const filterMatch =
-        (!filters.brand || item.brand === filters.brand) &&
-        (!filters.pillar || item.pillar === filters.pillar) &&
-        (!filters.distributor || item.distributor === filters.distributor) &&
-        (!filters.launchId || item.launchId === filters.launchId);
+        (!filters.brand || item.product.brand.name === filters.brand) &&
+        (!filters.pillar || item.product.brand.name === filters.pillar) &&
+        (!filters.distributor ||
+          item.distributor?.name === filters.distributor) &&
+        (!filters.launchId ||
+          item.product.offering_number === filters.launchId);
 
       return searchMatch && filterMatch;
     });
     if (sortBy) {
       newArr.sort((a, b) =>
-        a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
+        get(a, sortBy) > get(b, sortBy)
+          ? 1
+          : get(b, sortBy) > get(a, sortBy)
+            ? -1
+            : 0
       );
     }
     return newArr;
-  }, [filters, sortBy]);
+  }, [filters, sortBy, baseForecastData]);
 
   // Calculate paginated data
   const paginatedData = useMemo(() => {
@@ -150,6 +169,27 @@ function ForecastingTable({
   useEffect(() => {
     setActivePage(1);
   }, [filters, sortBy, itemsPerPage]);
+
+  useEffect(() => {
+    if (baseForecastData) {
+      const newDate = new Date(
+        `1 ${Object.keys(baseForecastData[0].items)[0]}`
+      );
+      setDate(newDate);
+    }
+  }, [baseForecastData]);
+
+  if (isError) {
+    return <ErrorCard />;
+  }
+
+  if (!baseForecastData || isLoading) {
+    return (
+      <div className="bg-white shadow-md text-center rounded-lg p-6 mt-5">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6 mt-5">
@@ -252,12 +292,22 @@ function ForecastingTable({
                 <Table.Th>Launch ID</Table.Th>
                 <Table.Th>Distributor</Table.Th>
                 <Table.Th>Offering Number</Table.Th>
-                <Table.Th>Mar 25</Table.Th>
-                <Table.Th>Apr 25</Table.Th>
-                <Table.Th>May 25</Table.Th>
-                <Table.Th>Jun 25</Table.Th>
-                <Table.Th>Jul 25</Table.Th>
-                <Table.Th>Aug 25</Table.Th>
+                <Table.Th>{dateToLocalString(date)}</Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 1))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 2))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 3))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 4))}
+                </Table.Th>
+                <Table.Th>
+                  {dateToLocalString(addMonthsToDate(date, 5))}
+                </Table.Th>
                 <Table.Th className="rounded-se-xl"></Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -265,23 +315,25 @@ function ForecastingTable({
               {paginatedData.map((element, index) => (
                 <Table.Tr key={index}>
                   <Table.Td className="first:rounded-es-xl">
-                    {element.brand}
+                    {element.product.brand.name}
                   </Table.Td>
-                  <Table.Td>{element.pillar}</Table.Td>
-                  <Table.Td>{element.sku}</Table.Td>
-                  <Table.Td>{element.launchId}</Table.Td>
-                  <Table.Td>{element.distributor}</Table.Td>
-                  <Table.Td>{element.offeringNumber}</Table.Td>
-                  <Table.Td>{element.date1}</Table.Td>
-                  <Table.Td>{element.date2}</Table.Td>
-                  <Table.Td>{element.date3}</Table.Td>
-                  <Table.Td>{element.date4}</Table.Td>
-                  <Table.Td>{element.date5}</Table.Td>
-                  <Table.Td>{element.date6}</Table.Td>
+                  <Table.Td>{element.product.brand.name}</Table.Td>
+                  <Table.Td>{element.product.offering_number}</Table.Td>
+                  <Table.Td>{element.product.offering_number}</Table.Td>
+                  <Table.Td>{element.distributor?.name}</Table.Td>
+                  <Table.Td>{element.product.offering_number}</Table.Td>
+                  {Object.keys(element.items).map((key, idx) => (
+                    <Table.Td key={`${index}-${idx}`}>
+                      {element.items[key].value}
+                    </Table.Td>
+                  ))}
                   <Table.Td
                     className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
                     onClick={() => {
-                      navigate({to: "/forecast-details/$forecastId", params: {forecastId: element.sku}})
+                      navigate({
+                        to: "/forecast-details/$productId",
+                        params: { productId: element.product.id.toString() },
+                      });
                     }}
                   >
                     <EyeIcon />
@@ -292,96 +344,11 @@ function ForecastingTable({
           </Table>
         </Table.ScrollContainer>
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 w-full">
-          <div className="hidden sm:block">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={3}
-              classNames={{
-                root: "w-full flex justify-center items-center",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none size-10 ",
-              }}
-            >
-              <Pagination.Previous
-                className="w-auto pe-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                className="w-auto ps-5"
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-          <div className="sm:hidden  w-full">
-            <Pagination.Root
-              total={totalPages}
-              value={activePage}
-              onChange={setActivePage}
-              color="#00EBB2"
-              radius="xl"
-              siblings={1}
-              boundaries={1}
-              classNames={{
-                root: "w-full flex justify-center ",
-                control:
-                  "text-primary text-sm font-medium data-[active=true]:bg-green  border-none",
-              }}
-            >
-              <Pagination.Previous
-                icon={() => {
-                  return (
-                    <button className="text-primary opacity-50 text-sm font-medium flex items-center gap-2 pointer-events-none pr-4">
-                      <span className="transform rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                      Previous
-                    </button>
-                  );
-                }}
-              />
-              <Pagination.Items />
-              <Pagination.Next
-                icon={() => {
-                  return (
-                    <button className="text-primary gap-2  text-sm font-medium flex items-center pl-4">
-                      Next
-                      <span className="transform -rotate-90">
-                        <ChevronDownIcon />
-                      </span>
-                    </button>
-                  );
-                }}
-              />
-            </Pagination.Root>
-          </div>
-        </div>
-      )}
+      <PaginationComponent
+        activePage={activePage}
+        setActivePage={setActivePage}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import LogoutIcon from "../Icons/LogoutIcon";
 import { useUserStore } from "@/stores/userStore";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { userLogout } from "@/api/post-logout";
+import { queryClient } from "@/main";
 
 const Logout = () => {
   const signOut = useUserStore((state) => state.signOut);
@@ -19,6 +20,7 @@ const Logout = () => {
         } catch (e) {
           console.log(e);
         } finally {
+          queryClient.resetQueries();
           signOut();
         }
         router.invalidate().then(() => navigate({ to: "/login" }));
