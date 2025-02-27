@@ -42,14 +42,14 @@ function RouteComponent() {
       <DeadlineHeader title="Forecast Deadline" />
       {isError ? (
         <ErrorCard errorText="an error occured fetching data" />
-      ) : isLoading ? (
+      ) : isLoading || !data ? (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
           <div className="flex justify-center items-center mt-6">
             <Loader />
           </div>
         </div>
       ) : (
-        <BaseForecastsTable data={data?.data.forecast} form={form} />
+        <BaseForecastsTable data={data.data.forecast} form={form} />
       )}
 
       <SubmitFooter title="Submit Forecast" form={form} />

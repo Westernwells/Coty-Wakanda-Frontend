@@ -1,9 +1,9 @@
 import Axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 function authRequestInterceptor(config: InternalAxiosRequestConfig) {
     const token = Cookies.get("token");
-
     config.headers.authorization = `Bearer ${token}`;
     config.headers.Accept = "application/json";
     return config;
@@ -19,6 +19,7 @@ axios.interceptors.response.use(
         return response;
     },
     (error) => {
+        toast.error(error.response.data.message);
         return Promise.reject(error);
     }
 );

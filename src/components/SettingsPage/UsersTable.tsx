@@ -1,9 +1,9 @@
-import { User } from "@/api/post-login";
 import { Button, Table } from "@mantine/core";
 import PencilIcon from "../Icons/PencilIcon";
 import TrashIcon from "../Icons/TrashIcon";
 import PlusIcon from "../Icons/PlusIcon";
 import { FormSection } from "../Shared/Form/Section";
+import { User } from "@/types";
 
 const users: Partial<User>[] = [
   {

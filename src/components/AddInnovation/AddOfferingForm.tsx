@@ -1,49 +1,74 @@
 import { Button, Grid, Group, Modal, Select, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { DateInput } from "@mantine/dates";
-import { FormSection } from "../Shared/Form/Section";
-import DateIcon from "../Icons/DateIcon";
-import { FileUploadSection } from "../Shared/Form/FileUploadSection";
-import { FormField } from "../Shared/Form/Field";
-import { PlusIcon } from "lucide-react";
-import RefreshIcon from "../Icons/RefreshIcon";
-import ExitIcon from "../Icons/ExitIcon";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
+import { PlusIcon } from "lucide-react";
+import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import DateIcon from "../Icons/DateIcon";
+import ExitIcon from "../Icons/ExitIcon";
+import RefreshIcon from "../Icons/RefreshIcon";
+import { FormField } from "../Shared/Form/Field";
+import { FileUploadSection } from "../Shared/Form/FileUploadSection";
+import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 
-const AddOfferingForm = () => {
-  const form = useForm({
-    initialValues: {
-      launch_id: "",
-      offering_number: "",
-      deadline: "",
-      global_icw: "",
-      global_ocd: "",
-      type: "",
-      offering_deck: "",
-      sfm_deck: "",
-    },
-  });
-
-  const ircForm = useForm({
-    initialValues: {
-      irc_number: "",
-      icp_cost: "",
-      currency: "",
-    },
-  });
-
+const AddOfferingForm = ({
+  setOfferingOpen,
+  form,
+}: {
+  setOfferingOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  form: UseFormReturnType<{
+    brand_id: string;
+    sub_brand_id: string;
+    year: Date;
+    format: string;
+    launch_name: string;
+    other_name: string;
+    document: string;
+    forecast_deadline: Date;
+    offerings?: {
+      number: string;
+      icw: Date;
+      ocd: Date;
+      type: string;
+      deck: string;
+      market_deck: string;
+      products: {
+        irc: string;
+        currency: string;
+        price: string;
+      }[];
+    }[];
+  }>;
+}) => {
   const [opened, { open, close }] = useDisclosure(false);
+
+  const idx = (form?.getValues()?.offerings?.length ?? 1) - 1;
+  const productIdx =
+    (form?.getValues()?.offerings?.[idx].products.length ?? 1) - 1;
 
   return (
     <>
-      <form
-        onSubmit={form.onSubmit((values) => {
-          console.log("submitted");
-          console.log(values);
-        })}
+      <Grid
+        gutter={{
+          sm: 32,
+          base: 16,
+        }}
       >
+        <Grid.Col
+          span={{
+            sm: 6,
+            base: 12,
+          }}
+        >
+          <TextInput
+            {...form.getInputProps(`offerings.${idx}.launch_id`)}
+            placeholder="Launch ID"
+            classNames={textInputStyles}
+          />
+        </Grid.Col>
+      </Grid>
+      <FormSection title="General Details">
         <Grid
           gutter={{
             sm: 32,
@@ -57,141 +82,140 @@ const AddOfferingForm = () => {
             }}
           >
             <TextInput
-              {...form.getInputProps("launch_id")}
-              placeholder="Launch ID"
+              {...form.getInputProps(`offerings.${idx}.number`)}
+              placeholder="00"
+              label="Offering number"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <DateInput
+              {...form.getInputProps(`offerings.${idx}.deadline`)}
+              label="Forecast deadline"
+              valueFormat="YYYY MMM DD"
+              placeholder="Select date"
+              rightSection={<DateIcon />}
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 4,
+              base: 12,
+            }}
+          >
+            <DateInput
+              {...form.getInputProps(`offerings.${idx}.icw`)}
+              label="Global ICW"
+              valueFormat="YYYY MMM DD"
+              placeholder="Select date"
+              rightSection={<DateIcon />}
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 4,
+              base: 12,
+            }}
+          >
+            <DateInput
+              {...form.getInputProps(`offerings.${idx}.ocd`)}
+              label="Global OCD"
+              valueFormat="YYYY MMM DD"
+              placeholder="Select date"
+              rightSection={<DateIcon />}
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 4,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps(`offerings.${idx}.type`)}
+              placeholder="Type"
+              label="Type"
               classNames={textInputStyles}
             />
           </Grid.Col>
         </Grid>
-        <FormSection title="General Details">
-          <Grid
-            gutter={{
-              sm: 32,
-              base: 16,
+      </FormSection>
+      <FormSection title="Custom Details">
+        <Grid
+          gutter={{
+            sm: 32,
+            base: 16,
+          }}
+        >
+          <Grid.Col
+            span={{
+              lg: 6,
+              base: 12,
             }}
           >
-            <Grid.Col
-              span={{
-                sm: 6,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("offering_number")}
-                placeholder="00"
-                label="Offering number"
-                classNames={textInputStyles}
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                sm: 6,
-                base: 12,
-              }}
-            >
-              <DateInput
-                {...form.getInputProps("deadline")}
-                label="Forecast deadline"
-                valueFormat="YYYY MMM DD"
-                placeholder="Select date"
-                rightSection={<DateIcon />}
-                classNames={textInputStyles}
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                sm: 4,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("global_icw")}
-                placeholder="00 Mar 2024"
-                label="Global ICW"
-                classNames={textInputStyles}
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                sm: 4,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("global_ocd")}
-                placeholder="Global OCD"
-                label="Global OCD"
-                classNames={textInputStyles}
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                sm: 4,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("type")}
-                placeholder="Type"
-                label="Type"
-                classNames={textInputStyles}
-              />
-            </Grid.Col>
-          </Grid>
-        </FormSection>
-        <FormSection title="Custom Details">
-          <Grid
-            gutter={{
-              sm: 32,
-              base: 16,
+            <FileUploadSection
+              label="Upload offering deck"
+              form={form}
+              id={`offerings.${idx}.deck`}
+              multiple={true}
+              accept="application/vnd.ms-powerpoint"
+              stringOnly
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              lg: 6,
+              base: 12,
             }}
           >
-            <Grid.Col
-              span={{
-                lg: 6,
-                base: 12,
-              }}
-            >
-              <FileUploadSection
-                label="Upload offering deck"
-                form={form}
-                id="offering_deck"
-                multiple={true}
-                accept="application/vnd.ms-powerpoint"
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                lg: 6,
-                base: 12,
-              }}
-            >
-              <FileUploadSection
-                label="Upload safe for market offering deck "
-                form={form}
-                id="sfm_deck"
-                multiple={true}
-                accept="application/vnd.ms-powerpoint"
-              />
-            </Grid.Col>
-          </Grid>
-        </FormSection>
-        <Group justify="flex-start" mt="md">
-          <FormField label="Add IRC (Products)">
-            <Button
-              variant="outline"
-              className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-              leftSection={<PlusIcon size={24} />}
-              onClick={open}
-            >
-              Add IRC
-            </Button>
-          </FormField>
-        </Group>
-        <Group justify="flex-end" mt="md">
-          <Button type="submit">Submit</Button>
-        </Group>
-      </form>
+            <FileUploadSection
+              label="Upload safe for market offering deck "
+              form={form}
+              id={`offerings.${idx}.market_deck`}
+              multiple={true}
+              accept="application/vnd.ms-powerpoint"
+              stringOnly
+            />
+          </Grid.Col>
+        </Grid>
+      </FormSection>
+      <Group justify="flex-start" mt="md">
+        <FormField label="Add IRC (Products)">
+          <Button
+            variant="outline"
+            className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+            leftSection={<PlusIcon size={24} />}
+            onClick={() => {
+              form.insertListItem(`offerings.${idx}.products`, {
+                irc: "",
+                currency: "",
+                price: "",
+              });
+              open();
+            }}
+          >
+            Add IRC
+          </Button>
+        </FormField>
+      </Group>
+      <Group justify="flex-end" mt="md">
+        <Button
+          type="submit"
+          onClick={() => {
+            setOfferingOpen(false);
+          }}
+        >
+          Submit
+        </Button>
+      </Group>
       <Modal.Root
         opened={opened}
         onClose={close}
@@ -207,26 +231,32 @@ const AddOfferingForm = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                Add Co-efficient
+                Add IRC
               </h2>
               <div className="space-y-6">
                 <TextInput
-                  {...ircForm.getInputProps("irc_number")}
+                  {...form.getInputProps(
+                    `offerings.${idx}.products.${productIdx}.irc`
+                  )}
                   label="IRC Number"
                   placeholder="123123124124"
                   type="text"
                   classNames={textInputStyles}
                 />
                 <TextInput
-                  {...ircForm.getInputProps("icp_cost")}
+                  {...form.getInputProps(
+                    `offerings.${idx}.products.${productIdx}.price`
+                  )}
                   label="ICP Cost"
                   placeholder="23"
                   type="text"
                   classNames={textInputStyles}
                 />
                 <Select
-                  {...ircForm.getInputProps("currency")}
-                  label="Pref/non-pref"
+                  {...form.getInputProps(
+                    `offerings.${idx}.products.${productIdx}.currency`
+                  )}
+                  label="Currency"
                   placeholder="USD"
                   data={[
                     { value: "usd", label: "USD" },
@@ -242,7 +272,13 @@ const AddOfferingForm = () => {
                     variant="outline"
                     className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     leftSection={<ExitIcon />}
-                    onClick={close}
+                    onClick={() => {
+                      form.removeListItem(
+                        `offerings.${idx}.products`,
+                        productIdx
+                      );
+                      close();
+                    }}
                   >
                     Cancel
                   </Button>
@@ -251,9 +287,7 @@ const AddOfferingForm = () => {
                     type="submit"
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                    // disabled={addCoefficientMutations.isPending}
                     onClick={() => {
-                      console.log(ircForm.getValues());
                       close();
                     }}
                   >

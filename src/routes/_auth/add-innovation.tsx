@@ -1,14 +1,32 @@
-import AddInnovationForm from '@/components/AddInnovation/AddInnovationForm'
-import ChevronDownIcon from '@/components/Icons/ChevronDownIcon'
-import Headline from '@/components/Shared/Headline'
-import { Button } from '@mantine/core'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import AddInnovationForm from "@/components/AddInnovation/AddInnovationForm";
+import AddOfferingForm from "@/components/AddInnovation/AddOfferingForm";
+import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
+import Headline from "@/components/Shared/Headline";
+import { Button } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 
-export const Route = createFileRoute('/_auth/add-innovation')({
+export const Route = createFileRoute("/_auth/add-innovation")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
+  const [offeringOpen, setOfferingOpen] = useState(false);
+  const form = useForm({
+    mode: "uncontrolled",
+    initialValues: {
+      brand_id: "",
+      sub_brand_id: "",
+      year: new Date(),
+      format: "",
+      launch_name: "",
+      other_name: "",
+      document: "",
+      forecast_deadline: new Date(),
+    },
+  });
+
   return (
     <div className="w-full">
       <Headline title="Create Innovation" />
@@ -27,7 +45,11 @@ function RouteComponent() {
           Back to Innovations
         </Button>
       </section>
-      <AddInnovationForm />
+      {!offeringOpen ? (
+        <AddInnovationForm setOfferingOpen={setOfferingOpen} form={form} />
+      ) : (
+        <AddOfferingForm setOfferingOpen={setOfferingOpen} form={form} />
+      )}
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { User } from "@/api/post-login";
+import { User } from "@/types";
 import { create } from "zustand";
 
 interface UserStore {

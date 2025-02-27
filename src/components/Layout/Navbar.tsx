@@ -107,7 +107,7 @@ const Navbar = () => {
             <UnstyledButton onClick={() => navigate({ to: "/settings" })}>
               <SettingsIcon />
             </UnstyledButton>
-            <UnstyledButton>
+            <UnstyledButton onClick={() => navigate({ to: "/notifications" })}>
               <BellIcon />
             </UnstyledButton>
           </Group>

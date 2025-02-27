@@ -1,4 +1,4 @@
-import { Grid, Select, TextInput } from "@mantine/core";
+import { Grid, Loader, Select, TextInput } from "@mantine/core";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import { UseFormReturnType } from "@mantine/form";
 import { getCurrencies } from "@/api/get-currencies";
@@ -7,9 +7,12 @@ import { ProductDistributor, ProductInput } from "@/types";
 // import { useEffect } from "react";
 
 interface PricingFieldsProps {
-  form:  UseFormReturnType<Partial<ProductInput>, (values: Partial<ProductInput>) => Partial<ProductInput>>;
+  form: UseFormReturnType<
+    Partial<ProductInput>,
+    (values: Partial<ProductInput>) => Partial<ProductInput>
+  >;
   prefix?: string;
-  coefficientsData: ProductDistributor['coefficients'];
+  coefficientsData: ProductDistributor["coefficients"];
   isMirror?: boolean;
   distributorId?: number;
 }
@@ -18,13 +21,11 @@ export const PricingFields = ({
   form,
   prefix = "",
   coefficientsData,
-  isMirror=false,
-  distributorId
+  isMirror = false,
+  distributorId,
 }: PricingFieldsProps) => {
-  const [{ data: currenciesData }] = useQueries({
-    queries: [
-      { queryKey: ["currencies"], queryFn: getCurrencies },
-    ],
+  const [{ data: currenciesData, isLoading }] = useQueries({
+    queries: [{ queryKey: ["currencies"], queryFn: getCurrencies }],
   });
 
   // useEffect(() => {
@@ -35,6 +36,8 @@ export const PricingFields = ({
   //     })
   //   }
   // }, [])
+  //
+  if (isLoading) return <Loader />;
 
   return (
     <>
@@ -44,7 +47,13 @@ export const PricingFields = ({
           base: 8,
         }}
       >
-        <TextInput hidden className="hidden" value={distributorId} {...form.getInputProps(`${prefix}.distributor_id`)} disabled />
+        <TextInput
+          hidden
+          className="hidden"
+          value={distributorId}
+          {...form.getInputProps(`${prefix}.distributor_id`)}
+          disabled
+        />
         <Select
           label="Select co-efficient"
           placeholder="Select co-efficient"

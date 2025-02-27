@@ -14,7 +14,7 @@ export type ApiResponse = {
     data: Pillar[];
 }
 
-export const getBrandPillars = async (): Promise<ApiResponse> => {
-    const response = await axios.get("/brand-pillars");
+export const getBrandPillars = async (params: object): Promise<ApiResponse> => {
+    const response = await axios.get("/brand-pillars", {params: params});
     return response.data;
 }

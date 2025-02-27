@@ -1,4 +1,3 @@
-import AddOfferingForm from "@/components/AddInnovation/AddOfferingForm";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import Headline from "@/components/Shared/Headline";
 import { Button } from "@mantine/core";
@@ -27,7 +26,7 @@ function RouteComponent() {
           Back to Innovations
         </Button>
       </section>
-      <AddOfferingForm />
+      {/* <AddOfferingForm setOfferingOpen={set}/> */}
     </div>
   );
 }

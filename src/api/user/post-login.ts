@@ -1,18 +1,8 @@
 import { axios } from "@/lib/axios";
-import { LoginValues } from "@/types";
+import { LoginValues, User } from "@/types";
 import { MutationConfig } from "@/lib/react-query";
 import { useMutation } from "@tanstack/react-query";
 import Cookies from "js-cookie";
-
-export type User = {
-  id: number;
-  name: string;
-  surname: string;
-  email: string;
-  phone: string;
-  role: string;
-  created_at: string;
-};
 
 type ApiResponse = {
   data: {

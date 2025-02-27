@@ -20,6 +20,7 @@ import { Route as AuthSettingsImport } from './routes/_auth/settings'
 import { Route as AuthSalesImport } from './routes/_auth/sales'
 import { Route as AuthProfileImport } from './routes/_auth/profile'
 import { Route as AuthOrdersImport } from './routes/_auth/orders'
+import { Route as AuthNotificationsImport } from './routes/_auth/notifications'
 import { Route as AuthInnovationsImport } from './routes/_auth/innovations'
 import { Route as AuthInnovationForecastsImport } from './routes/_auth/innovation-forecasts'
 import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
@@ -87,6 +88,12 @@ const AuthProfileRoute = AuthProfileImport.update({
 const AuthOrdersRoute = AuthOrdersImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthNotificationsRoute = AuthNotificationsImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -271,6 +278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthInnovationsImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/notifications': {
+      id: '/_auth/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthNotificationsImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/orders': {
       id: '/_auth/orders'
       path: '/orders'
@@ -370,6 +384,7 @@ interface AuthRouteChildren {
   AuthForecastingRoute: typeof AuthForecastingRoute
   AuthInnovationForecastsRoute: typeof AuthInnovationForecastsRoute
   AuthInnovationsRoute: typeof AuthInnovationsRoute
+  AuthNotificationsRoute: typeof AuthNotificationsRoute
   AuthOrdersRoute: typeof AuthOrdersRoute
   AuthProfileRoute: typeof AuthProfileRoute
   AuthSalesRoute: typeof AuthSalesRoute
@@ -394,6 +409,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthForecastingRoute: AuthForecastingRoute,
   AuthInnovationForecastsRoute: AuthInnovationForecastsRoute,
   AuthInnovationsRoute: AuthInnovationsRoute,
+  AuthNotificationsRoute: AuthNotificationsRoute,
   AuthOrdersRoute: AuthOrdersRoute,
   AuthProfileRoute: AuthProfileRoute,
   AuthSalesRoute: AuthSalesRoute,
@@ -424,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/forecasting': typeof AuthForecastingRoute
   '/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/innovations': typeof AuthInnovationsRoute
+  '/notifications': typeof AuthNotificationsRoute
   '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
   '/sales': typeof AuthSalesRoute
@@ -450,6 +467,7 @@ export interface FileRoutesByTo {
   '/forecasting': typeof AuthForecastingRoute
   '/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/innovations': typeof AuthInnovationsRoute
+  '/notifications': typeof AuthNotificationsRoute
   '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
   '/sales': typeof AuthSalesRoute
@@ -478,6 +496,7 @@ export interface FileRoutesById {
   '/_auth/forecasting': typeof AuthForecastingRoute
   '/_auth/innovation-forecasts': typeof AuthInnovationForecastsRoute
   '/_auth/innovations': typeof AuthInnovationsRoute
+  '/_auth/notifications': typeof AuthNotificationsRoute
   '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/profile': typeof AuthProfileRoute
   '/_auth/sales': typeof AuthSalesRoute
@@ -506,6 +525,7 @@ export interface FileRouteTypes {
     | '/forecasting'
     | '/innovation-forecasts'
     | '/innovations'
+    | '/notifications'
     | '/orders'
     | '/profile'
     | '/sales'
@@ -531,6 +551,7 @@ export interface FileRouteTypes {
     | '/forecasting'
     | '/innovation-forecasts'
     | '/innovations'
+    | '/notifications'
     | '/orders'
     | '/profile'
     | '/sales'
@@ -557,6 +578,7 @@ export interface FileRouteTypes {
     | '/_auth/forecasting'
     | '/_auth/innovation-forecasts'
     | '/_auth/innovations'
+    | '/_auth/notifications'
     | '/_auth/orders'
     | '/_auth/profile'
     | '/_auth/sales'
@@ -611,6 +633,7 @@ export const routeTree = rootRoute
         "/_auth/forecasting",
         "/_auth/innovation-forecasts",
         "/_auth/innovations",
+        "/_auth/notifications",
         "/_auth/orders",
         "/_auth/profile",
         "/_auth/sales",
@@ -665,6 +688,10 @@ export const routeTree = rootRoute
     },
     "/_auth/innovations": {
       "filePath": "_auth/innovations.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/notifications": {
+      "filePath": "_auth/notifications.tsx",
       "parent": "/_auth"
     },
     "/_auth/orders": {

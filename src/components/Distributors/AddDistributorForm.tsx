@@ -20,7 +20,7 @@ import { getBrands } from "@/api/get-brands";
 import { getCategories } from "@/api/get-categories";
 import { getMarkets } from "@/api/get-markets";
 import { getRegions } from "@/api/get-regions";
-import { useForm } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { useLayoutEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
@@ -30,6 +30,7 @@ import { selectStyles, textInputStyles } from "../Shared/Styles";
 import CoefficientsForm from "./CoefficientsForm";
 import {
   updateDistributorInput,
+  updateDistributorInputSchema,
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
 import { useAddDistributor } from "@/api/distributors/add-distributor";
@@ -66,10 +67,11 @@ const AddDistributorForm = ({
       currency: "",
       coefficients: [],
       mirror: {
-        group_one: null,
-        group_two: null,
+        group_one: "",
+        group_two: "",
       }
     },
+    validate: zodResolver(updateDistributorInputSchema)
   });
   const navigate = useNavigate();
 
@@ -414,6 +416,9 @@ const AddDistributorForm = ({
               >
                 Add co-efficients
               </Button>
+              {form.errors.coefficients && ( 
+                <p className="text-xs text-[#fa5252]">Co-effiencents is required</p>
+              )}
             </div>
 
             <Group justify="flex-end" mt="xl" gap={10}>
