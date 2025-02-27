@@ -15,7 +15,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { getForecasts } from "@/api/forecasts/get-forcasts";
 import { useQuery } from "@tanstack/react-query";
 import { addMonthsToDate, dateToLocalString } from "@/lib/utils";
-import get from "lodash.get";
 import ErrorCard from "../Shared/ErrorCard";
 import { useInView } from "react-intersection-observer";
 

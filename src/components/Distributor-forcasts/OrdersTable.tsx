@@ -29,7 +29,7 @@ function OrdersTable({
     const itemsPerPage = 10;
     const totalPages = Math.ceil(data.length / itemsPerPage);
     const [date, setDate] = useState<Date>(new Date());
-    const [filters, setFilters] = useState({
+    const [_, setFilters] = useState({
         brand: "",
         brandPillar: "",
         distributor: "",
