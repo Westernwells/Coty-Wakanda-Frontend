@@ -59,15 +59,19 @@ const AddProductForm = ({
             country,
             subcategory,
             category,
+            brand_pillar,
             ...flatProduct
         } = product;
         productToEdit = {
             ...flatProduct,
             brand_id: brand.id.toString(),
+            // @ts-ignore
+            brand_pillar: undefined,
             market_id: market?.id?.toString(),
             country_id: country.id?.toString(),
             category_id: category.id.toString(),
             subcategory_id: subcategory.id.toString(),
+            sub_brand_id: brand_pillar.id.toString(),
             launch_date: new Date(product.launch_date),
             discontinue_date: new Date(product.discontinue_date),
             grouping: product.grouping?.toString(),
@@ -132,7 +136,7 @@ const AddProductForm = ({
             },
             {
                 queryKey: ["products"],
-                queryFn: () => getProducts({ cursor: 1, page_size: 999999 }),
+                queryFn: () => getProducts({ cursor: 1, page_size: 100 }),
             },
             {
                 queryKey: ["product-distributor"],
@@ -195,8 +199,6 @@ const AddProductForm = ({
         });
     });
 
-    console.log("form", form.getValues());
-
     if (
         isEdit &&
         (brandsLoading ||
@@ -216,7 +218,7 @@ const AddProductForm = ({
                 const { documents, ...toSubmit } = values;
                 if (isEdit) {
                     const promises: Promise<ApiResponseFiles>[] = [];
-                    documents?.map((doc) => {
+                    documents?.map((doc: any) => {
                         const data = addDocument.mutateAsync({
                             productId: product?.id || 0,
                             data: {
@@ -524,7 +526,7 @@ const AddProductForm = ({
                         }}
                     >
                         <Select
-                            {...form.getInputProps("brand_pillar_id")}
+                            {...form.getInputProps("sub_brand_id")}
                             data={
                                 brandPillarsData?.data?.map((brand) => ({
                                     value: brand.id.toString(),
@@ -1023,6 +1025,7 @@ const AddProductForm = ({
                                         }}
                                     >
                                         <PricingFields
+                                            // @ts-ignore
                                             form={form}
                                             prefix={`distributor_pricing.${item_idx}`}
                                             coefficientsData={item.coefficients}
@@ -1053,6 +1056,7 @@ const AddProductForm = ({
                                                 >
                                                     <PricingFields
                                                         isMirror
+                                                        // @ts-ignore
                                                         form={form}
                                                         prefix={`distributor_pricing.${item_idx}.mirrors.${mirror_idx}`}
                                                         coefficientsData={

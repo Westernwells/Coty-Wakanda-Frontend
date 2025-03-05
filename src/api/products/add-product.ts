@@ -17,7 +17,7 @@ export const addProductSchema = z
         launch_date: z.date({ message: "This field is required" }),
         discontinue_date: z.date({ message: "This field is required" }),
         offering_number: z
-            .string()
+            .number({ coerce: true })
             .min(1, { message: "This field is required" }),
         irc: z.string().min(1, { message: "This field is required" }),
         material_description: z
@@ -25,47 +25,154 @@ export const addProductSchema = z
             .min(1, { message: "This field is required" }),
         ean_upc: z.string().min(1, { message: "This field is required" }),
         house: z.string().min(1, { message: "This field is required" }),
-        brand_id: z.string().min(1, { message: "This field is required" }),
+        brand_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         line: z.string().min(1, { message: "This field is required" }),
-        line_id: z.string().min(1, { message: "This field is required" }),
+        line_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         article_type: z.string().min(1, { message: "This field is required" }),
-        division: z.string().min(1, { message: "This field is required" }),
+        division: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         price: z
-            .string()
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
             .min(1, { message: "This field is required" })
             .optional(),
-        category_id: z.string().min(1, { message: "This field is required" }),
-        subcategory_id: z
-            .string()
+        category_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
             .min(1, { message: "This field is required" }),
-        market_id: z.string().min(1, { message: "This field is required" }),
-        segment: z.string().min(1, { message: "This field is required" }),
-        icp_eur: z.string().min(1, { message: "This field is required" }),
-        icp_usd: z.string().min(1, { message: "This field is required" }),
+        subcategory_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        market_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        segment: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        icp_eur: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        icp_usd: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         factory: z.string().min(1, { message: "This field is required" }),
-        commodity_id: z.string().min(1, { message: "This field is required" }),
-        country_id: z.string().min(1, { message: "This field is required" }),
+        commodity_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        country_id: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         gender: z.enum(["male", "female"], {
             message: "This value should be either male or female",
         }),
-        size: z.string().min(1, { message: "This field is required" }),
-        length: z.string().min(1, { message: "This field is required" }),
-        height: z.string().min(1, { message: "This field is required" }),
-        width: z.string().min(1, { message: "This field is required" }),
-        volume: z.string().min(1, { message: "This field is required" }),
-        gross_weight: z.string().min(1, { message: "This field is required" }),
-        net_weight: z.string().min(1, { message: "This field is required" }),
-        units: z.string().min(1, { message: "This field is required" }),
+        size: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        length: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        height: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        width: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        volume: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        gross_weight: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        net_weight: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
+        units: z
+            .number({
+                coerce: true,
+                message: "This field should have a numeric value",
+            })
+            .min(1, { message: "This field is required" }),
         price_benchmark: z.union([
             z
                 .object({
                     brand_id: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" })
                         .optional(),
-                    product_id: z.string().optional(),
+                    product_id: z
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
+                        .optional(),
                     index_value: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" })
                         .optional(),
                     comment: z.string().optional(),
@@ -77,19 +184,34 @@ export const addProductSchema = z
             .array(
                 z.object({
                     distributor_id: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" }),
                     coefficient_id: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" }),
                     preactive_rrsp: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" }),
                     active_rrsp: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" }),
                     billing: z
-                        .string()
+                        .number({
+                            coerce: true,
+                            message: "This field should have a numeric value",
+                        })
                         .min(1, { message: "This field is required" }),
                     currency: z.string(),
                 })
@@ -104,11 +226,22 @@ export const addProductSchema = z
             // Re-validate price_benchmark schema dynamically
             const priceBenchmarkSchema = z.object({
                 brand_id: z
-                    .string()
+                    .number({
+                        coerce: true,
+                        message: "This field should have a numeric value",
+                    })
                     .min(1, { message: "This field is required" }),
-                product_id: z.string().optional(),
+                product_id: z
+                    .number({
+                        coerce: true,
+                        message: "This field should have a numeric value",
+                    })
+                    .optional(),
                 index_value: z
-                    .string()
+                    .number({
+                        coerce: true,
+                        message: "This field should have a numeric value",
+                    })
                     .min(1, { message: "This field is required" }),
                 comment: z
                     .string()
@@ -132,7 +265,12 @@ export const addProduct = ({
 }: {
     data: Partial<Product>;
 }): Promise<Comment> => {
-    return axios.post(`/products`, data);
+    const body = {
+        ...data,
+        // @ts-ignore
+        subcategory_id: Number(data.subcategory_id),
+    };
+    return axios.post(`/products`, body);
 };
 
 type UseAddProductOptions = {
