@@ -69,9 +69,9 @@ const AddDistributorForm = ({
       mirror: {
         group_one: "",
         group_two: "",
-      }
+      },
     },
-    validate: zodResolver(updateDistributorInputSchema)
+    validate: zodResolver(updateDistributorInputSchema),
   });
   const navigate = useNavigate();
 
@@ -91,7 +91,7 @@ const AddDistributorForm = ({
       { queryKey: ["categories"], queryFn: getCategories },
       { queryKey: ["brands"], queryFn: getBrands },
       { queryKey: ["currencies"], queryFn: getCurrencies },
-      { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+      { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
     ],
   });
 
@@ -116,7 +116,7 @@ const AddDistributorForm = ({
         mirror: {
           group_one: formData.mirror.group_one?.toString(),
           group_two: formData.mirror.group_two?.toString(),
-        }
+        },
       });
     }
   }, [formData, isEdit]);
@@ -133,17 +133,17 @@ const AddDistributorForm = ({
   });
 
   const mirrorOptions = [
-    {value: 1, label: '1'},
-    {value: 2, label: '2'},
-    {value: 3, label: '3'},
-  ]
+    { value: 1, label: "1" },
+    { value: 2, label: "2" },
+    { value: 3, label: "3" },
+  ];
 
   return (
     <>
       {updateDistributorMutations.isPending ||
       addDistributorMutations.isPending ? (
         <div className="flex justify-center items-center mt-6">
-        <Loader />
+          <Loader />
         </div>
       ) : (
         <>
@@ -364,7 +364,7 @@ const AddDistributorForm = ({
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <Select
                       {...form.getInputProps("mirror.group_one")}
-                      key={form.key('mirror.group_one')}
+                      key={form.key("mirror.group_one")}
                       label="Group 1 pricing mirror (optional)"
                       placeholder="Select distributor"
                       data={
@@ -402,12 +402,13 @@ const AddDistributorForm = ({
 
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-lg font-semibold mb-6">Co-efficients</h2>
-              {Array.isArray(formData?.coefficients) && formData?.coefficients.length > 0 && (
-                <CoefficientsTable
-                  data={formData?.coefficients}
-                  distributorId={formData.id}
-                />
-              )}
+              {Array.isArray(formData?.coefficients) &&
+                formData?.coefficients.length > 0 && (
+                  <CoefficientsTable
+                    data={formData?.coefficients}
+                    distributorId={formData.id}
+                  />
+                )}
               <Button
                 variant="outline"
                 className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
@@ -416,8 +417,10 @@ const AddDistributorForm = ({
               >
                 Add co-efficients
               </Button>
-              {form.errors.coefficients && ( 
-                <p className="text-xs text-[#fa5252]">Co-effiencents is required</p>
+              {form.errors.coefficients && (
+                <p className="text-xs text-[#fa5252]">
+                  Co-effiencents is required
+                </p>
               )}
             </div>
 

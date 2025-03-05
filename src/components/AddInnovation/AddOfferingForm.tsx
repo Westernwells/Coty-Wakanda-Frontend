@@ -1,4 +1,12 @@
-import { Button, Grid, Group, Modal, Select, TextInput } from "@mantine/core";
+import {
+  Button,
+  Grid,
+  Group,
+  Modal,
+  Select,
+  Table,
+  TextInput,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
@@ -11,12 +19,19 @@ import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import { Product } from "@/types";
+import PencilIcon from "../Icons/PencilIcon";
+import TrashIcon from "../Icons/TrashIcon";
+import { useState } from "react";
+import EditInnovationProductForm from "../InnovationProduct/Form";
 
 const AddOfferingForm = ({
   setOfferingOpen,
+  offeringIndex,
   form,
 }: {
   setOfferingOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  offeringIndex: number;
   form: UseFormReturnType<{
     brand_id: string;
     sub_brand_id: string;
@@ -33,19 +48,23 @@ const AddOfferingForm = ({
       type: string;
       deck: string;
       market_deck: string;
-      products: {
-        irc: string;
+      products: Array<Partial<Product> &{
         currency: string;
         price: string;
-      }[];
+      }>;
     }[];
   }>;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
+  const [productOpen, setProductOpen] = useState(-1);
 
-  const idx = (form?.getValues()?.offerings?.length ?? 1) - 1;
+  const idx = offeringIndex !== -1 ? offeringIndex : (form?.getValues()?.offerings?.length ?? 1) - 1;
   const productIdx =
     (form?.getValues()?.offerings?.[idx].products.length ?? 1) - 1;
+
+    if(productOpen >= 0) {
+      return <EditInnovationProductForm path={`offerings.${idx}.products.${productOpen}`} setProductOpen={setProductOpen} form={form}/>
+    }
 
   return (
     <>
@@ -83,7 +102,7 @@ const AddOfferingForm = ({
           >
             <TextInput
               {...form.getInputProps(`offerings.${idx}.number`)}
-              placeholder="00"
+              placeholder="Offering Number"
               label="Offering number"
               classNames={textInputStyles}
             />
@@ -165,7 +184,7 @@ const AddOfferingForm = ({
               label="Upload offering deck"
               form={form}
               id={`offerings.${idx}.deck`}
-              multiple={true}
+              multiple={false}
               accept="application/vnd.ms-powerpoint"
               stringOnly
             />
@@ -180,14 +199,76 @@ const AddOfferingForm = ({
               label="Upload safe for market offering deck "
               form={form}
               id={`offerings.${idx}.market_deck`}
-              multiple={true}
+              multiple={false}
               accept="application/vnd.ms-powerpoint"
               stringOnly
             />
           </Grid.Col>
         </Grid>
       </FormSection>
-      <Group justify="flex-start" mt="md">
+      <Grid justify="flex-start" mt="md">
+          {!!form.getValues().offerings?.[idx]?.products?.length && (
+            <Grid.Col span={12}>
+              <div className="relative border border-primary rounded-xl border-t-0">
+                <Table.ScrollContainer minWidth={768}>
+                  <Table
+                    verticalSpacing="sm"
+                    borderColor="transparent"
+                    striped="even"
+                    stripedColor="#F2F4F6"
+                  >
+                    <Table.Thead>
+                      <Table.Tr className="bg-primary text-white">
+                        <Table.Th className="rounded-ss-xl">
+                          IRC Number
+                        </Table.Th>
+                        <Table.Th>ICP Cost</Table.Th>
+                        <Table.Th>Cost</Table.Th>
+                        <Table.Th>EAN/UPC</Table.Th>
+                        <Table.Th>Line</Table.Th>
+                        <Table.Th>Size & Dimension</Table.Th>
+                        <Table.Th>Division</Table.Th>
+                        <Table.Th>Core Category</Table.Th>
+                        <Table.Th>Article Type</Table.Th>
+                        <Table.Th></Table.Th>
+                        <Table.Th className="rounded-se-xl"></Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {form.getValues().offerings?.[idx]?.products.map((product, index) => (
+                        <Table.Tr key={product.irc}>
+                          <Table.Td className="rounded-ss-xl">
+                          {product.irc}
+                          </Table.Td>
+                          <Table.Td>{product.price}</Table.Td>
+                          <Table.Td>{product.currency}</Table.Td>
+                          <Table.Td>{product.ean_upc}</Table.Td>
+                          <Table.Td>{product.line}</Table.Td>
+                          <Table.Td>{product.size}</Table.Td>
+                          <Table.Td>{product.division}</Table.Td>
+                          <Table.Td>{product.category?.name}</Table.Td>
+                          <Table.Td>{product.article_type}</Table.Td>
+                          <Table.Td onClick={() => {
+                            form.removeListItem(`offerings.${idx}.products`, index)
+                          }}><TrashIcon /></Table.Td>
+                          <Table.Td className="rounded-se-xl cursor-pointer" onClick={() => {
+                            setProductOpen(index)
+                            console.log(index)
+                          }}>
+                            <PencilIcon />
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
+              </div>
+            </Grid.Col>
+          )}
+        <Grid.Col span={{
+          lg: 6,
+          base: 12
+        }}>
         <FormField label="Add IRC (Products)">
           <Button
             variant="outline"
@@ -205,12 +286,16 @@ const AddOfferingForm = ({
             Add IRC
           </Button>
         </FormField>
-      </Group>
+        </Grid.Col>
+      </Grid>
       <Group justify="flex-end" mt="md">
         <Button
           type="submit"
           onClick={() => {
-            setOfferingOpen(false);
+            const errors = Object.keys(form.validate().errors).some(key => key.includes(`offerings.${idx}`));
+            if (!errors) {
+              setOfferingOpen(false);
+            }
           }}
         >
           Submit

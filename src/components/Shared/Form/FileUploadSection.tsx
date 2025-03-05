@@ -86,7 +86,6 @@ export const FileUploadSection = ({
                 };
               });
               form.setFieldValue(id, values);
-              console.log();
             }
           }}
         />
@@ -94,9 +93,7 @@ export const FileUploadSection = ({
       {get(form.getValues(), id) && (
         <Grid.Col span={12} className="custom-file-input">
           <div className=" flex justify-between bg-white border !border-primary !rounded-[10px] p-1 pe-2">
-            <p className="truncate max-w-[250px]">
-              filenameherefilenameherefilenameherefilenameherefilenameherefilenameherefilenameherefilenameherefilenameherefilenameherefilenamehere
-            </p>
+            <p className="truncate max-w-[250px]">your file uploaded</p>
             <div className="flex items-center pr-[10px]">
               <Divider
                 orientation="vertical"
@@ -105,7 +102,7 @@ export const FileUploadSection = ({
               <div
                 className="flex items-center gap-x-[10px] text-sm text-primary cursor-pointer"
                 onClick={() => {
-                  form.setFieldValue(id, "");
+                  form.setFieldValue(id, null);
                 }}
               >
                 <TrashIcon />

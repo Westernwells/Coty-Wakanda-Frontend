@@ -7,7 +7,7 @@ import { getMarkets } from "@/api/get-markets";
 import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/get-categories";
 import { getBrands } from "@/api/get-brands";
-import { getBrandPillars } from "@/api/get-brandPillars";
+// import { getBrandPillars } from "@/api/get-brandPillars";
 import { useForm } from "@mantine/form";
 import ExitIcon from "../Icons/ExitIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
@@ -25,7 +25,7 @@ const DistributorSettings = () => {
       { queryKey: ["regions"], queryFn: getRegions },
       { queryKey: ["categories"], queryFn: getCategories },
       { queryKey: ["brands"], queryFn: getBrands },
-      { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+      { queryKey: ["brandPillars"], queryFn: () => getBrands() },
     ],
   });
 

@@ -1,261 +1,228 @@
+import { getDistributors } from "@/api/distributors/get-distributors";
+import { getBrandPillars } from "@/api/get-brandPillars";
+import { getBrands } from "@/api/get-brands";
+import { ForecastFilters } from "@/types";
 import {
-  Button,
-  Checkbox,
-  CloseButton,
-  Divider,
-  Group,
-  Select,
-  TextInput,
-  Title,
+    Button,
+    CloseButton,
+    Divider,
+    Group,
+    Radio,
+    Select,
+    TextInput,
+    Title,
 } from "@mantine/core";
-import { useField } from "@mantine/form";
-import SearchIcon from "../Icons/SearchIcon";
+import { DateInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
+import { useQueries } from "@tanstack/react-query";
+import { CSVLink } from "react-csv";
 import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
-import { useEffect } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { getBrands } from "@/api/get-brands";
-import { getRegions } from "@/api/get-regions";
-import { DateInput } from "@mantine/dates";
-import { CSVLink } from "react-csv";
 import FileDownloadIcon from "../Icons/FileDownloadIcon";
+import SearchIcon from "../Icons/SearchIcon";
 
 const ForecastingFilters = ({
-  setFilters,
-}: {
-  setFilters: (filters: any) => void;
-}) => {
-  const [{ data: brandsData, error: brandsError }] = useQueries({
-    queries: [
-      { queryKey: ["brands"], queryFn: getBrands },
-      { queryKey: ["regions"], queryFn: getRegions },
-    ],
-  });
-
-  // Transform data for select components
-  const brandOptions =
-    brandsData?.data?.map((brand) => ({
-      value: brand.name,
-      label: brand.name,
-    })) || [];
-
-  // Initialize fields with proper typing
-  const searchField = useField<string>({
-    initialValue: "",
-  });
-  const startDateField = useField<Date | null>({
-    initialValue: null,
-  });
-  const endDateField = useField<Date | null>({
-    initialValue: null,
-  });
-
-  const regionField = useField<string>({
-    initialValue: "",
-  });
-
-  const marketField = useField<string>({
-    initialValue: "",
-  });
-  const brandField = useField<string>({
-    initialValue: "",
-  });
-  const brandPillarField = useField<string>({
-    initialValue: "",
-  });
-  const distributorsField = useField<string>({
-    initialValue: "",
-  });
-  const launchIdField = useField<string>({
-    initialValue: "",
-  });
-
-  const productTypeField = useField<"all" | "luxury" | "mass">({
-    initialValue: "all",
-  });
-
-  // Update parent filters when any field changes
-  useEffect(() => {
-    setFilters({
-      search: searchField.getInputProps().value,
-      region: regionField.getInputProps().value,
-      market: marketField.getInputProps().value,
-      brand: brandField.getInputProps().value,
-      productType: productTypeField.getInputProps().value,
-      pillar: brandPillarField.getInputProps().value,
-      distributor: distributorsField.getInputProps().value,
-      launchId: launchIdField.getInputProps().value,
-      startDate: startDateField.getInputProps().value,
-      endDate: endDateField.getInputProps().value,
-    });
-  }, [
-    searchField.getInputProps().value,
-    regionField.getInputProps().value,
-    marketField.getInputProps().value,
-    brandField.getInputProps().value,
-    brandPillarField.getInputProps().value,
-    distributorsField.getInputProps().value,
-    launchIdField.getInputProps().value,
-    productTypeField.getInputProps().value,
-    startDateField.getInputProps().value,
-    endDateField.getInputProps().value,
     setFilters,
-  ]);
+}: {
+    setFilters: React.Dispatch<React.SetStateAction<ForecastFilters>>;
+}) => {
+    const form = useForm({
+        initialValues: {
+            search: "",
+            start_date: "",
+            end_date: "",
+            launch_id: "",
+            brand_id: "",
+            sub_brand_id: "",
+            distributor_id: "",
+            brand_type: "",
+        },
 
-  const handleProductTypeChange = (value: "all" | "luxury" | "mass") => {
-    productTypeField.setValue(value);
-  };
+        onValuesChange: (values) => {
+            setFilters(values);
+        },
+    });
 
-  const hasError = brandsError;
+    const [
+        { data: brandsData, error: brandsError },
+        { data: brandPillarsData, error: brandPillarsError },
+        { data: distributorsData, error: distributorsError },
+    ] = useQueries({
+        queries: [
+            { queryKey: ["brands"], queryFn: getBrands },
+            { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
+            {
+                queryKey: ["distributors"],
+                queryFn: () => getDistributors({ page_size: 100 }),
+            },
+        ],
+    });
 
-  if (hasError) {
+    // Transform data for select components
+    const brandOptions =
+        brandsData?.data?.map((brand) => ({
+            value: brand.id.toString(),
+            label: brand.name,
+        })) || [];
+    const brandPillarOptions =
+        brandPillarsData?.data?.map((pillar) => ({
+            value: pillar.id.toString(),
+            label: pillar.name,
+        })) || [];
+    const distributorOptions =
+        distributorsData?.data?.map((dist) => ({
+            value: dist.id.toString(),
+            label: dist.name,
+        })) || [];
+
+    // Update parent filters when any field changes
+
+    const hasError = brandsError || brandPillarsError || distributorsError;
+
+    if (hasError) {
+        return (
+            <div className="bg-white w-full rounded-[20px] p-6 mt-5">
+                <div className="text-red-500">
+                    Error loading filter data. Please try again later.
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="bg-white w-full rounded-[20px] p-6 mt-5">
-        <div className="text-red-500">
-          Error loading filter data. Please try again later.
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white w-full rounded-[20px] p-6 mt-5">
-      <Title order={2} className="text-primary font-semibold text-xl">
-        Refine your results
-      </Title>
-      <div className="flex items-center gap-x-5 mt-6 flex-wrap">
-        <TextInput
-          {...searchField.getInputProps()}
-          aria-label="Search"
-          placeholder="Search for..."
-          className="flex-grow"
-          leftSection={<SearchIcon />}
-        />
-        <div
-          className={twMerge(
-            "flex sm:hidden items-center gap-x-2 cursor-pointer",
-            !searchField.getValue().length && "invisible"
-          )}
-          onClick={() => {
-            searchField.setValue("");
-            regionField.setValue("");
-            marketField.setValue("");
-            brandField.setValue("");
-            productTypeField.setValue("all");
-          }}
-        >
-          <CloseButton />
-          <span className="hidden sm:inline text-nowrap text-primary font-medium">
-            Clear all
-          </span>
-        </div>
-        <CSVLink data={[]} className="w-full sm:w-auto">
-        <Button variant="outline" className="text-primary border-primary w-full mt-2 sm:mt-0 sm:w-auto" leftSection={<FileDownloadIcon />}>
-          Download CSV
-        </Button>
-        </CSVLink>
-        <div
-          className={twMerge(
-            "hidden sm:flex items-center gap-x-2 cursor-pointer",
-            !searchField.getValue().length && "invisible"
-          )}
-          onClick={() => {
-            searchField.setValue("");
-            regionField.setValue("");
-            marketField.setValue("");
-            brandField.setValue("");
-            productTypeField.setValue("all");
-          }}
-        >
-          <CloseButton />
-          <span className="hidden sm:inline text-nowrap text-primary font-medium">
-            Clear all
-          </span>
-        </div>
-      </div>
-      <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-      <Group w="100% gap-4 sm:gap-5">
-        <>
-          <DateInput
-            {...startDateField.getInputProps()}
-            aria-label="Start Date"
-            placeholder="Start Date"
-            clearable
-            variant="filled"
-            className="grow"
-            rightSection={<DateIcon />}
-          />
-          <DateInput
-            {...endDateField.getInputProps()}
-            aria-label="End Date"
-            placeholder="End Date"
-            clearable
-            variant="filled"
-            className="grow"
-            rightSection={<DateIcon />}
-          />
-          <Select
-            {...brandField.getInputProps()}
-            aria-label="Filter by brand"
-            placeholder="Filter by brand"
-            data={brandOptions}
-            clearable
-            className="grow"
-            rightSection={<ChevronDownIcon />}
-          />
-          <Select
-            {...brandPillarField.getInputProps()}
-            aria-label="Filter by brand pillar"
-            placeholder="Filter by brand pillar"
-            data={brandOptions}
-            clearable
-            className="grow"
-            rightSection={<ChevronDownIcon />}
-          />
-          <Select
-            {...distributorsField.getInputProps()}
-            aria-label="Filter by distributor"
-            placeholder="Filter by distributor"
-            data={brandOptions}
-            clearable
-            className="grow"
-            rightSection={<ChevronDownIcon />}
-          />
-          <Select
-            {...launchIdField.getInputProps()}
+        <div className="bg-white w-full rounded-[20px] p-6 mt-5">
+            <Title order={2} className="text-primary font-semibold text-xl">
+                Refine your results
+            </Title>
+            <div className="flex items-center gap-x-5 mt-6 flex-wrap">
+                <TextInput
+                    {...form.getInputProps("search")}
+                    aria-label="Search"
+                    placeholder="Search for..."
+                    className="flex-grow"
+                    leftSection={<SearchIcon />}
+                />
+                <div
+                    className={twMerge(
+                        "flex items-center gap-x-2 cursor-pointer",
+                        !form.getValues().search.length && "hidden"
+                    )}
+                    onClick={() => form.reset()}
+                >
+                    <CloseButton />
+                    <span className="hidden sm:inline text-nowrap text-primary font-medium">
+                        Clear all
+                    </span>
+                </div>
+                <CSVLink data={[]} className="w-full sm:w-auto">
+                    <Button
+                        variant="outline"
+                        className="text-primary border-primary w-full mt-2 sm:mt-0 sm:w-auto"
+                        leftSection={<FileDownloadIcon />}
+                    >
+                        Download CSV
+                    </Button>
+                </CSVLink>
+            </div>
+            <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
+            <Group w="100% gap-4 sm:gap-5">
+                <>
+                    <DateInput
+                        {...form.getInputProps("start_date")}
+                        aria-label="Start Date"
+                        placeholder="Start Date"
+                        clearable
+                        valueFormat="YYYY-MM-DD"
+                        variant="filled"
+                        className="grow"
+                        rightSection={<DateIcon />}
+                    />
+                    <DateInput
+                        {...form.getInputProps("end_date")}
+                        aria-label="End Date"
+                        placeholder="End Date"
+                        valueFormat="YYYY-MM-DD"
+                        clearable
+                        variant="filled"
+                        className="grow"
+                        rightSection={<DateIcon />}
+                    />
+                    <Select
+                        {...form.getInputProps("brand_id")}
+                        aria-label="Filter by brand"
+                        placeholder="Filter by brand"
+                        data={brandOptions}
+                        clearable
+                        className="grow"
+                        rightSection={<ChevronDownIcon />}
+                    />
+                    <Select
+                        {...form.getInputProps("sub_brand_id")}
+                        aria-label="Filter by brand pillar"
+                        placeholder="Filter by brand pillar"
+                        data={brandPillarOptions}
+                        clearable
+                        className="grow"
+                        rightSection={<ChevronDownIcon />}
+                    />
+                    <Select
+                        {...form.getInputProps("distributor_id")}
+                        aria-label="Filter by distributor"
+                        placeholder="Filter by distributor"
+                        data={distributorOptions}
+                        clearable
+                        className="grow"
+                        rightSection={<ChevronDownIcon />}
+                    />
+                    {/* <Select
+            {...form.getInputProps("launchId")}
             aria-label="Filter by launch id"
             placeholder="Filter by launch id"
             data={brandOptions}
             clearable
             className="grow"
             rightSection={<ChevronDownIcon />}
-          />
-        </>
-      </Group>
+          /> */}
+                </>
+            </Group>
 
-      <Group gap={24} w="100%" className="mt-6">
-        <Checkbox
-          label="All"
-          size="xs"
-          checked={productTypeField.getInputProps().value === "all"}
-          onChange={() => handleProductTypeChange("all")}
-        />
-        <Checkbox
-          label="Luxury only"
-          size="xs"
-          checked={productTypeField.getInputProps().value === "luxury"}
-          onChange={() => handleProductTypeChange("luxury")}
-        />
-        <Checkbox
-          label="Mass only"
-          size="xs"
-          checked={productTypeField.getInputProps().value === "mass"}
-          onChange={() => handleProductTypeChange("mass")}
-        />
-      </Group>
-    </div>
-  );
+            <Group gap={24} w="100%" className="mt-6">
+                <Radio.Group
+                    name="brandType"
+                    {...form.getInputProps("brand_type")}
+                >
+                    <Group
+                        gap={24}
+                        w="100%"
+                        className="mt-[10px] flex-col sm:flex-row  items-start "
+                    >
+                        <Radio
+                            value=""
+                            label="All"
+                            classNames={{
+                                label: "text-primary text-sm pl-[5px] sm:pl-2",
+                            }}
+                        />
+                        <Radio
+                            value="mass"
+                            label="Mass"
+                            classNames={{
+                                label: "text-primary text-sm pl-[5px] sm:pl-2",
+                            }}
+                        />
+                        <Radio
+                            value="luxury"
+                            label="Luxury"
+                            classNames={{
+                                label: "text-primary text-sm pl-[5px] sm:pl-2",
+                            }}
+                        />
+                    </Group>
+                </Radio.Group>
+            </Group>
+        </div>
+    );
 };
 
 export default ForecastingFilters;

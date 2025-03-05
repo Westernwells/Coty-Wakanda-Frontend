@@ -1,9 +1,9 @@
-import { Grid, Loader, Select, TextInput } from "@mantine/core";
-import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
-import { UseFormReturnType } from "@mantine/form";
 import { getCurrencies } from "@/api/get-currencies";
-import { useQueries } from "@tanstack/react-query";
+import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import { ProductDistributor, ProductInput } from "@/types";
+import { Grid, Loader, NumberInput, Select, TextInput } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
+import { useQueries } from "@tanstack/react-query";
 // import { useEffect } from "react";
 
 interface PricingFieldsProps {
@@ -85,7 +85,7 @@ export const PricingFields = ({
           base: 12,
         }}
       >
-        <TextInput
+        <NumberInput
           disabled={isMirror}
           {...form.getInputProps(`${prefix}.preactive_rrsp`)}
           key={form.key(`${prefix}.preactive_rrsp`)}
@@ -93,6 +93,9 @@ export const PricingFields = ({
           classNames={{
             label: "text-primary font-medium text-sm mb-1",
           }}
+          allowDecimal={false}
+          allowNegative={false}
+          hideControls
         />
       </Grid.Col>
       <Grid.Col
@@ -101,7 +104,7 @@ export const PricingFields = ({
           base: 12,
         }}
       >
-        <TextInput
+        <NumberInput
           disabled={isMirror}
           {...form.getInputProps(`${prefix}.active_rrsp`)}
           key={form.key(`${prefix}.active_rrsp`)}
@@ -109,6 +112,9 @@ export const PricingFields = ({
           classNames={{
             label: "text-primary font-medium text-sm mb-1",
           }}
+          allowDecimal={false}
+          allowNegative={false}
+          hideControls
         />
       </Grid.Col>
       <Grid.Col
@@ -117,7 +123,7 @@ export const PricingFields = ({
           base: 12,
         }}
       >
-        <TextInput
+        <NumberInput
           disabled={isMirror}
           {...form.getInputProps(`${prefix}.billing`)}
           key={form.key(`${prefix}.billing`)}
@@ -125,6 +131,9 @@ export const PricingFields = ({
           classNames={{
             label: "text-primary font-medium text-sm mb-1",
           }}
+          allowDecimal={false}
+          allowNegative={false}
+          hideControls
         />
       </Grid.Col>
       <Grid.Col

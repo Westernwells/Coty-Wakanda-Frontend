@@ -1,38 +1,45 @@
+import { getBrandPillars } from "@/api/get-brandPillars";
+import { getBrands } from "@/api/get-brands";
+import { getCategories } from "@/api/get-categories";
+import { getCountries } from "@/api/get-countries";
+import { getMarkets } from "@/api/get-markets";
+import { getSubCategories } from "@/api/get-subCategories";
+import { useAddDocument } from "@/api/products/add-document";
+import { addProductSchema, useAddProduct } from "@/api/products/add-product";
+import { getProductDistributors } from "@/api/products/get-product-distributors";
+import { getProducts } from "@/api/products/get-products";
+import { useUpdateProduct } from "@/api/products/update-product";
+import { ApiResponseFiles } from "@/api/products/upload-document";
+import { queryClient } from "@/main";
+import { PriceBenchmark, Product, ProductInput } from "@/types";
 import {
     Button,
     Grid,
     Group,
     Loader,
+    NumberInput,
     Radio,
     Select,
     TextInput,
 } from "@mantine/core";
-import { useForm, zodResolver } from "@mantine/form";
 import { DateInput } from "@mantine/dates";
-import { FormSection } from "../Shared/Form/Section";
-import { FormField } from "../Shared/Form/Field";
-import DateIcon from "../Icons/DateIcon";
+import { useForm, zodResolver } from "@mantine/form";
+import { useQueries } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { toast } from "react-toastify";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import { StatusCard } from "../Shared/Form/StatusCard";
 import CornerDownRightIcon from "../Icons/CornerDownRightIcon";
+import DateIcon from "../Icons/DateIcon";
+import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { PricingFields } from "../Shared/Form/PricingFields";
-import { useQueries } from "@tanstack/react-query";
-import { getMarkets } from "@/api/get-markets";
-import { getCategories } from "@/api/get-categories";
-import { getBrands } from "@/api/get-brands";
-import { getCountries } from "@/api/get-countries";
-import { PriceBenchmark, Product, ProductInput } from "@/types";
-import { useUpdateProduct } from "@/api/products/update-product";
-import { useEffect, useState } from "react";
-import { addProductSchema, useAddProduct } from "@/api/products/add-product";
-import { useAddDocument } from "@/api/products/add-document";
-import { ApiResponseFiles } from "@/api/products/upload-document";
-import { getProductDistributors } from "@/api/products/get-product-distributors";
-import { queryClient } from "@/main";
-import { getProducts } from "@/api/products/get-products";
-import { toast } from "react-toastify";
-import { useNavigate } from "@tanstack/react-router";
+import { FormSection } from "../Shared/Form/Section";
+import { StatusCard } from "../Shared/Form/StatusCard";
+import {
+    selectStyles,
+    textAreaStyles,
+    textInputStyles,
+} from "../Shared/Styles";
 
 const AddProductForm = ({
     isEdit = false,
@@ -41,13 +48,6 @@ const AddProductForm = ({
     isEdit?: boolean;
     product?: Product;
 }) => {
-    const [changed, setChanged] = useState<{
-        pref: boolean;
-        brand_id: boolean;
-    }>({
-        pref: false,
-        brand_id: false,
-    });
     const navigate = useNavigate();
 
     let productToEdit;
@@ -64,13 +64,13 @@ const AddProductForm = ({
         productToEdit = {
             ...flatProduct,
             brand_id: brand.id.toString(),
-            market_id: market.id.toString(),
-            country_id: country.id.toString(),
+            market_id: market?.id?.toString(),
+            country_id: country.id?.toString(),
             category_id: category.id.toString(),
             subcategory_id: subcategory.id.toString(),
             launch_date: new Date(product.launch_date),
             discontinue_date: new Date(product.discontinue_date),
-            grouping: product.grouping.toString(),
+            grouping: product.grouping?.toString(),
             price_benchmark: {
                 ...flatProduct.price_benchmark,
                 brand_id: product.price_benchmark?.brand?.id.toString(),
@@ -93,10 +93,11 @@ const AddProductForm = ({
     const [
         { data: marketsData, isLoading: marketsLoading },
         { data: categoriesData, isLoading: categoriesLoading },
+        { data: subCategoriesData, isLoading: subCategoriesLoading },
         { data: brandsData, isLoading: brandsLoading },
         { data: countriesData, isLoading: countriesLoading },
         // { data: currenciesData },
-        // { data: brandPillarsData },
+        { data: brandPillarsData, isLoading: brandPillarsLoading },
         { data: productsListData, isLoading: productsLoading },
         {
             data: productDistributorsData,
@@ -106,13 +107,32 @@ const AddProductForm = ({
         queries: [
             { queryKey: ["markets"], queryFn: getMarkets },
             { queryKey: ["categories"], queryFn: getCategories },
+            {
+                queryKey: ["subCategories"],
+                queryFn: () =>
+                    getSubCategories({
+                        filter: {
+                            category_id: form.getValues().category_id as string,
+                        },
+                    }),
+                enabled: !!form.getValues().category_id,
+            },
             { queryKey: ["brands"], queryFn: getBrands },
-            { queryKey: ["countriues"], queryFn: getCountries },
+            { queryKey: ["countries"], queryFn: getCountries },
             // { queryKey: ["currencies"], queryFn: getCurrencies },
-            // { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+            {
+                queryKey: ["brand_pillars"],
+                queryFn: () =>
+                    getBrandPillars({
+                        filter: {
+                            brand_id: form.getValues().brand_id as string,
+                        },
+                    }),
+                enabled: !!form.getValues().brand_id,
+            },
             {
                 queryKey: ["products"],
-                queryFn: () => getProducts({ page: 1, per_page: 999999 }),
+                queryFn: () => getProducts({ cursor: 1, page_size: 999999 }),
             },
             {
                 queryKey: ["product-distributor"],
@@ -121,9 +141,7 @@ const AddProductForm = ({
                         form.getValues().brand_id as string,
                         form.getValues().pref as string
                     ),
-                enabled:
-                    form.getValues().brand_id !== undefined &&
-                    form.getValues().pref !== undefined,
+                enabled: !!form.getValues().brand_id && !!form.getValues().pref,
             },
         ],
     });
@@ -152,50 +170,32 @@ const AddProductForm = ({
         },
     });
 
-    form.watch("brand_id", ({ value }) => {
-        setChanged((prev) => {
-            return {
-                ...prev,
-                brand_id: value ? true : false,
-            };
+    form.watch("brand_id", () => {
+        queryClient.invalidateQueries({
+            queryKey: ["brand_pillars"],
+            refetchType: "all",
+        });
+        queryClient.invalidateQueries({
+            queryKey: ["product-distributor"],
+            refetchType: "all",
         });
     });
 
-    form.watch("pref", ({ value }) => {
-        setChanged((prev) => {
-            return {
-                ...prev,
-                pref: value ? true : false,
-            };
+    form.watch("pref", () => {
+        queryClient.invalidateQueries({
+            queryKey: ["product-distributor"],
+            refetchType: "all",
         });
     });
 
-    useEffect(() => {
-        const fetchProductDistributors = async () => {
-            const { brand_id, pref } = form.getValues();
-            if (brand_id && pref) {
-                if (changed.brand_id || changed.pref) {
-                    await queryClient.invalidateQueries({
-                        queryKey: ["product-distributor"],
-                        exact: true,
-                        refetchType: "all",
-                    });
-                    setChanged({
-                        brand_id: false,
-                        pref: false,
-                    });
-                    productDistributorsData?.data.map((dist, idx) => {
-                        if (dist.coefficients.length > 0) {
-                            form.setFieldValue(`distributor_pricing.${idx}`, {
-                                distributor_id: dist.id,
-                            });
-                        }
-                    });
-                }
-            }
-        };
-        fetchProductDistributors();
-    }, [changed.brand_id, changed.pref, form]);
+    form.watch("category_id", () => {
+        queryClient.invalidateQueries({
+            queryKey: ["subCategories"],
+            refetchType: "all",
+        });
+    });
+
+    console.log("form", form.getValues());
 
     if (
         isEdit &&
@@ -204,6 +204,8 @@ const AddProductForm = ({
             productsLoading ||
             countriesLoading ||
             categoriesLoading ||
+            subCategoriesLoading ||
+            brandPillarsLoading ||
             productDistrubutorsLoading)
     )
         return <Loader />;
@@ -430,12 +432,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("offering_number")}
                             label="Offering number (optional)"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            hideControls
+                            allowDecimal={false}
+                            allowNegative={false}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -447,9 +450,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("irc")}
                             label="IRC"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                 </Grid>
@@ -471,9 +472,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("material_description")}
                             label="Material description"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -485,9 +484,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("ean_upc")}
                             label="Item EAN/UPC"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -499,9 +496,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("house")}
                             label="House"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -519,9 +514,26 @@ const AddProductForm = ({
                                 })) || []
                             }
                             label="Brand"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
+                        />
+                    </Grid.Col>
+                    <Grid.Col
+                        span={{
+                            sm: 6,
+                            base: 12,
+                        }}
+                    >
+                        <Select
+                            {...form.getInputProps("brand_pillar_id")}
+                            data={
+                                brandPillarsData?.data?.map((brand) => ({
+                                    value: brand.id.toString(),
+                                    label: brand.name,
+                                })) || []
+                            }
+                            label="Brand Pillar"
+                            classNames={selectStyles}
+                            disabled={!form.getValues().brand_id}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -533,9 +545,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("line")}
                             label="Line"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -544,12 +554,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("line_id")}
                             label="Line ID"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            hideControls
+                            allowDecimal={false}
+                            allowNegative={false}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -561,9 +572,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("article_type")}
                             label="Article type"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -572,12 +581,28 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("division")}
                             label="Division"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
+                        />
+                    </Grid.Col>
+                    <Grid.Col
+                        span={{
+                            sm: 6,
+                            base: 12,
+                        }}
+                    >
+                        <NumberInput
+                            {...form.getInputProps("price")}
+                            label="Price"
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                 </Grid>
@@ -604,9 +629,7 @@ const AddProductForm = ({
                                     label: category.name,
                                 })) || []
                             }
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -619,14 +642,13 @@ const AddProductForm = ({
                             {...form.getInputProps("subcategory_id")}
                             label="Sub category"
                             data={
-                                categoriesData?.data?.map((category) => ({
+                                subCategoriesData?.data?.map((category) => ({
                                     value: category.id.toString(),
                                     label: category.name,
                                 })) || []
                             }
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
+                            disabled={!form.getValues().category_id}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -644,9 +666,7 @@ const AddProductForm = ({
                                     label: market.name,
                                 })) || []
                             }
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -655,12 +675,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("segment")}
                             label="Segment"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -669,12 +690,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("icp_eur")}
                             label="ICP_EUR"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -683,12 +705,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("icp_usd")}
                             label="ICP_USD"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -700,9 +723,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("factory")}
                             label="Factory"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -711,12 +732,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("commodity_id")}
                             label="Commodity ID"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -734,9 +756,7 @@ const AddProductForm = ({
                                     label: country.name,
                                 })) || []
                             }
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -758,9 +778,7 @@ const AddProductForm = ({
                                     label: "Female",
                                 },
                             ]}
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                         />
                     </Grid.Col>
                 </Grid>
@@ -782,9 +800,7 @@ const AddProductForm = ({
                         <TextInput
                             {...form.getInputProps("size")}
                             label="Size & Dimension"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -793,12 +809,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("length")}
                             label="Length"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -807,12 +824,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("height")}
                             label="Height"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -821,12 +839,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("width")}
                             label="Width"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -835,12 +854,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("volume")}
                             label="Volume"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -849,12 +869,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("gross_weight")}
                             label="Gross weight"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -863,12 +884,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("net_weight")}
                             label="Net weight"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col
@@ -877,12 +899,13 @@ const AddProductForm = ({
                             base: 12,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             {...form.getInputProps("units")}
                             label="Units"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                 </Grid>
@@ -912,9 +935,7 @@ const AddProductForm = ({
                                 })) || []
                             }
                             clearable
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                             rightSection={<ChevronDownIcon />}
                         />
                     </Grid.Col>
@@ -938,9 +959,7 @@ const AddProductForm = ({
                                 })) || []
                             }
                             clearable
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={selectStyles}
                             rightSection={<ChevronDownIcon />}
                         />
                     </Grid.Col>
@@ -950,15 +969,16 @@ const AddProductForm = ({
                             base: 6,
                         }}
                     >
-                        <TextInput
+                        <NumberInput
                             key={form.key("price_benchmark.index_value")}
                             {...form.getInputProps(
                                 "price_benchmark.index_value"
                             )}
                             label="Index value"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textInputStyles}
+                            allowDecimal={false}
+                            allowNegative={false}
+                            hideControls
                         />
                     </Grid.Col>
                     <Grid.Col span={12}>
@@ -967,9 +987,7 @@ const AddProductForm = ({
                             {...form.getInputProps("price_benchmark.comment")}
                             label="Add a comment"
                             placeholder="HB BOT PM 24 EDP 50ml PREM IV"
-                            classNames={{
-                                label: "text-primary font-medium text-sm mb-1",
-                            }}
+                            classNames={textAreaStyles}
                         />
                     </Grid.Col>
                 </Grid>

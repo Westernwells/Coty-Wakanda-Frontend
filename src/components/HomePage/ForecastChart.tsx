@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart } from "@mantine/charts";
 import { useEffect, useState } from "react";
 import { Loader } from "@mantine/core";
+import { ForecastFilters } from "@/types";
 
-const ForecastChart = () => {
+const ForecastChart = ({ filters }: { filters?: ForecastFilters }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-chart"],
-    queryFn: getForecastChart,
+    queryFn: () => getForecastChart({ filters: filters }),
   });
 
   const [unitData, setUnitData] = useState<
@@ -50,12 +51,12 @@ const ForecastChart = () => {
       </div>
       <div className="grow p-5">
         <p className="text-lg pb-5">Total value forecast ($)</p>
-      <LineChart
-        h={300}
-        data={valueData}
-        series={[{ name: "value", label: "Profit Made" }]}
-        dataKey="date"
-      />
+        <LineChart
+          h={300}
+          data={valueData}
+          series={[{ name: "value", label: "Profit Made" }]}
+          dataKey="date"
+        />
       </div>
     </div>
   );

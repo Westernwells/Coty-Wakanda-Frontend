@@ -18,9 +18,9 @@ export const Route = createFileRoute("/_auth/stock-on-hand")({
 function RouteComponent() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["base-forcasts"],
-    queryFn: getForecasts,
+    queryFn: () => getForecasts({ cursor: 1, page_size: 20 }),
   });
-  const form = useForm<{forecast: ForecastSubmitInput[]}>();
+  const form = useForm<{ forecast: ForecastSubmitInput[] }>();
 
   useEffect(() => {
     if (data) {
@@ -32,7 +32,7 @@ function RouteComponent() {
         })),
       }));
 
-      form.setValues({forecast: [...transformedData]});
+      form.setValues({ forecast: [...transformedData] });
     }
   }, [data]);
   return (
@@ -48,7 +48,12 @@ function RouteComponent() {
           </div>
         </div>
       ) : (
-        <BaseForecastsTable showDateChanger={true} data={data.data.forecast} form={form} />
+        <BaseForecastsTable
+          showDateChanger={true}
+          initialData={data.data.forecast}
+          initialMeta={data.meta}
+          form={form}
+        />
       )}
       <SubmitFooter title="Submit Sales" form={form} />
     </div>

@@ -26,6 +26,24 @@ const Filter = ({
     setFilters: React.Dispatch<React.SetStateAction<Filters>>;
     isProductsPage?: boolean;
 }) => {
+    // const isDistributor = useUserStore((state) => state.user?.role === "admin");
+    // Transform data for select components
+    const form = useForm({
+        initialValues: {
+            search: "",
+            region_id: "",
+            market_id: "",
+            brand_id: "",
+            sub_brand_id: "",
+            distributor_id: "",
+            brand_type: "",
+        },
+
+        onValuesChange: (values) => {
+            setFilters(values);
+        },
+    });
+
     const [
         { data: marketsData, error: marketsError },
         { data: regionsData, error: regionsError },
@@ -37,59 +55,41 @@ const Filter = ({
             { queryKey: ["markets"], queryFn: getMarkets },
             { queryKey: ["regions"], queryFn: getRegions },
             { queryKey: ["brands"], queryFn: getBrands },
-            { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+            { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
             {
                 queryKey: ["distributors"],
-                queryFn: () =>
-                    getDistributors({ page: 1, per_page: 9999999999 }),
+                queryFn: () => getDistributors({ page_size: 100 }),
             },
         ],
     });
-    // const isDistributor = useUserStore((state) => state.user?.role === "admin");
-    // Transform data for select components
+
     const marketOptions =
         marketsData?.data?.map((market) => ({
-            value: market.name,
+            value: market.id.toString(),
             label: market.name,
         })) || [];
 
     const regionOptions =
         regionsData?.data?.map((region) => ({
-            value: region.name,
+            value: region.id.toString(),
             label: region.name,
         })) || [];
 
     const brandOptions =
         brandsData?.data?.map((brand) => ({
-            value: brand.name,
+            value: brand.id.toString(),
             label: brand.name,
         })) || [];
     const brandPillarOptions =
         brandPillarsData?.data?.map((pillar) => ({
-            value: pillar.name,
+            value: pillar.id.toString(),
             label: pillar.name,
         })) || [];
     const distributorOptions =
         distributorsData?.data?.map((dist) => ({
-            value: dist.name,
+            value: dist.id.toString(),
             label: dist.name,
         })) || [];
-    const form = useForm({
-        mode: "uncontrolled",
-        initialValues: {
-            search: "",
-            region: "",
-            market: "",
-            brand: "",
-            brandPillar: "",
-            distributor: "",
-            brandType: "",
-        },
-
-        onValuesChange: (values) => {
-            setFilters(values);
-        },
-    });
 
     const hasError =
         marketsError ||
@@ -139,7 +139,7 @@ const Filter = ({
                 {isProductsPage ? (
                     <>
                         <Select
-                            {...form.getInputProps("brand")}
+                            {...form.getInputProps("brand_id")}
                             aria-label="Filter by brand"
                             placeholder="Filter by brand"
                             data={brandOptions}
@@ -148,7 +148,7 @@ const Filter = ({
                             rightSection={<ChevronDownIcon />}
                         />
                         <Select
-                            {...form.getInputProps("brandPillar")}
+                            {...form.getInputProps("sub_brand_id")}
                             aria-label="Filter by brand pillar"
                             placeholder="Filter by brand pillar"
                             data={brandPillarOptions}
@@ -157,7 +157,7 @@ const Filter = ({
                             rightSection={<ChevronDownIcon />}
                         />
                         <Select
-                            {...form.getInputProps("distributor")}
+                            {...form.getInputProps("distributor_id")}
                             aria-label="Filter by distributor"
                             placeholder="Filter by distributor"
                             data={distributorOptions}
@@ -169,7 +169,7 @@ const Filter = ({
                 ) : (
                     <>
                         <Select
-                            {...form.getInputProps("region")}
+                            {...form.getInputProps("region_id")}
                             aria-label="Filter by region"
                             placeholder="Filter by region"
                             data={regionOptions}
@@ -178,7 +178,7 @@ const Filter = ({
                             rightSection={<ChevronDownIcon />}
                         />
                         <Select
-                            {...form.getInputProps("market")}
+                            {...form.getInputProps("market_id")}
                             aria-label="Filter by market"
                             placeholder="Filter by market"
                             data={marketOptions}
@@ -193,8 +193,8 @@ const Filter = ({
             {isProductsPage && (
                 <Group gap={24} w="100%" className="mt-6">
                     <Radio.Group
-                        name="brandType"
-                        {...form.getInputProps("brandType")}
+                        name="brand_type"
+                        {...form.getInputProps("brand_type")}
                     >
                         <Group
                             gap={24}

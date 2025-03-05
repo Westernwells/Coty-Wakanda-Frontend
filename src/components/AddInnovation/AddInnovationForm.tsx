@@ -10,17 +10,21 @@ import { useQueries } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
-import EyeIcon from "../Icons/EyeIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import PencilIcon from "../Icons/PencilIcon";
+import { Product } from "@/types";
+import { useNavigate } from "@tanstack/react-router";
 
 const AddInnovationForm = ({
   setOfferingOpen,
   form,
+  setOfferingIndex,
 }: {
   setOfferingOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setOfferingIndex: React.Dispatch<React.SetStateAction<number>>;
   form: UseFormReturnType<{
     brand_id: string;
     sub_brand_id: string;
@@ -37,11 +41,12 @@ const AddInnovationForm = ({
       type: string;
       deck: string;
       market_deck: string;
-      products: {
-        irc: string;
-        currency: string;
-        price: string;
-      }[];
+      products: Array<
+        Partial<Product> & {
+          currency: string;
+          price: string;
+        }
+      >;
     }[];
   }>;
 }) => {
@@ -51,11 +56,12 @@ const AddInnovationForm = ({
       {
         queryKey: ["brandPillars"],
         queryFn: () =>
-          getBrandPillars({ "filter[brand_id]": form.getValues().brand_id }),
-        enabled: form.getValues().brand_id !== "",
+          getBrandPillars({ filter: { brand_id: form.getValues().brand_id } }),
+        enabled: !!form.getValues().brand_id,
       },
     ],
   });
+  const navigate = useNavigate();
 
   const addInnovationMutation = useAddInnovation({ mutationConfig: {} });
 
@@ -71,21 +77,31 @@ const AddInnovationForm = ({
   return (
     <form
       onSubmit={form.onSubmit((values) => {
-        const { year, forecast_deadline, offerings, ...toSubmit } = values;
-        addInnovationMutation.mutate({
-          data: {
-            ...toSubmit,
-            forecast_deadline: forecast_deadline.toISOString().split("T")[0],
-            year: year?.getFullYear().toString(),
-            offerings: offerings?.map((offering) => {
-              return {
-                ...offering,
-                icw: offering.icw.toISOString().split("T")[0],
-                ocd: offering.ocd.toISOString().split("T")[0],
-              };
-            }),
-          },
-        });
+        if (Object.keys(form.validate().errors).length === 0) {
+          form.validate();
+          const { year, forecast_deadline, offerings, ...toSubmit } = values;
+          addInnovationMutation.mutate(
+            {
+              data: {
+                ...toSubmit,
+                forecast_deadline: forecast_deadline
+                  .toISOString()
+                  .split("T")[0],
+                year: year?.getFullYear().toString(),
+                offerings: offerings?.map((offering) => {
+                  return {
+                    ...offering,
+                    icw: offering.icw.toISOString().split("T")[0],
+                    ocd: offering.ocd.toISOString().split("T")[0],
+                  };
+                }),
+              },
+            },
+            {
+              onSuccess: () => navigate({ to: "/innovations" }),
+            }
+          );
+        }
       })}
     >
       <DateInput
@@ -277,7 +293,7 @@ const AddInnovationForm = ({
                       </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>
-                      {form.getValues().offerings?.map((offering) => (
+                      {form.getValues().offerings?.map((offering, index) => (
                         <Table.Tr key={offering.number}>
                           <Table.Td className="rounded-ss-xl">
                             {offering.number}
@@ -285,8 +301,14 @@ const AddInnovationForm = ({
                           <Table.Td>{dateToLocalString(offering.icw)}</Table.Td>
                           <Table.Td>{dateToLocalString(offering.icw)}</Table.Td>
                           <Table.Td>{offering.type}</Table.Td>
-                          <Table.Td className="rounded-se-xl">
-                            <EyeIcon />
+                          <Table.Td
+                            className="rounded-se-xl cursor-pointer"
+                            onClick={() => {
+                              setOfferingIndex(index);
+                              setOfferingOpen(true);
+                            }}
+                          >
+                            <PencilIcon />
                           </Table.Td>
                         </Table.Tr>
                       ))}

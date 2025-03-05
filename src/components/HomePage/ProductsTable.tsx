@@ -1,168 +1,146 @@
-import { Table } from "@mantine/core";
-import PencilIcon from "../Icons/PencilIcon";
-import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { getProducts } from "@/api/products/get-products";
 import { useUserStore } from "@/stores/userStore";
+import { Filters, Meta, Product } from "@/types";
+import { Loader, Table } from "@mantine/core";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 import EyeIcon from "../Icons/EyeIcon";
-import { Filters, Product } from "@/types";
-import { useInView } from "react-intersection-observer";
+import PencilIcon from "../Icons/PencilIcon";
 
 function ProductsTable({
-    filters,
-    data,
+  filters,
+  initialData,
+  initialMeta,
 }: {
-    data: Product[];
-    filters: Filters;
+  initialData: Product[];
+  initialMeta: Meta;
+  filters: Filters;
 }) {
-    const [activePage, setActivePage] = useState(1);
-    const itemsPerPage = 10;
-    const navigate = useNavigate();
-    const { ref, inView } = useInView({
-        threshold: 1,
-        delay: 100,
-        trackVisibility: true,
-    });
-    const role = useUserStore((state) => state.user)?.role;
+  const navigate = useNavigate();
+  const role = useUserStore((state) => state.user)?.role;
 
-    const filteredData = useMemo(() => {
-        if (!data) return [];
+  const [products, setProducts] = useState<Product[]>(initialData);
+  const [meta, setMeta] = useState<Meta>(initialMeta);
+  const [hasMore, setHasMore] = useState(initialMeta.has_next);
 
-        return data.filter((item) => {
-            const searchTerm = filters.search.toLowerCase();
-            const searchMatch =
-                !filters.search ||
-                item.category.name.toLowerCase().includes(searchTerm) ||
-                item.house.toLowerCase().includes(searchTerm) ||
-                item.gender.toLowerCase().includes(searchTerm);
+  // ✅ Reset product list when filters change
+  useEffect(() => {
+    setProducts(initialData);
+    setMeta(initialMeta);
+    setHasMore(initialMeta.has_next);
+  }, [filters, initialData, initialMeta]);
 
-            const brandMatch =
-                !filters.brand ||
-                item.brand.name.toLowerCase() === filters.brand.toLowerCase();
+  const fetchMoreProducts = async () => {
+    if (!meta?.has_next) return;
 
-            // ✅ Filter by distributor ID from distributor_pricing
-            const distributorMatch =
-                !filters.distributor ||
-                item.distributor_pricing.some(
-                    (pricing) =>
-                        pricing.distributor.id.toString() ===
-                        filters.distributor
-                );
+    try {
+      const response = await getProducts({
+        cursor: meta.cursor,
+        page_size: 20,
+        filters,
+      });
 
-            // ✅ Filter by brand type (Luxury, Mass Market, etc.)
-            const brandTypeMatch =
-                !filters.brandType ||
-                item.brand.type.toLowerCase() ===
-                    filters.brandType.toLowerCase();
+      setProducts((prev) => [...prev, ...response.data]);
+      setMeta(response.meta);
+      setHasMore(response.meta.has_next);
+    } catch (error) {
+      console.error("Error fetching more products:", error);
+      setHasMore(false);
+    }
+  };
 
-            return (
-                searchMatch && brandMatch && distributorMatch && brandTypeMatch
-            );
-        });
-    }, [data, filters]);
-
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-    const paginatedData = useMemo(() => {
-        return filteredData.slice(0, activePage * itemsPerPage);
-    }, [filteredData, activePage, itemsPerPage]);
-
-    // Load more products when user reaches the bottom
-    useEffect(() => {
-        if (inView && activePage < totalPages) {
-            setActivePage((prev) => prev + 1);
-        }
-    }, [inView, activePage, totalPages]);
-
-    return (
-        <div className="bg-white shadow-md rounded-lg p-6 mt-5">
-            <div className="relative border border-primary rounded-xl border-t-0">
-                <Table.ScrollContainer minWidth={768}>
-                    <Table
-                        verticalSpacing="sm"
-                        borderColor="transparent"
-                        striped="even"
-                        stripedColor="#F2F4F6"
-                    >
-                        <Table.Thead>
-                            <Table.Tr className="bg-primary text-white">
-                                <Table.Th className="rounded-ss-xl">
-                                    Brand
-                                </Table.Th>
-                                <Table.Th>Brand Type</Table.Th>
-                                <Table.Th>Brand Pillar</Table.Th>
-                                <Table.Th>Description</Table.Th>
-                                <Table.Th>Distributor</Table.Th>
-                                <Table.Th>IRC</Table.Th>
-                                <Table.Th>Status</Table.Th>
-                                <Table.Th className="rounded-se-xl"></Table.Th>
-                            </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                            {paginatedData.map((product, index) => (
-                                <Table.Tr
-                                    key={product.id}
-                                    ref={
-                                        index === paginatedData.length - 1
-                                            ? ref
-                                            : null
-                                    }
-                                >
-                                    <Table.Td className="first:rounded-es-xl">
-                                        {product.brand.name}
-                                    </Table.Td>
-                                    <Table.Td>{product.brand.type}</Table.Td>
-                                    <Table.Td>{product.brand.name}</Table.Td>
-                                    <Table.Td>
-                                        {product.material_description}
-                                    </Table.Td>
-                                    <Table.Td>
-                                        {product.distributor_pricing
-                                            .map((p) => p.distributor.name)
-                                            .join(", ")}
-                                    </Table.Td>
-                                    <Table.Td>{product.irc}</Table.Td>
-                                    <Table.Td>
-                                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
-                                            {product.pref}
-                                        </span>
-                                    </Table.Td>
-                                    {role === "admin" ? (
-                                        <Table.Td
-                                            className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                                            onClick={() => {
-                                                navigate({
-                                                    to: "/edit-product/$productId",
-                                                    params: {
-                                                        productId: `${product.id}`,
-                                                    },
-                                                });
-                                            }}
-                                        >
-                                            <PencilIcon />
-                                        </Table.Td>
-                                    ) : (
-                                        <Table.Td
-                                            className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                                            onClick={() => {
-                                                navigate({
-                                                    to: "/products/$productId",
-                                                    params: {
-                                                        productId: `${product.id}`,
-                                                    },
-                                                });
-                                            }}
-                                        >
-                                            <EyeIcon />
-                                        </Table.Td>
-                                    )}
-                                </Table.Tr>
-                            ))}
-                        </Table.Tbody>
-                    </Table>
-                </Table.ScrollContainer>
+  return (
+    <div className="bg-white shadow-md rounded-lg p-6 mt-5">
+      <div className="relative border border-primary rounded-xl border-t-0">
+        <InfiniteScroll
+          dataLength={products.length}
+          next={fetchMoreProducts}
+          hasMore={hasMore}
+          loader={
+            <div className="text-center py-4">
+              <Loader size="md" />
             </div>
-        </div>
-    );
+          }
+          endMessage={
+            <p className="text-center text-gray-500 py-4">
+              No more products to load.
+            </p>
+          }
+        >
+          <Table.ScrollContainer minWidth={768}>
+            <Table
+              verticalSpacing="sm"
+              borderColor="transparent"
+              striped="even"
+              stripedColor="#F2F4F6"
+            >
+              <Table.Thead>
+                <Table.Tr className="bg-primary text-white">
+                  <Table.Th className="rounded-ss-xl">Brand</Table.Th>
+                  <Table.Th>Brand Type</Table.Th>
+                  <Table.Th>Brand Pillar</Table.Th>
+                  <Table.Th>Description</Table.Th>
+                  <Table.Th>Distributor</Table.Th>
+                  <Table.Th>IRC</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                  <Table.Th className="rounded-se-xl"></Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {products.map((product) => (
+                  <Table.Tr key={product.id}>
+                    <Table.Td className="first:rounded-es-xl">
+                      {product.brand.name}
+                    </Table.Td>
+                    <Table.Td>{product.brand.type}</Table.Td>
+                    <Table.Td>{product.brand.name}</Table.Td>
+                    <Table.Td>{product.material_description}</Table.Td>
+                    <Table.Td>{product.brand_pillar.name}</Table.Td>
+                    <Table.Td>{product.irc}</Table.Td>
+                    <Table.Td>
+                      <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
+                        {product.pref}
+                      </span>
+                    </Table.Td>
+                    {role === "admin" ? (
+                      <Table.Td
+                        className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
+                        onClick={() => {
+                          navigate({
+                            to: "/edit-product/$productId",
+                            params: {
+                              productId: `${product.id}`,
+                            },
+                          });
+                        }}
+                      >
+                        <PencilIcon />
+                      </Table.Td>
+                    ) : (
+                      <Table.Td
+                        className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
+                        onClick={() => {
+                          navigate({
+                            to: "/products/$productId",
+                            params: {
+                              productId: `${product.id}`,
+                            },
+                          });
+                        }}
+                      >
+                        <EyeIcon />
+                      </Table.Td>
+                    )}
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        </InfiniteScroll>
+      </div>
+    </div>
+  );
 }
 
 export default ProductsTable;

@@ -1,7 +1,9 @@
 export type Meta = {
     page: number;
     total: number;
-    perPage: number;
+    page_size: number;
+    cursor: number;
+    has_next: boolean;
 };
 
 export interface User {
@@ -119,6 +121,10 @@ export interface Product {
     sku: string;
     pref: string;
     product_type: string;
+    brand_pillar: {
+        id: number;
+        name: string;
+    };
     grouping: number;
     price: string;
     launch_date: string | Date;
@@ -150,7 +156,7 @@ export interface Product {
     brand: Brand;
     category: Category;
     country: Country;
-    market: Market;
+    market: Market | null;
     subcategory: Subcategory;
     price_benchmark: PriceBenchmark | null;
     documents: Document[];
@@ -175,12 +181,25 @@ export interface Subcategory {
 
 export interface Filters {
     search: string;
-    brand: string;
-    brandPillar: string;
-    distributor: string;
-    region: string;
-    market: string;
-    brandType: string;
+    brand_id: string;
+    sub_brand_id: string;
+    distributor_id: string;
+    region_id: string;
+    market_id: string;
+    brand_type: string;
+}
+
+export interface ForecastFilters {
+    search: string;
+    start_date: string;
+    end_date: string;
+    brand_id: string;
+    sub_brand_id: string;
+    distributor_id: string;
+    launch_id: string;
+    sort?: string;
+    type?: string;
+    brand_type: string;
 }
 
 export interface Document {
@@ -333,10 +352,11 @@ export interface InnovationInput {
         type: string;
         deck: string;
         market_deck: string;
-        products: {
-            irc: string;
-            currency: string;
-            price: string;
-        }[];
+        products: Array<
+            Partial<Product> & {
+                currency: string;
+                price: string;
+            }
+        >;
     }[];
 }

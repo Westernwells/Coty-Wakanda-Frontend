@@ -1,15 +1,14 @@
-import BaseForecastsTable from "@/components/Distributor-forcasts/BaseForcastsTable";
-import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooterBaseForecast";
-import DeadlineHeader from "@/components/DistributorPages/Shared/DeadlineHeader";
-import Headline from "@/components/Shared/Headline";
-import { createFileRoute } from "@tanstack/react-router";
 import { getForecasts } from "@/api/forecasts/get-forcasts";
-import { useQuery } from "@tanstack/react-query";
-import { useForm } from "@mantine/form";
-import { useEffect } from "react";
-import { ForecastSubmitInput } from "@/types";
+import BaseForecastsTable from "@/components/Distributor-forcasts/BaseForcastsTable";
+import DeadlineHeader from "@/components/DistributorPages/Shared/DeadlineHeader";
+import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooterBaseForecast";
 import ErrorCard from "@/components/Shared/ErrorCard";
+import Headline from "@/components/Shared/Headline";
+import { ForecastSubmitInput } from "@/types";
 import { Loader } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/base-forecasts")({
   component: RouteComponent,
@@ -18,23 +17,9 @@ export const Route = createFileRoute("/_auth/base-forecasts")({
 function RouteComponent() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["base-forcasts"],
-    queryFn: getForecasts,
+    queryFn: () => getForecasts({ cursor: 1, page_size: 20 }),
   });
-  const form = useForm<{forecast: ForecastSubmitInput[]}>();
-
-  useEffect(() => {
-    if (data) {
-      const transformedData = data.data.forecast.map((item) => ({
-        product_id: item.product.id,
-        items: Object.entries(item.items).map(([month, item]) => ({
-          month,
-          value: item.value,
-        })),
-      }));
-
-      form.setValues({forecast: [...transformedData]});
-    }
-  }, [data]);
+  const form = useForm<{ forecast: ForecastSubmitInput[] }>();
 
   return (
     <div>
@@ -49,7 +34,11 @@ function RouteComponent() {
           </div>
         </div>
       ) : (
-        <BaseForecastsTable data={data.data.forecast} form={form} />
+        <BaseForecastsTable
+          initialData={data.data.forecast}
+          initialMeta={data.meta}
+          form={form}
+        />
       )}
 
       <SubmitFooter title="Submit Forecast" form={form} />

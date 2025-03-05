@@ -1,13 +1,18 @@
-import { ForecastChartData } from "@/types";
+import { ForecastChartData, ForecastFilters } from "@/types";
 
 import { axios } from "@/lib/axios";
 
+type GetForecastsChartParams = {
+  filters?: ForecastFilters;
+};
 export type ApiResponse = {
-    message: string;
-    data: {chart: ForecastChartData;}
-}
+  message: string;
+  data: { chart: ForecastChartData };
+};
 
-export const getForecastChart = async (): Promise<ApiResponse> => {
-    const response = await axios.get(`/forecasts/chart`);
-    return response.data;
-}
+export const getForecastChart = async (
+  params?: GetForecastsChartParams
+): Promise<ApiResponse> => {
+  const response = await axios.get(`/forecasts/chart`, { params });
+  return response.data;
+};

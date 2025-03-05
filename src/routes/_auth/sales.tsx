@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_auth/sales")({
 function RouteComponent() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["base-forcasts"],
-    queryFn: getForecasts,
+    queryFn: () => getForecasts({ cursor: 1, page_size: 20 }),
   });
   const form = useForm<{ forecast: ForecastSubmitInput[] }>();
 
@@ -51,7 +51,8 @@ function RouteComponent() {
         <BaseForecastsTable
           isSales
           showDateChanger={true}
-          data={data.data.forecast}
+          initialData={data.data.forecast}
+          initialMeta={data.meta}
           form={form}
         />
       )}

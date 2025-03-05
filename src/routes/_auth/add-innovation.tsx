@@ -3,9 +3,10 @@ import AddOfferingForm from "@/components/AddInnovation/AddOfferingForm";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import Headline from "@/components/Shared/Headline";
 import { Button } from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { useForm, zodResolver } from "@mantine/form";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_auth/add-innovation")({
   component: RouteComponent,
@@ -13,6 +14,39 @@ export const Route = createFileRoute("/_auth/add-innovation")({
 
 function RouteComponent() {
   const [offeringOpen, setOfferingOpen] = useState(false);
+  const [offeringIndex, setOfferingIndex] = useState(-1);
+  const schema = z.object({
+    brand_id: z.string({
+      message: "Brand Is required",
+    }).min(1, "Brand Is required"),
+    launch_name: z.string({
+      message: "Brand Is required",
+    }).min(1, "Launch Name is required"),
+    other_name: z.string({
+      message: "Brand Is required",
+    }).min(1, "Launch Name is required"),
+    format: z.string({
+      message: "Format is required",
+    }).min(1, "Launch Name is required"),
+    sub_brand_id: z.string({
+      message: "Sub Brand Is required",
+    }).min(1, "sub brand is required"),
+    year: z.date({
+      message: "Brand Is required",
+    }),
+    offerings: z.array(z.object({
+      number: z.string({
+        message: "Offering Number is required"
+      }).min(1, "offering number is required"),
+      icw: z.date({
+        message: "Global ICW is required"
+      }),
+      ocd: z.date({
+        message: "Global OCD is required"
+      }),
+      type: z.string().min(1, "Type is required"),
+    })).optional()
+  })
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -25,6 +59,7 @@ function RouteComponent() {
       document: "",
       forecast_deadline: new Date(),
     },
+    validate: zodResolver(schema),
   });
 
   return (
@@ -46,9 +81,9 @@ function RouteComponent() {
         </Button>
       </section>
       {!offeringOpen ? (
-        <AddInnovationForm setOfferingOpen={setOfferingOpen} form={form} />
+        <AddInnovationForm setOfferingOpen={setOfferingOpen} setOfferingIndex={setOfferingIndex} form={form} />
       ) : (
-        <AddOfferingForm setOfferingOpen={setOfferingOpen} form={form} />
+        <AddOfferingForm setOfferingOpen={setOfferingOpen} offeringIndex={offeringIndex} form={form} />
       )}
     </div>
   );

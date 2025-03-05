@@ -26,10 +26,10 @@ const OrderFilter = ({
   ] = useQueries({
     queries: [
       { queryKey: ["brands"], queryFn: getBrands },
-      { queryKey: ["brandPillars"], queryFn: getBrandPillars },
+      { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
       {
         queryKey: ["distributors"],
-        queryFn: () => getDistributors({ page: 1, per_page: 999999 }),
+        queryFn: () => getDistributors({ page_size: 999999 }),
       },
     ],
   });

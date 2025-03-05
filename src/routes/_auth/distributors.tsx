@@ -1,7 +1,6 @@
 import { Button, Group, Loader } from "@mantine/core";
 import { Link, createFileRoute } from "@tanstack/react-router";
-
-import DistributorsTable from "@/components/Distributors/Table";
+import DistributorsTable from "@/components/Distributors/DistributorsTable";
 import Filter from "@/components/HomePage/Filter";
 import Headline from "@/components/Shared/Headline";
 import ImportIcon from "@/components/Icons/ImportIcon";
@@ -16,22 +15,27 @@ export const Route = createFileRoute("/_auth/distributors")({
 });
 
 function RouteComponent() {
-    const { data, isLoading, error } = useQuery({
-        queryKey: ["distributors"],
-        queryFn: () => getDistributors({ page: 1, per_page: 9999999 }),
-    });
-
-    const [filters, setFilters] = useState<Filters>({
+    const [filter, setFilter] = useState<Filters>({
         search: "",
-        region: "",
-        market: "",
-        brand: "",
-        brandPillar: "",
-        distributor: "",
-        brandType: "",
+        region_id: "",
+        market_id: "",
+        brand_id: "",
+        sub_brand_id: "",
+        distributor_id: "",
+        brand_type: "",
     });
 
-    if (error) {
+    const { data, isLoading, error } = useQuery({
+        queryKey: ["distributors", filter], // ✅ Filters trigger refetch
+        queryFn: () =>
+            getDistributors({
+                cursor: 1,
+                page_size: 20,
+                filter,
+            }),
+    });
+
+    if (error || (!isLoading && !data)) {
         return (
             <div className="w-full">
                 <Headline title="Distributors" />
@@ -67,14 +71,18 @@ function RouteComponent() {
                     </Button>
                 </Group>
 
-                <Filter setFilters={setFilters} />
+                <Filter setFilters={setFilter} />
 
-                {isLoading ? (
+                {isLoading || !data ? (
                     <div className="mt-5 p-6 bg-white rounded-lg flex justify-center">
                         <Loader size="md" />
                     </div>
                 ) : (
-                    <DistributorsTable data={data?.data} filters={filters} />
+                    <DistributorsTable
+                        initialData={data.data}
+                        initialMeta={data.meta}
+                        filters={filter}
+                    />
                 )}
             </section>
         </div>
