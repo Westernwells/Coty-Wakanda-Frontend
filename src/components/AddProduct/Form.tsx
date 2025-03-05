@@ -78,7 +78,7 @@ const AddProductForm = ({
             price_benchmark: {
                 ...flatProduct.price_benchmark,
                 brand_id: product.price_benchmark?.brand?.id.toString(),
-                product_id: flatProduct.price_benchmark?.product?.id.toString(),
+                product_id: flatProduct.id.toString(),
             },
         };
     }
