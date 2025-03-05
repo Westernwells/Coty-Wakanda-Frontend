@@ -96,25 +96,6 @@ const ForecastingFilters = ({
                 Refine your results
             </Title>
             <div className="flex items-center gap-x-5 mt-6 flex-wrap">
-                <TextInput
-                    {...form.getInputProps("search")}
-                    aria-label="Search"
-                    placeholder="Search for..."
-                    className="flex-grow"
-                    leftSection={<SearchIcon />}
-                />
-                <div
-                    className={twMerge(
-                        "flex items-center gap-x-2 cursor-pointer",
-                        !form.getValues().search.length && "hidden"
-                    )}
-                    onClick={() => form.reset()}
-                >
-                    <CloseButton />
-                    <span className="hidden sm:inline text-nowrap text-primary font-medium">
-                        Clear all
-                    </span>
-                </div>
                 <CSVLink data={[]} className="w-full sm:w-auto">
                     <Button
                         variant="outline"
