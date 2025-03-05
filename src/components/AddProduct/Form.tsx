@@ -109,7 +109,10 @@ const AddProductForm = ({
         },
     ] = useQueries({
         queries: [
-            { queryKey: ["markets"], queryFn: getMarkets },
+            {
+                queryKey: ["markets"],
+                queryFn: () => getMarkets({}),
+            },
             { queryKey: ["categories"], queryFn: getCategories },
             {
                 queryKey: ["subCategories"],

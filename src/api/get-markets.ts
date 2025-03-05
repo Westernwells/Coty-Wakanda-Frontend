@@ -15,7 +15,15 @@ export type ApiResponse = {
     data: Market[];
 };
 
-export const getMarkets = async (): Promise<ApiResponse> => {
-    const response = await axios.get("/markets");
+export const getMarkets = async ({
+    region_id,
+}: {
+    region_id?: string;
+}): Promise<ApiResponse> => {
+    const response = await axios.get("/markets", {
+        params: {
+            "filter[region_id]": region_id,
+        },
+    });
     return response.data;
 };

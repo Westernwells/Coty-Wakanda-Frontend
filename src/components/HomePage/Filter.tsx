@@ -52,7 +52,7 @@ const Filter = ({
         { data: distributorsData, error: distributorsError },
     ] = useQueries({
         queries: [
-            { queryKey: ["markets"], queryFn: getMarkets },
+            { queryKey: ["markets"], queryFn: () => getMarkets({}) },
             { queryKey: ["regions"], queryFn: getRegions },
             { queryKey: ["brands"], queryFn: getBrands },
             { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },

@@ -79,7 +79,7 @@ const EditInnovationProductForm = ({
         },
     ] = useQueries({
         queries: [
-            { queryKey: ["markets"], queryFn: getMarkets },
+            { queryKey: ["markets"], queryFn: () => getMarkets({}) },
             { queryKey: ["categories"], queryFn: getCategories },
             { queryKey: ["brands"], queryFn: getBrands },
             { queryKey: ["countriues"], queryFn: getCountries },
