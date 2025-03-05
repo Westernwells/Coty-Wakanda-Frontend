@@ -94,6 +94,10 @@ function ForecastingTable({
         { value: "cost", label: "Cost" },
     ];
 
+    if (!initialData.length) {
+        return <p>Sorry no data to show try changing your filters</p>;
+    }
+
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
             {/* Table */}
@@ -225,7 +229,7 @@ function ForecastingTable({
                                         <Table.Td>
                                             {element.product.offering_number}
                                         </Table.Td>
-                                        {Object.keys(element.items).map(
+                                        {Object.keys(element?.items).map(
                                             (key) => (
                                                 <Table.Td key={key}>
                                                     {element.items[key].value}
