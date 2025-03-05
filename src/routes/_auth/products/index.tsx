@@ -18,8 +18,8 @@ function RouteComponent() {
     const userData = useUserStore((state) => state.user);
     const [filter, setFilter] = useState<Filters>({
         search: "",
-        region: "",
-        market: "",
+        region_id: "",
+        market_id: "",
         brand_id: "",
         sub_brand_id: "",
         distributor_id: "",
