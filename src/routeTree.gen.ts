@@ -26,6 +26,7 @@ import { Route as AuthInnovationForecastsImport } from './routes/_auth/innovatio
 import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
 import { Route as AuthDistributorsImport } from './routes/_auth/distributors'
 import { Route as AuthBaseForecastsImport } from './routes/_auth/base-forecasts'
+import { Route as AuthApplicationSettingsImport } from './routes/_auth/application-settings'
 import { Route as AuthAddProductImport } from './routes/_auth/add-product'
 import { Route as AuthAddOfferingImport } from './routes/_auth/add-offering'
 import { Route as AuthAddInnovationImport } from './routes/_auth/add-innovation'
@@ -124,6 +125,12 @@ const AuthDistributorsRoute = AuthDistributorsImport.update({
 const AuthBaseForecastsRoute = AuthBaseForecastsImport.update({
   id: '/base-forecasts',
   path: '/base-forecasts',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthApplicationSettingsRoute = AuthApplicationSettingsImport.update({
+  id: '/application-settings',
+  path: '/application-settings',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -241,6 +248,13 @@ declare module '@tanstack/react-router' {
       path: '/add-product'
       fullPath: '/add-product'
       preLoaderRoute: typeof AuthAddProductImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/application-settings': {
+      id: '/_auth/application-settings'
+      path: '/application-settings'
+      fullPath: '/application-settings'
+      preLoaderRoute: typeof AuthApplicationSettingsImport
       parentRoute: typeof AuthImport
     }
     '/_auth/base-forecasts': {
@@ -379,6 +393,7 @@ interface AuthRouteChildren {
   AuthAddInnovationRoute: typeof AuthAddInnovationRoute
   AuthAddOfferingRoute: typeof AuthAddOfferingRoute
   AuthAddProductRoute: typeof AuthAddProductRoute
+  AuthApplicationSettingsRoute: typeof AuthApplicationSettingsRoute
   AuthBaseForecastsRoute: typeof AuthBaseForecastsRoute
   AuthDistributorsRoute: typeof AuthDistributorsRoute
   AuthForecastingRoute: typeof AuthForecastingRoute
@@ -404,6 +419,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthAddInnovationRoute: AuthAddInnovationRoute,
   AuthAddOfferingRoute: AuthAddOfferingRoute,
   AuthAddProductRoute: AuthAddProductRoute,
+  AuthApplicationSettingsRoute: AuthApplicationSettingsRoute,
   AuthBaseForecastsRoute: AuthBaseForecastsRoute,
   AuthDistributorsRoute: AuthDistributorsRoute,
   AuthForecastingRoute: AuthForecastingRoute,
@@ -435,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/add-innovation': typeof AuthAddInnovationRoute
   '/add-offering': typeof AuthAddOfferingRoute
   '/add-product': typeof AuthAddProductRoute
+  '/application-settings': typeof AuthApplicationSettingsRoute
   '/base-forecasts': typeof AuthBaseForecastsRoute
   '/distributors': typeof AuthDistributorsRoute
   '/forecasting': typeof AuthForecastingRoute
@@ -462,6 +479,7 @@ export interface FileRoutesByTo {
   '/add-innovation': typeof AuthAddInnovationRoute
   '/add-offering': typeof AuthAddOfferingRoute
   '/add-product': typeof AuthAddProductRoute
+  '/application-settings': typeof AuthApplicationSettingsRoute
   '/base-forecasts': typeof AuthBaseForecastsRoute
   '/distributors': typeof AuthDistributorsRoute
   '/forecasting': typeof AuthForecastingRoute
@@ -491,6 +509,7 @@ export interface FileRoutesById {
   '/_auth/add-innovation': typeof AuthAddInnovationRoute
   '/_auth/add-offering': typeof AuthAddOfferingRoute
   '/_auth/add-product': typeof AuthAddProductRoute
+  '/_auth/application-settings': typeof AuthApplicationSettingsRoute
   '/_auth/base-forecasts': typeof AuthBaseForecastsRoute
   '/_auth/distributors': typeof AuthDistributorsRoute
   '/_auth/forecasting': typeof AuthForecastingRoute
@@ -520,6 +539,7 @@ export interface FileRouteTypes {
     | '/add-innovation'
     | '/add-offering'
     | '/add-product'
+    | '/application-settings'
     | '/base-forecasts'
     | '/distributors'
     | '/forecasting'
@@ -546,6 +566,7 @@ export interface FileRouteTypes {
     | '/add-innovation'
     | '/add-offering'
     | '/add-product'
+    | '/application-settings'
     | '/base-forecasts'
     | '/distributors'
     | '/forecasting'
@@ -573,6 +594,7 @@ export interface FileRouteTypes {
     | '/_auth/add-innovation'
     | '/_auth/add-offering'
     | '/_auth/add-product'
+    | '/_auth/application-settings'
     | '/_auth/base-forecasts'
     | '/_auth/distributors'
     | '/_auth/forecasting'
@@ -628,6 +650,7 @@ export const routeTree = rootRoute
         "/_auth/add-innovation",
         "/_auth/add-offering",
         "/_auth/add-product",
+        "/_auth/application-settings",
         "/_auth/base-forecasts",
         "/_auth/distributors",
         "/_auth/forecasting",
@@ -668,6 +691,10 @@ export const routeTree = rootRoute
     },
     "/_auth/add-product": {
       "filePath": "_auth/add-product.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/application-settings": {
+      "filePath": "_auth/application-settings.tsx",
       "parent": "/_auth"
     },
     "/_auth/base-forecasts": {

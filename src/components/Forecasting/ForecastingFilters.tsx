@@ -2,14 +2,25 @@ import { getDistributors } from "@/api/distributors/get-distributors";
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { ForecastFilters } from "@/types";
-import { Button, Divider, Group, Radio, Select, Title } from "@mantine/core";
+import {
+    Button,
+    CloseButton,
+    Divider,
+    Group,
+    Radio,
+    Select,
+    TextInput,
+    Title,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { CSVLink } from "react-csv";
+import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
 import FileDownloadIcon from "../Icons/FileDownloadIcon";
+import SearchIcon from "../Icons/SearchIcon";
 
 const ForecastingFilters = ({
     setFilters,
@@ -85,6 +96,25 @@ const ForecastingFilters = ({
                 Refine your results
             </Title>
             <div className="flex items-center gap-x-5 mt-6 flex-wrap">
+                <TextInput
+                    {...form.getInputProps("search")}
+                    aria-label="Search"
+                    placeholder="Search for..."
+                    className="flex-grow"
+                    leftSection={<SearchIcon />}
+                />
+                <div
+                    className={twMerge(
+                        "flex items-center gap-x-2 cursor-pointer",
+                        !form.getValues().search.length && "hidden"
+                    )}
+                    onClick={() => form.reset()}
+                >
+                    <CloseButton />
+                    <span className="hidden sm:inline text-nowrap text-primary font-medium">
+                        Clear all
+                    </span>
+                </div>
                 <CSVLink data={[]} className="w-full sm:w-auto">
                     <Button
                         variant="outline"

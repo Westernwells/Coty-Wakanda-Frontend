@@ -2,6 +2,9 @@ import {
   addCoefficientInput,
   useAddCoefficient,
 } from "@/api/coefficients/create-coeff";
+import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
+import { Brand, getBrands } from "@/api/get-brands";
+import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { Coefficient } from "@/types";
 import {
   Button,
@@ -13,19 +16,16 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
+import { useQueries } from "@tanstack/react-query";
+import { useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
+import ExitIcon from "../Icons/ExitIcon";
+import RefreshIcon from "../Icons/RefreshIcon";
 import {
   selectStyles,
   textAreaStyles,
   textInputStyles,
 } from "../Shared/Styles";
-import ExitIcon from "../Icons/ExitIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
-import { getCategories } from "@/api/get-categories";
-import { Brand, getBrands } from "@/api/get-brands";
-import { useQueries } from "@tanstack/react-query";
-import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
-import { useEffect } from "react";
 import { FormValues } from "./AddDistributorForm";
 
 function CoefficientsForm({
@@ -43,7 +43,10 @@ function CoefficientsForm({
 }) {
   const [{ data: categoriesData }, { data: brandsData }] = useQueries({
     queries: [
-      { queryKey: ["categories"], queryFn: getCategories },
+      {
+        queryKey: ["categories"],
+        queryFn: () => getCategories({ page_size: 999999 }),
+      },
       { queryKey: ["brands"], queryFn: getBrands },
     ],
   });

@@ -42,6 +42,11 @@ const Navbar = () => {
           { link: "/innovations", label: "Innovations", icon: LightBulbIcon },
           { link: "/distributors", label: "Distributors", icon: GroupIcon },
           { link: "/products", label: "Products", icon: ShoppingCart },
+          {
+            link: "/application-settings",
+            label: "Settings",
+            icon: LightBulbIcon,
+          },
           { link: "orders", label: "Orders", icon: BoxIcon },
           { link: "reporting", label: "Reporting", icon: FileDocumentIcon },
         ]

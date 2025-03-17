@@ -3,20 +3,20 @@ import { getBrands } from "@/api/get-brands";
 import { useAddInnovation } from "@/api/innovations/add-innovation";
 import { dateToLocalString } from "@/lib/utils";
 import { queryClient } from "@/main";
+import { Product } from "@/types";
 import { Button, Grid, Group, Select, Table, TextInput } from "@mantine/core";
 import { DateInput, YearPickerInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
+import PencilIcon from "../Icons/PencilIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import PencilIcon from "../Icons/PencilIcon";
-import { Product } from "@/types";
-import { useNavigate } from "@tanstack/react-router";
 
 const AddInnovationForm = ({
   setOfferingOpen,
@@ -44,7 +44,6 @@ const AddInnovationForm = ({
       products: Array<
         Partial<Product> & {
           currency: string;
-          price: string;
         }
       >;
     }[];

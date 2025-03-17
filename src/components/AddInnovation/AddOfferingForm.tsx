@@ -1,3 +1,4 @@
+import { Product } from "@/types";
 import {
   Button,
   Grid,
@@ -11,19 +12,18 @@ import { DateInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { PlusIcon } from "lucide-react";
+import { useState } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
 import ExitIcon from "../Icons/ExitIcon";
+import PencilIcon from "../Icons/PencilIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
+import TrashIcon from "../Icons/TrashIcon";
+import EditInnovationProductForm from "../InnovationProduct/Form";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import { Product } from "@/types";
-import PencilIcon from "../Icons/PencilIcon";
-import TrashIcon from "../Icons/TrashIcon";
-import { useState } from "react";
-import EditInnovationProductForm from "../InnovationProduct/Form";
 
 const AddOfferingForm = ({
   setOfferingOpen,
@@ -48,23 +48,33 @@ const AddOfferingForm = ({
       type: string;
       deck: string;
       market_deck: string;
-      products: Array<Partial<Product> &{
-        currency: string;
-        price: string;
-      }>;
+      products: Array<
+        Partial<Product> & {
+          currency: string;
+        }
+      >;
     }[];
   }>;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [productOpen, setProductOpen] = useState(-1);
 
-  const idx = offeringIndex !== -1 ? offeringIndex : (form?.getValues()?.offerings?.length ?? 1) - 1;
+  const idx =
+    offeringIndex !== -1
+      ? offeringIndex
+      : (form?.getValues()?.offerings?.length ?? 1) - 1;
   const productIdx =
     (form?.getValues()?.offerings?.[idx].products.length ?? 1) - 1;
 
-    if(productOpen >= 0) {
-      return <EditInnovationProductForm path={`offerings.${idx}.products.${productOpen}`} setProductOpen={setProductOpen} form={form}/>
-    }
+  if (productOpen >= 0) {
+    return (
+      <EditInnovationProductForm
+        path={`offerings.${idx}.products.${productOpen}`}
+        setProductOpen={setProductOpen}
+        form={form}
+      />
+    );
+  }
 
   return (
     <>
@@ -207,38 +217,38 @@ const AddOfferingForm = ({
         </Grid>
       </FormSection>
       <Grid justify="flex-start" mt="md">
-          {!!form.getValues().offerings?.[idx]?.products?.length && (
-            <Grid.Col span={12}>
-              <div className="relative border border-primary rounded-xl border-t-0">
-                <Table.ScrollContainer minWidth={768}>
-                  <Table
-                    verticalSpacing="sm"
-                    borderColor="transparent"
-                    striped="even"
-                    stripedColor="#F2F4F6"
-                  >
-                    <Table.Thead>
-                      <Table.Tr className="bg-primary text-white">
-                        <Table.Th className="rounded-ss-xl">
-                          IRC Number
-                        </Table.Th>
-                        <Table.Th>ICP Cost</Table.Th>
-                        <Table.Th>Cost</Table.Th>
-                        <Table.Th>EAN/UPC</Table.Th>
-                        <Table.Th>Line</Table.Th>
-                        <Table.Th>Size & Dimension</Table.Th>
-                        <Table.Th>Division</Table.Th>
-                        <Table.Th>Core Category</Table.Th>
-                        <Table.Th>Article Type</Table.Th>
-                        <Table.Th></Table.Th>
-                        <Table.Th className="rounded-se-xl"></Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {form.getValues().offerings?.[idx]?.products.map((product, index) => (
+        {!!form.getValues().offerings?.[idx]?.products?.length && (
+          <Grid.Col span={12}>
+            <div className="relative border border-primary rounded-xl border-t-0">
+              <Table.ScrollContainer minWidth={768}>
+                <Table
+                  verticalSpacing="sm"
+                  borderColor="transparent"
+                  striped="even"
+                  stripedColor="#F2F4F6"
+                >
+                  <Table.Thead>
+                    <Table.Tr className="bg-primary text-white">
+                      <Table.Th className="rounded-ss-xl">IRC Number</Table.Th>
+                      <Table.Th>ICP Cost</Table.Th>
+                      <Table.Th>Cost</Table.Th>
+                      <Table.Th>EAN/UPC</Table.Th>
+                      <Table.Th>Line</Table.Th>
+                      <Table.Th>Size & Dimension</Table.Th>
+                      <Table.Th>Division</Table.Th>
+                      <Table.Th>Core Category</Table.Th>
+                      <Table.Th>Article Type</Table.Th>
+                      <Table.Th></Table.Th>
+                      <Table.Th className="rounded-se-xl"></Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {form
+                      .getValues()
+                      .offerings?.[idx]?.products.map((product, index) => (
                         <Table.Tr key={product.irc}>
                           <Table.Td className="rounded-ss-xl">
-                          {product.irc}
+                            {product.irc}
                           </Table.Td>
                           <Table.Td>{product.price}</Table.Td>
                           <Table.Td>{product.currency}</Table.Td>
@@ -248,51 +258,65 @@ const AddOfferingForm = ({
                           <Table.Td>{product.division}</Table.Td>
                           <Table.Td>{product.category?.name}</Table.Td>
                           <Table.Td>{product.article_type}</Table.Td>
-                          <Table.Td onClick={() => {
-                            form.removeListItem(`offerings.${idx}.products`, index)
-                          }}><TrashIcon /></Table.Td>
-                          <Table.Td className="rounded-se-xl cursor-pointer" onClick={() => {
-                            setProductOpen(index)
-                            console.log(index)
-                          }}>
+                          <Table.Td
+                            onClick={() => {
+                              form.removeListItem(
+                                `offerings.${idx}.products`,
+                                index
+                              );
+                            }}
+                          >
+                            <TrashIcon />
+                          </Table.Td>
+                          <Table.Td
+                            className="rounded-se-xl cursor-pointer"
+                            onClick={() => {
+                              setProductOpen(index);
+                              console.log(index);
+                            }}
+                          >
                             <PencilIcon />
                           </Table.Td>
                         </Table.Tr>
                       ))}
-                    </Table.Tbody>
-                  </Table>
-                </Table.ScrollContainer>
-              </div>
-            </Grid.Col>
-          )}
-        <Grid.Col span={{
-          lg: 6,
-          base: 12
-        }}>
-        <FormField label="Add IRC (Products)">
-          <Button
-            variant="outline"
-            className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-            leftSection={<PlusIcon size={24} />}
-            onClick={() => {
-              form.insertListItem(`offerings.${idx}.products`, {
-                irc: "",
-                currency: "",
-                price: "",
-              });
-              open();
-            }}
-          >
-            Add IRC
-          </Button>
-        </FormField>
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            </div>
+          </Grid.Col>
+        )}
+        <Grid.Col
+          span={{
+            lg: 6,
+            base: 12,
+          }}
+        >
+          <FormField label="Add IRC (Products)">
+            <Button
+              variant="outline"
+              className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+              leftSection={<PlusIcon size={24} />}
+              onClick={() => {
+                form.insertListItem(`offerings.${idx}.products`, {
+                  irc: "",
+                  currency: "",
+                  price: "",
+                });
+                open();
+              }}
+            >
+              Add IRC
+            </Button>
+          </FormField>
         </Grid.Col>
       </Grid>
       <Group justify="flex-end" mt="md">
         <Button
           type="submit"
           onClick={() => {
-            const errors = Object.keys(form.validate().errors).some(key => key.includes(`offerings.${idx}`));
+            const errors = Object.keys(form.validate().errors).some((key) =>
+              key.includes(`offerings.${idx}`)
+            );
             if (!errors) {
               setOfferingOpen(false);
             }
