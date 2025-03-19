@@ -31,6 +31,7 @@ export type Distributor = {
   brands: Brand[];
   coefficients: Coefficient[];
   brand_pillars: BrandPillar[];
+  products: ProductBinding[];
 };
 
 export type Mirror = {
@@ -99,6 +100,20 @@ export type Coefficient = {
   pref: Pref;
   description?: string;
 };
+export type ProductBinding = {
+  pricing: ProductBindingPricing;
+};
+
+export type ProductBindingPricing = {
+  product_id: number;
+  distributor_id: number;
+  icp_eur: number;
+  icp_usd: number;
+  french_usd: number;
+  french_eur: number;
+  rrsp: number;
+  regional_billing_price: number;
+};
 
 export type Pref = "pref" | "non-pref";
 
@@ -130,7 +145,7 @@ export interface Product {
   article_type: string;
   article_sub_type: string;
   division: string;
-  segment: string;
+  segment: Segment;
   icp_eur: string;
   icp_usd: string;
   factory: string;
@@ -237,9 +252,8 @@ export interface ProductInput {
   line_id: string;
   article_type: string;
   division: string;
-  segment: string;
-  icp_eur: string;
-  icp_usd: string;
+  segment_id: string;
+  sub_brand_id: string;
   factory: string;
   commodity_id: string;
   gender: string;

@@ -61,14 +61,14 @@ const AddProductForm = ({
       subcategory,
       category,
       brand_pillar,
+      segment,
       ...flatProduct
     } = product;
     productToEdit = {
       ...flatProduct,
       brand_id: brand.id.toString(),
-      // @ts-ignore
-      brand_pillar: undefined,
       market_id: market?.id?.toString(),
+      segment_id: segment?.id?.toString(),
       country_id: country.id?.toString(),
       category_id: category.id.toString(),
       subcategory_id: subcategory.id.toString(),
@@ -686,36 +686,6 @@ const AddProductForm = ({
                 })) || []
               }
               classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("icp_eur")}
-              label="ICP_EUR"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("icp_usd")}
-              label="ICP_USD"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
             />
           </Grid.Col>
           <Grid.Col

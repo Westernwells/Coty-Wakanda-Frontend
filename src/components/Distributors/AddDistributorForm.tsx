@@ -35,6 +35,8 @@ import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import CoefficientsForm from "./CoefficientsForm";
 import CoefficientsTable from "./CoefficientsTable";
+import ProductBindingForm from "./ProductBindingForm";
+import ProductBindingsTable from "./ProductBindingTable";
 
 export type FormValues = updateDistributorInput & {
   coefficients: Array<{
@@ -76,6 +78,10 @@ const AddDistributorForm = ({
   const navigate = useNavigate();
 
   const [opened, { open, close }] = useDisclosure(false);
+  const [
+    productBindingOpened,
+    { open: openProductBinding, close: closeProductBinding },
+  ] = useDisclosure(false);
 
   const [
     { data: marketsData },
@@ -437,7 +443,23 @@ const AddDistributorForm = ({
                 </p>
               )}
             </div>
-
+            <div className="bg-white rounded-2xl p-6 mt-6">
+              <h2 className="text-lg font-semibold mb-6">Products</h2>
+              <ProductBindingsTable distributorId={formData?.id || 0} />
+              <Button
+                variant="outline"
+                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                leftSection={<LucidePlusIcon size={24} />}
+                onClick={openProductBinding}
+              >
+                Add Product Binding
+              </Button>
+              {/* {form.errors.product && (
+                <p className="text-xs text-[#fa5252]">
+                  Co-effiencents is required
+                </p>
+              )} */}
+            </div>
             <Group justify="flex-end" mt="xl" gap={10}>
               <Button
                 variant="outline"
@@ -459,6 +481,12 @@ const AddDistributorForm = ({
           <CoefficientsForm
             opened={opened}
             close={close}
+            distributorId={formData?.id ?? undefined}
+            form={form}
+          />
+          <ProductBindingForm
+            opened={productBindingOpened}
+            close={closeProductBinding}
             distributorId={formData?.id ?? undefined}
             form={form}
           />
