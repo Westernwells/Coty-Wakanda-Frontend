@@ -198,6 +198,15 @@ export interface Filters {
   brand_type: string;
 }
 
+export interface BindingFilters {
+  brand_id: string;
+  sub_brand_id: string;
+  brand_type: string;
+  pref: string;
+  grouping: string;
+  product_type: string;
+}
+
 export interface ForecastFilters {
   search: string;
   start_date: string;

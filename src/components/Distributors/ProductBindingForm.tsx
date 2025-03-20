@@ -3,23 +3,17 @@ import {
   useUpdateProductBinding,
 } from "@/api/bindProducts/update-binding";
 import { getProducts } from "@/api/products/get-products";
-import { Product, ProductBindingPricing } from "@/types";
-import {
-  Button,
-  Group,
-  Loader,
-  Modal,
-  NumberInput,
-  Select,
-} from "@mantine/core";
+import { BindingFilters, Product, ProductBindingPricing } from "@/types";
+import { Button, Group, Modal, NumberInput, Select } from "@mantine/core";
 import { useForm, UseFormReturnType } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { FormValues } from "./AddDistributorForm";
+import FilterBindings from "./FilterBindings";
 
 function ProductBindingForm({
   opened,
@@ -34,15 +28,23 @@ function ProductBindingForm({
   distributorId?: number;
   form?: UseFormReturnType<FormValues>;
 }) {
-  const [{ data: productsData, isLoading }] = useQueries({
+  const [filter, setFilter] = useState<BindingFilters>({
+    brand_id: "",
+    sub_brand_id: "",
+    brand_type: "",
+    pref: "",
+    grouping: "",
+    product_type: "",
+  });
+
+  const [{ data: productsData }] = useQueries({
     queries: [
       {
-        queryKey: ["products"],
-        queryFn: () => getProducts({ page_size: 999999 }),
+        queryKey: ["products", filter],
+        queryFn: () => getProducts({ page_size: 200000, filter: filter }),
       },
     ],
   });
-
   const updateProductBinding = useUpdateProductBinding({});
 
   const productForm = useForm<
@@ -89,106 +91,108 @@ function ProductBindingForm({
         />
         <Modal.Content className="!items-center min-w-[70%]">
           <Modal.Body>
-            {isLoading ? (
-              <Loader className="m-auto" />
-            ) : (
-              <div className="bg-white rounded-2xl p-6 mt-6">
-                <h2 className="text-xl font-semibold mb-6 text-primary">
-                  Bind Product
-                </h2>
-                <div className="space-y-6">
-                  <Select
-                    {...productForm.getInputProps("product_id")}
-                    disabled={!!data}
-                    defaultValue={data?.product_id?.toString()}
-                    label="Product"
-                    placeholder="Select product"
-                    data={
-                      productsData?.data?.map((product: Product) => ({
-                        value: product?.id.toString(),
-                        label: product?.id.toString(),
-                      })) || []
-                    }
-                    rightSection={<ChevronDownIcon />}
-                    classNames={selectStyles}
-                    clearable
-                    searchable
-                  />
+            <div className="bg-white rounded-2xl p-6 mt-6">
+              <h2 className="text-xl font-semibold mb-6 text-primary">
+                Bind Product
+              </h2>
+              <div className="space-y-6">
+                <FilterBindings setFilters={setFilter} />
+                {!productsData?.data?.length && (
+                  <p>
+                    No Product Matches These Filters Please try changing them
+                  </p>
+                )}
+                <Select
+                  {...productForm.getInputProps("product_id")}
+                  disabled={!productsData?.data?.length}
+                  defaultValue={data?.product_id?.toString()}
+                  label="Product"
+                  placeholder="Select product"
+                  data={
+                    productsData?.data?.map((product: Product) => ({
+                      value: product?.id.toString(),
+                      label: product?.id.toString(),
+                    })) || []
+                  }
+                  rightSection={<ChevronDownIcon />}
+                  classNames={selectStyles}
+                  clearable
+                  searchable
+                />
 
-                  <NumberInput
-                    {...productForm.getInputProps("icp_eur")}
-                    label="ICP EUR"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <NumberInput
-                    {...productForm.getInputProps("icp_usd")}
-                    label="ICP USD"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <NumberInput
-                    {...productForm.getInputProps("french_eur")}
-                    label="French EUR"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <NumberInput
-                    {...productForm.getInputProps("french_usd")}
-                    label="French USD"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <NumberInput
-                    {...productForm.getInputProps("rrsp")}
-                    label="RRSP"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <NumberInput
-                    {...productForm.getInputProps("regional_billing_price")}
-                    label="Regional Billing Price"
-                    classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
-                  />
-                  <Group justify="flex-end" mt="xl" gap={10}>
-                    <Button
-                      variant="outline"
-                      className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                      leftSection={<ExitIcon />}
-                      onClick={close}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      leftSection={<RefreshIcon />}
-                      variant="outline"
-                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                      disabled={updateProductBinding.isPending}
-                      loading={updateProductBinding.isPending}
-                      onClick={() => {
-                        const data = productForm.getValues();
-                        handleSubmit(data);
-                      }}
-                    >
-                      {data ? "Update" : "Add"}
-                    </Button>
-                  </Group>
-                </div>
+                <NumberInput
+                  {...productForm.getInputProps("icp_eur")}
+                  label="ICP EUR"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("icp_usd")}
+                  label="ICP USD"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("french_eur")}
+                  label="French EUR"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("french_usd")}
+                  label="French USD"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("rrsp")}
+                  label="RRSP"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("regional_billing_price")}
+                  label="Regional Billing Price"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <Group justify="flex-end" mt="xl" gap={10}>
+                  <Button
+                    variant="outline"
+                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    leftSection={<ExitIcon />}
+                    onClick={close}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    leftSection={<RefreshIcon />}
+                    variant="outline"
+                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    disabled={updateProductBinding.isPending}
+                    loading={updateProductBinding.isPending}
+                    onClick={() => {
+                      const data = productForm.getValues();
+                      handleSubmit(data);
+                    }}
+                  >
+                    {data ? "Update" : "Add"}
+                  </Button>
+                </Group>
               </div>
-            )}
+            </div>
           </Modal.Body>
         </Modal.Content>
       </Modal.Root>

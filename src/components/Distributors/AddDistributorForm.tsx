@@ -82,7 +82,6 @@ const AddDistributorForm = ({
     productBindingOpened,
     { open: openProductBinding, close: closeProductBinding },
   ] = useDisclosure(false);
-
   const [
     { data: marketsData },
     { data: regionsData },
