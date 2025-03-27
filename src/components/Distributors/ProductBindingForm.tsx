@@ -111,7 +111,7 @@ function ProductBindingForm({
                   data={
                     productsData?.data?.map((product: Product) => ({
                       value: product?.id.toString(),
-                      label: product?.id.toString(),
+                      label: product?.material_description.toString(),
                     })) || []
                   }
                   rightSection={<ChevronDownIcon />}
