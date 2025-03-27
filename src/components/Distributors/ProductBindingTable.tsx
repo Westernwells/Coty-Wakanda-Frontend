@@ -42,8 +42,6 @@ function ProductBindingsTable({ distributorId }: { distributorId: number }) {
                 <Table.Tr className="bg-primary text-white">
                   <Table.Th className="rounded-ss-xl">Product ID</Table.Th>
                   <Table.Th>Product Name</Table.Th>
-                  <Table.Th>ICP EUR</Table.Th>
-                  <Table.Th>ICP USD</Table.Th>
                   <Table.Th>French EUR</Table.Th>
                   <Table.Th>French USD</Table.Th>
                   <Table.Th>RRSP</Table.Th>
@@ -59,8 +57,6 @@ function ProductBindingsTable({ distributorId }: { distributorId: number }) {
                       {irc}
                     </Table.Td>
                     <Table.Td>{material_description}</Table.Td>
-                    <Table.Td>{element.icp_eur}</Table.Td>
-                    <Table.Td>{element.icp_usd}</Table.Td>
                     <Table.Td>{element.french_eur}</Table.Td>
                     <Table.Td>{element.french_usd}</Table.Td>
                     <Table.Td>{element.rrsp}</Table.Td>

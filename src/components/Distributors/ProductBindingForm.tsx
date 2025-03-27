@@ -120,22 +120,8 @@ function ProductBindingForm({
                   searchable
                 />
 
-                <NumberInput
-                  {...productForm.getInputProps("icp_eur")}
-                  label="ICP EUR"
-                  classNames={textInputStyles}
-                  hideControls
-                  allowDecimal={false}
-                  allowNegative={false}
-                />
-                <NumberInput
-                  {...productForm.getInputProps("icp_usd")}
-                  label="ICP USD"
-                  classNames={textInputStyles}
-                  hideControls
-                  allowDecimal={false}
-                  allowNegative={false}
-                />
+               
+              
                 <NumberInput
                   {...productForm.getInputProps("french_eur")}
                   label="French EUR"
