@@ -442,7 +442,7 @@ const AddProductForm = ({
               label="ICP USD"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           </Grid.Col>
@@ -457,7 +457,7 @@ const AddProductForm = ({
               label="ICP EUR"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           
