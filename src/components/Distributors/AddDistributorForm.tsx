@@ -5,6 +5,7 @@ import {
   Group,
   Loader,
   MultiSelect,
+  NumberInput,
   Radio,
   Select,
   TextInput,
@@ -58,6 +59,7 @@ const AddDistributorForm = ({
     initialValues: {
       type: "formal",
       name: "",
+      account_number: "",
       regions: [],
       markets: [],
       company_registration_number: "",
@@ -215,11 +217,19 @@ const AddDistributorForm = ({
                 </div>
 
                 <Grid gutter={24}>
-                  <Grid.Col span={12}>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
                     <TextInput
                       {...form.getInputProps("name")}
                       label="Business name"
                       placeholder="Enter business name"
+                      classNames={textInputStyles}
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <NumberInput
+                      {...form.getInputProps("account_number")}
+                      label="Account Number"
+                      placeholder="Enter account number"
                       classNames={textInputStyles}
                     />
                   </Grid.Col>

@@ -1,25 +1,24 @@
+import { useDeleteCoefficient } from "@/api/coefficients/delete-coeff";
 import { Coefficient } from "@/types";
 import { Button, Group, Loader, Modal, Table } from "@mantine/core";
-import PencilIcon from "../Icons/PencilIcon";
-import TrashIcon from "../Icons/TrashIcon";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
-import CoefficientsForm from "./CoefficientsForm";
-import { useDeleteCoefficient } from "@/api/coefficients/delete-coeff";
 import ExitIcon from "../Icons/ExitIcon";
+import PencilIcon from "../Icons/PencilIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
+import TrashIcon from "../Icons/TrashIcon";
+import CoefficientsForm from "./CoefficientsForm";
 
 function CoefficientsTable({
   data,
   distributorId,
 }: {
-  data: Coefficient[];
+  data: Coefficient[] | [];
   distributorId: number;
 }) {
   const [editData, setEditData] = useState<Coefficient>();
   const [pressedId, setPressedId] = useState<number | null>(null);
   const deleteCoefficientMutations = useDeleteCoefficient({});
-
   const [opened, { open, close }] = useDisclosure(false);
   const [
     openedDeleteModal,

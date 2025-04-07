@@ -5,6 +5,7 @@ import {
 import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
 import { Brand, getBrands } from "@/api/get-brands";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
+import { queryClient } from "@/main";
 import { Coefficient } from "@/types";
 import {
   Button,
@@ -106,6 +107,7 @@ function CoefficientsForm({
       data: values,
       distributorId: distributorId || 0,
     });
+    queryClient.invalidateQueries({ queryKey: ["distributors"] });
     close();
   };
   return (

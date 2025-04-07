@@ -111,7 +111,7 @@ function ProductBindingForm({
                   data={
                     productsData?.data?.map((product: Product) => ({
                       value: product?.id.toString(),
-                      label: product?.material_description.toString(),
+                      label: product?.id.toString(),
                     })) || []
                   }
                   rightSection={<ChevronDownIcon />}
@@ -120,8 +120,22 @@ function ProductBindingForm({
                   searchable
                 />
 
-               
-              
+                <NumberInput
+                  {...productForm.getInputProps("icp_eur")}
+                  label="ICP EUR"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
+                <NumberInput
+                  {...productForm.getInputProps("icp_usd")}
+                  label="ICP USD"
+                  classNames={textInputStyles}
+                  hideControls
+                  allowDecimal={false}
+                  allowNegative={false}
+                />
                 <NumberInput
                   {...productForm.getInputProps("french_eur")}
                   label="French EUR"

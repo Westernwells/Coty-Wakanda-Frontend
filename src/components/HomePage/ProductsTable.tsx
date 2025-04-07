@@ -85,8 +85,9 @@ function ProductsTable({
                   <Table.Th>Brand Type</Table.Th>
                   <Table.Th>Brand Pillar</Table.Th>
                   <Table.Th>Description</Table.Th>
-                  <Table.Th>Distributor</Table.Th>
                   <Table.Th>IRC</Table.Th>
+                  <Table.Th>ICP EU</Table.Th>
+                  <Table.Th>ICP USD</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th className="rounded-se-xl"></Table.Th>
                 </Table.Tr>
@@ -100,8 +101,9 @@ function ProductsTable({
                     <Table.Td>{product.brand.type}</Table.Td>
                     <Table.Td>{product.brand.name}</Table.Td>
                     <Table.Td>{product.material_description}</Table.Td>
-                    <Table.Td>{product.brand_pillar.name}</Table.Td>
                     <Table.Td>{product.irc}</Table.Td>
+                    <Table.Td>{product.icp_eur}</Table.Td>
+                    <Table.Td>{product.icp_usd}</Table.Td>
                     <Table.Td>
                       <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
                         {product.pref}

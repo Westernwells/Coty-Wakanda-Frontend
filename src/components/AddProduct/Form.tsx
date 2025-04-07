@@ -423,50 +423,6 @@ const AddProductForm = ({
         </Grid>
       </FormSection>
 
-       <FormSection title="Product Pricing" className="mt-2 sm:mt-5">
-      
-      <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("icp_usd")}
-              label="ICP USD"
-              classNames={textInputStyles}
-              hideControls
-              allowDecimal={true}
-              allowNegative={false}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-              <NumberInput
-              {...form.getInputProps("icp_eur")}
-              label="ICP EUR"
-              classNames={textInputStyles}
-              hideControls
-              allowDecimal={true}
-              allowNegative={false}
-            />
-          
-          </Grid.Col>
-        </Grid>
-
-      
-      </FormSection>
-
       <FormSection title="Product Metadata">
         <Grid
           gutter={{
@@ -605,6 +561,21 @@ const AddProductForm = ({
             <NumberInput
               {...form.getInputProps("line_id")}
               label="Line ID"
+              classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("line_number")}
+              label="Line Number"
               classNames={textInputStyles}
               hideControls
               allowDecimal={false}

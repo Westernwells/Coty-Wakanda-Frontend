@@ -1,5 +1,6 @@
 import { axios } from "@/lib/axios";
 import { MutationConfig } from "@/lib/react-query";
+import { queryClient } from "@/main";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
@@ -34,6 +35,7 @@ export const useAddCoefficient = ({
 
   return useMutation({
     onSuccess: (...args) => {
+      queryClient.invalidateQueries({ queryKey: ["distributors"] });
       onSuccess?.(...args);
     },
     ...restConfig,
