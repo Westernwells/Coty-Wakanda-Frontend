@@ -1,7 +1,5 @@
 import { axios } from "@/lib/axios";
 import {
-    BindingFilters,
-    Filters,
     MasterDistributor,
     MasterProduct,
     MasterProductFilters,

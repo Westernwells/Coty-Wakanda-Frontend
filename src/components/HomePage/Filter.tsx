@@ -7,7 +7,6 @@ import { Filters } from "@/types";
 import {
     Button,
     CloseButton,
-    CloseIcon,
     Divider,
     Group,
     Radio,
