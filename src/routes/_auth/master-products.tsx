@@ -1,0 +1,62 @@
+import { getMasterData } from "@/api/products/master-data";
+import MasterDataViewModal from "@/components/Distributors/MasterDataViewModal";
+import MasterProductFilters from "@/components/Distributors/MasterProductsFilter";
+import Headline from "@/components/Shared/Headline";
+import type { MasterProductFilters as MasterProductFiltersType } from "@/types";
+import { Loader } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+
+export const Route = createFileRoute("/_auth/master-products")({
+    component: RouteComponent,
+});
+
+function RouteComponent() {
+    const [filter, setFilter] = useState<MasterProductFiltersType>({
+        search: "",
+        house: "",
+        brand_id: "",
+        distributor_id: "",
+    });
+    const { data, isLoading, error } = useQuery({
+        queryKey: ["masterData", filter],
+        queryFn: () =>
+            getMasterData({
+                cursor: 1,
+                page_size: 20,
+                filter,
+            }),
+    });
+
+    if (error || (!isLoading && !data)) {
+        return (
+            <div className="w-full">
+                <Headline title="Products" />
+                <div className="mt-8 p-6 bg-white rounded-lg text-red-500">
+                    Error loading products. Please try again later.
+                </div>
+            </div>
+        );
+    }
+    return (
+        <div className="w-full">
+            <Headline title="Master Products" />
+            <section className="mt-3 sm:mt-8">
+                <MasterProductFilters setFilters={setFilter} />
+
+                {isLoading || !data ? (
+                    <div className="mt-5 p-6 bg-white rounded-lg flex justify-center">
+                        <Loader size="md" />
+                    </div>
+                ) : (
+                    <MasterDataViewModal
+                        initialData={data.data}
+                        initialMeta={data.meta}
+                        filters={filter}
+                    />
+                )}
+            </section>
+        </div>
+    );
+}

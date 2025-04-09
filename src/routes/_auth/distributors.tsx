@@ -50,24 +50,35 @@ function RouteComponent() {
         <div className="w-full">
             <Headline title="Distributors" />
             <section className="mt-3 sm:mt-8">
-                <Group>
+                <Group justify="space-between" className="mb-4">
+                    <Group>
+                        {" "}
+                        <Button
+                            rightSection={<PlusIcon />}
+                            variant="default"
+                            className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                            component={Link}
+                            to="/add-distributor"
+                        >
+                            Add new distributor
+                        </Button>
+                        <Button
+                            rightSection={<ImportIcon />}
+                            variant="default"
+                            className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                            component={Link}
+                            to="#"
+                        >
+                            Import distributors
+                        </Button>
+                    </Group>
                     <Button
-                        rightSection={<PlusIcon />}
                         variant="default"
                         className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
                         component={Link}
-                        to="/add-distributor"
+                        to="/master-products"
                     >
-                        Add new distributor
-                    </Button>
-                    <Button
-                        rightSection={<ImportIcon />}
-                        variant="default"
-                        className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                        component={Link}
-                        to="#"
-                    >
-                        Import distributors
+                        Distributors vs Products master data view
                     </Button>
                 </Group>
 
