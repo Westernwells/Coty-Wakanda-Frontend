@@ -18,6 +18,7 @@ import { Route as AuthIndexImport } from './routes/_auth/index'
 import { Route as AuthStockOnHandImport } from './routes/_auth/stock-on-hand'
 import { Route as AuthSettingsImport } from './routes/_auth/settings'
 import { Route as AuthSalesImport } from './routes/_auth/sales'
+import { Route as AuthRoyaltiesImport } from './routes/_auth/royalties'
 import { Route as AuthProfileImport } from './routes/_auth/profile'
 import { Route as AuthOrdersImport } from './routes/_auth/orders'
 import { Route as AuthNotificationsImport } from './routes/_auth/notifications'
@@ -78,6 +79,12 @@ const AuthSettingsRoute = AuthSettingsImport.update({
 const AuthSalesRoute = AuthSalesImport.update({
   id: '/sales',
   path: '/sales',
+  getParentRoute: () => AuthRoute,
+} as any)
+
+const AuthRoyaltiesRoute = AuthRoyaltiesImport.update({
+  id: '/royalties',
+  path: '/royalties',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -327,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProfileImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/royalties': {
+      id: '/_auth/royalties'
+      path: '/royalties'
+      fullPath: '/royalties'
+      preLoaderRoute: typeof AuthRoyaltiesImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/sales': {
       id: '/_auth/sales'
       path: '/sales'
@@ -417,6 +431,7 @@ interface AuthRouteChildren {
   AuthNotificationsRoute: typeof AuthNotificationsRoute
   AuthOrdersRoute: typeof AuthOrdersRoute
   AuthProfileRoute: typeof AuthProfileRoute
+  AuthRoyaltiesRoute: typeof AuthRoyaltiesRoute
   AuthSalesRoute: typeof AuthSalesRoute
   AuthSettingsRoute: typeof AuthSettingsRoute
   AuthStockOnHandRoute: typeof AuthStockOnHandRoute
@@ -444,6 +459,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthNotificationsRoute: AuthNotificationsRoute,
   AuthOrdersRoute: AuthOrdersRoute,
   AuthProfileRoute: AuthProfileRoute,
+  AuthRoyaltiesRoute: AuthRoyaltiesRoute,
   AuthSalesRoute: AuthSalesRoute,
   AuthSettingsRoute: AuthSettingsRoute,
   AuthStockOnHandRoute: AuthStockOnHandRoute,
@@ -477,6 +493,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthNotificationsRoute
   '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
+  '/royalties': typeof AuthRoyaltiesRoute
   '/sales': typeof AuthSalesRoute
   '/settings': typeof AuthSettingsRoute
   '/stock-on-hand': typeof AuthStockOnHandRoute
@@ -506,6 +523,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthNotificationsRoute
   '/orders': typeof AuthOrdersRoute
   '/profile': typeof AuthProfileRoute
+  '/royalties': typeof AuthRoyaltiesRoute
   '/sales': typeof AuthSalesRoute
   '/settings': typeof AuthSettingsRoute
   '/stock-on-hand': typeof AuthStockOnHandRoute
@@ -537,6 +555,7 @@ export interface FileRoutesById {
   '/_auth/notifications': typeof AuthNotificationsRoute
   '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/royalties': typeof AuthRoyaltiesRoute
   '/_auth/sales': typeof AuthSalesRoute
   '/_auth/settings': typeof AuthSettingsRoute
   '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
@@ -568,6 +587,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/profile'
+    | '/royalties'
     | '/sales'
     | '/settings'
     | '/stock-on-hand'
@@ -596,6 +616,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/profile'
+    | '/royalties'
     | '/sales'
     | '/settings'
     | '/stock-on-hand'
@@ -625,6 +646,7 @@ export interface FileRouteTypes {
     | '/_auth/notifications'
     | '/_auth/orders'
     | '/_auth/profile'
+    | '/_auth/royalties'
     | '/_auth/sales'
     | '/_auth/settings'
     | '/_auth/stock-on-hand'
@@ -682,6 +704,7 @@ export const routeTree = rootRoute
         "/_auth/notifications",
         "/_auth/orders",
         "/_auth/profile",
+        "/_auth/royalties",
         "/_auth/sales",
         "/_auth/settings",
         "/_auth/stock-on-hand",
@@ -754,6 +777,10 @@ export const routeTree = rootRoute
     },
     "/_auth/profile": {
       "filePath": "_auth/profile.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/royalties": {
+      "filePath": "_auth/royalties.tsx",
       "parent": "/_auth"
     },
     "/_auth/sales": {

@@ -33,12 +33,7 @@ export const addProductSchema = z.object({
     })
     .min(1, { message: "This field is required" }),
   article_type: z.string().min(1, { message: "This field is required" }),
-  division: z
-    .number({
-      coerce: true,
-      message: "This field should have a numeric value",
-    })
-    .min(1, { message: "This field is required" }),
+  division: z.string().min(1, { message: "This field is required" }),
   category_id: z
     .number({
       coerce: true,

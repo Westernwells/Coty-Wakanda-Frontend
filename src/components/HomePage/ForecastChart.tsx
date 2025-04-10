@@ -1,13 +1,13 @@
 import { getForecastChart } from "@/api/forecasts/get-forecast-chart";
-import { useQuery } from "@tanstack/react-query";
-import { LineChart } from "@mantine/charts";
-import { useEffect, useState } from "react";
-import { Loader } from "@mantine/core";
 import { ForecastFilters } from "@/types";
+import { LineChart } from "@mantine/charts";
+import { Loader } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 const ForecastChart = ({ filters }: { filters?: ForecastFilters }) => {
   const { data, isLoading } = useQuery({
-    queryKey: ["admin-chart"],
+    queryKey: ["admin-chart", filters],
     queryFn: () => getForecastChart({ filters: filters }),
   });
 
@@ -39,7 +39,7 @@ const ForecastChart = ({ filters }: { filters?: ForecastFilters }) => {
   }
 
   return (
-    <div className="flex justify-between gap-4 grow mb-5 font-semibold text-primary">
+    <div className="flex flex-wrap justify-between gap-4 grow mb-5 font-semibold text-primary">
       <div className="grow p-5">
         <p className="text-lg pb-5">Total unit forecast</p>
         <LineChart

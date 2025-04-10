@@ -62,6 +62,10 @@ const AddProductForm = ({
       category,
       brand_pillar,
       segment,
+      gmm_category,
+      gmm_market,
+      gmm_segment,
+      gmm_subCategory,
       ...flatProduct
     } = product;
     productToEdit = {
@@ -73,9 +77,14 @@ const AddProductForm = ({
       category_id: category.id.toString(),
       subcategory_id: subcategory.id.toString(),
       sub_brand_id: brand_pillar.id.toString(),
+      gmm_category_id: gmm_category?.id?.toString(),
+      gmm_market_id: gmm_market?.id?.toString(),
+      gmm_segment_id: gmm_segment?.id?.toString(),
+      gmm_subcategory_id: gmm_subCategory?.id?.toString(),
       launch_date: new Date(product.launch_date),
       discontinue_date: new Date(product.discontinue_date),
       grouping: product.grouping?.toString(),
+
       price_benchmark: {
         ...flatProduct.price_benchmark,
         brand_id: product.price_benchmark?.brand?.id.toString(),
@@ -100,6 +109,7 @@ const AddProductForm = ({
     { data: segmentsData, isLoading: segmentsLoading },
     { data: categoriesData, isLoading: categoriesLoading },
     { data: subCategoriesData, isLoading: subCategoriesLoading },
+    { data: gmmSubCategoriesData, isLoading: gmmSubCategoriesLoading },
     { data: brandsData, isLoading: brandsLoading },
     { data: countriesData, isLoading: countriesLoading },
     // { data: currenciesData },
@@ -110,7 +120,7 @@ const AddProductForm = ({
     queries: [
       {
         queryKey: ["markets"],
-        queryFn: () => getMarkets({ page_size: 999999 }),
+        queryFn: () => getMarkets({ page_size: 999999, type: "core" }),
       },
       {
         queryKey: ["segments"],
@@ -128,6 +138,19 @@ const AddProductForm = ({
               category_id: form.getValues().category_id as string,
             },
             page_size: 99999,
+            type: "core",
+          }),
+        enabled: !!form.getValues().category_id,
+      },
+      {
+        queryKey: ["GmmSubCategories"],
+        queryFn: () =>
+          getSubcategories({
+            filter: {
+              category_id: form.getValues().gmm_category_id as string,
+            },
+            page_size: 99999,
+            type: "core",
           }),
         enabled: !!form.getValues().category_id,
       },
@@ -209,6 +232,13 @@ const AddProductForm = ({
     });
   });
 
+  form.watch("gmm_category_id", () => {
+    queryClient.invalidateQueries({
+      queryKey: ["GmmSubCategories"],
+      refetchType: "all",
+    });
+  });
+
   if (
     isEdit &&
     (brandsLoading ||
@@ -219,7 +249,8 @@ const AddProductForm = ({
       categoriesLoading ||
       subCategoriesLoading ||
       brandPillarsLoading ||
-      productDistrubutorsLoading)
+      productDistrubutorsLoading ||
+      gmmSubCategoriesLoading)
   )
     return <Loader />;
 
@@ -423,43 +454,6 @@ const AddProductForm = ({
         </Grid>
       </FormSection>
 
-      <FormSection title="Product Metadata">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("offering_number")}
-              label="Offering number (optional)"
-              classNames={textInputStyles}
-              hideControls
-              allowDecimal={false}
-              allowNegative={false}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <TextInput
-              {...form.getInputProps("irc")}
-              label="IRC"
-              classNames={textInputStyles}
-            />
-          </Grid.Col>
-        </Grid>
-      </FormSection>
-
       <FormSection title="Product Details">
         <Grid
           gutter={{
@@ -475,7 +469,19 @@ const AddProductForm = ({
           >
             <TextInput
               {...form.getInputProps("material_description")}
-              label="Material description"
+              label="Material Description"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("material_tr")}
+              label="Material TR"
               classNames={textInputStyles}
             />
           </Grid.Col>
@@ -612,13 +618,196 @@ const AddProductForm = ({
               base: 12,
             }}
           >
-            <NumberInput
+            <Select
               {...form.getInputProps("division")}
               label="Division"
+              data={[
+                {
+                  label: "Mass",
+                  value: "mass",
+                },
+                {
+                  label: "Luxury",
+                  value: "luxury",
+                },
+              ]}
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_eur")}
+              label="Cssp Trex EUR"
               classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_usd")}
+              label="Cssp Trex USD"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gmm_category_id")}
+              label="Gmm category"
+              data={
+                categoriesData?.data?.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gmm_subcategory_id")}
+              label="GMM Sub category"
+              data={
+                gmmSubCategoriesData?.data?.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })) || []
+              }
+              classNames={selectStyles}
+              disabled={!form.getValues().category_id}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gmm_market_id")}
+              label="Gmm Market"
+              data={
+                marketsData?.data?.map((market) => ({
+                  value: market.id.toString(),
+                  label: market.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gmm_segment_id")}
+              label="Gmm Segment"
+              data={
+                segmentsData?.data?.map((segment) => ({
+                  value: segment.id.toString(),
+                  label: segment.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+        </Grid>
+      </FormSection>
+
+      <FormSection title="Product Metadata">
+        <Grid
+          gutter={{
+            sm: 32,
+            base: 16,
+          }}
+        >
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("offering_number")}
+              label="Offering number (optional)"
+              classNames={textInputStyles}
+              hideControls
               allowDecimal={false}
               allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("irc")}
+              label="IRC"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+        </Grid>
+      </FormSection>
+
+      <FormSection title="Product Pricing">
+        <Grid
+          gutter={{
+            sm: 32,
+            base: 16,
+          }}
+        >
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("icp_eur")}
+              label="ICP EUR"
+              classNames={textInputStyles}
               hideControls
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("icp_usd")}
+              label="ICP USD"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
             />
           </Grid.Col>
         </Grid>

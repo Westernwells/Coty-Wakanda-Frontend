@@ -5,7 +5,6 @@ import {
   Group,
   Loader,
   MultiSelect,
-  NumberInput,
   Radio,
   Select,
   TextInput,
@@ -17,7 +16,6 @@ import {
   updateDistributorInputSchema,
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
-import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
@@ -59,7 +57,6 @@ const AddDistributorForm = ({
     initialValues: {
       type: "formal",
       name: "",
-      account_number: "",
       regions: [],
       markets: [],
       company_registration_number: "",
@@ -67,7 +64,6 @@ const AddDistributorForm = ({
       contact_email: "",
       categories: [],
       brands: [],
-      brand_pillars: [],
       currency: "",
       coefficients: [],
       mirror: {
@@ -90,7 +86,6 @@ const AddDistributorForm = ({
     { data: categoriesData },
     { data: brandsData },
     { data: currenciesData },
-    { data: brandPillarsData },
   ] = useQueries({
     queries: [
       {
@@ -112,7 +107,6 @@ const AddDistributorForm = ({
       },
       { queryKey: ["brands"], queryFn: getBrands },
       { queryKey: ["currencies"], queryFn: getCurrencies },
-      { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
     ],
   });
 
@@ -126,8 +120,7 @@ const AddDistributorForm = ({
         ),
         markets: formData.markets.map((market) => market.id.toString()),
         brands: formData.brands.map((brand) => brand.id.toString()),
-        brand_pillars:
-          formData.brand_pillars?.map((brand) => brand.id.toString()) || [],
+
         coefficients: formData.coefficients.map((coefficient) => ({
           value: coefficient.value,
           brand_id: coefficient.brand.id,
@@ -225,14 +218,6 @@ const AddDistributorForm = ({
                       classNames={textInputStyles}
                     />
                   </Grid.Col>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <NumberInput
-                      {...form.getInputProps("account_number")}
-                      label="Account Number"
-                      placeholder="Enter account number"
-                      classNames={textInputStyles}
-                    />
-                  </Grid.Col>
                 </Grid>
 
                 <Grid gutter={24}>
@@ -280,8 +265,8 @@ const AddDistributorForm = ({
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <TextInput
                       {...form.getInputProps("company_registration_number")}
-                      label="Company registration number"
-                      placeholder="Enter registration number"
+                      label="SAP Account Number "
+                      placeholder="Enter SAP Account Number"
                       classNames={textInputStyles}
                     />
                   </Grid.Col>
@@ -336,23 +321,6 @@ const AddDistributorForm = ({
                         brandsData?.data?.map((brand) => ({
                           value: brand.id.toString(),
                           label: brand.name,
-                        })) || []
-                      }
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <MultiSelect
-                      {...form.getInputProps("brand_pillars")}
-                      label="Brand pillars"
-                      placeholder="Select brand pillars"
-                      data={
-                        brandPillarsData?.data?.map((pillar) => ({
-                          value: pillar.id.toString(),
-                          label: pillar.name,
                         })) || []
                       }
                       rightSection={<ChevronDownIcon />}

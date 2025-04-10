@@ -61,7 +61,7 @@ function RouteComponent() {
   return (
     <Container
       size={420}
-      className="flex flex-col align-middle justify-center h-screen pt-[60px] md:pt-0"
+      className="flex flex-col align-middle justify-center h-screen w-screen pt-[60px] md:pt-0 absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2"
     >
       <Title ta="center" className="font-extrabold">
         Welcome back!

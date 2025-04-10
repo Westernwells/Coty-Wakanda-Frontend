@@ -16,6 +16,7 @@ import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import SearchIcon from "../Icons/SearchIcon";
 import ExitIcon from "../Icons/ExitIcon";
+import { getHouses } from "@/api/get-houses";
 
 const MasterProductFilters = ({
     setFilters,
@@ -40,12 +41,17 @@ const MasterProductFilters = ({
     const [
         { data: brandsData, error: brandsError },
         { data: distributorsData, error: distributorsError },
+        { data: housesData, error: housesError },
     ] = useQueries({
         queries: [
             { queryKey: ["brands"], queryFn: getBrands },
             {
                 queryKey: ["distributors"],
                 queryFn: () => getDistributors({ page_size: 100 }),
+            },
+            {
+                queryKey: ["houses"],
+                queryFn: () => getHouses(),
             },
         ],
     });
@@ -62,7 +68,12 @@ const MasterProductFilters = ({
             label: dist.name,
         })) || [];
 
-    const hasError = brandsError || distributorsError;
+    const hasError = brandsError || distributorsError || housesError;
+    const houseOptions =
+        housesData?.data?.map((house) => ({
+            value: house,
+            label: house,
+        })) || [];
 
     if (hasError) {
         return (
@@ -136,7 +147,7 @@ const MasterProductFilters = ({
                         {...form.getInputProps("house")}
                         aria-label="Filter by house"
                         placeholder="Filter by house"
-                        data={[]}
+                        data={houseOptions}
                         clearable
                         className="grow"
                         rightSection={<ChevronDownIcon />}

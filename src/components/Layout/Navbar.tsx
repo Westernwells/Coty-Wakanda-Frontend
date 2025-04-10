@@ -13,6 +13,10 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 
+import Logo from "@/assets/logo.svg";
+import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/userStore";
+import { useDisclosure } from "@mantine/hooks";
 import AvatarIcon from "../Icons/AvatarIcon";
 import BellIcon from "../Icons/BellIcon";
 import BoxIcon from "../Icons/BoxIcon";
@@ -21,12 +25,9 @@ import DashboardIcon from "../Icons/DashboardIcon";
 import FileDocumentIcon from "../Icons/FileDocumentIcon";
 import GroupIcon from "../Icons/GroupIcon";
 import LightBulbIcon from "../Icons/LightBulbIcon";
-import Logo from "@/assets/logo.svg";
+import PlusIcon from "../Icons/PlusIcon";
 import SettingsIcon from "../Icons/SettingsIcon";
 import ShoppingCart from "../Icons/ShoppingCartIcon";
-import { cn } from "@/lib/utils";
-import { useDisclosure } from "@mantine/hooks";
-import { useUserStore } from "@/stores/userStore";
 
 const Navbar = () => {
   const matchRoute = useMatchRoute();
@@ -42,6 +43,7 @@ const Navbar = () => {
           { link: "/innovations", label: "Innovations", icon: LightBulbIcon },
           { link: "/distributors", label: "Distributors", icon: GroupIcon },
           { link: "/products", label: "Products", icon: ShoppingCart },
+          { link: "/royalties", label: "Royalties", icon: PlusIcon },
           {
             link: "/application-settings",
             label: "Settings",
@@ -75,7 +77,6 @@ const Navbar = () => {
         breakpoint: "md",
         collapsed: { mobile: !opened },
       }}
-      className={cn("w-full flex", opened && "block")}
     >
       <AppShell.Header className=" bg-primary px-4 py-4 md:hidden">
         <Group align="center">
@@ -92,8 +93,7 @@ const Navbar = () => {
       {isSignedIn && (
         <AppShell.Navbar
           className={cn(
-            "bg-primary px-4 py-6 lg:py-10 lg:px-6 relative border-0 h-full md:flex min-h-screen",
-            opened ? "flex w-full" : "hidden"
+            "bg-primary px-4 py-6 lg:py-10 lg:px-6 border-0 md:flex h-screen"
           )}
         >
           <CloseButton
@@ -105,7 +105,7 @@ const Navbar = () => {
           <div className="flex justify-center ">
             <img src={Logo} alt="Logo" />
           </div>
-          <Group className="bg-white rounded-xl py-3 px-5 bg-opacity-10 flex justify-center  gap-x-3 flex-nowrap my-10">
+          <Group className="bg-white rounded-xl no-scrollbar py-3 px-5 bg-opacity-10 flex justify-center  gap-x-3 flex-nowrap my-5">
             <UnstyledButton onClick={() => navigate({ to: "/profile" })}>
               <AvatarIcon />
             </UnstyledButton>
@@ -117,7 +117,7 @@ const Navbar = () => {
             </UnstyledButton>
           </Group>
 
-          <Stack className="gap-[10px]">
+          <Stack className="gap-[10px] overflow-y-auto no-scrollbar">
             {links.map((link) => {
               const isActive = matchRoute({ to: link.link, fuzzy: true });
               return (
@@ -134,10 +134,10 @@ const Navbar = () => {
           </Stack>
         </AppShell.Navbar>
       )}
-      <AppShell.Main
-        className={cn("w-full container  pb-10", opened && "hidden")}
-      >
-        <Outlet />
+      <AppShell.Main>
+        <div className="mx-5 lg:mx-10 mt-20 lg:mt-0">
+          <Outlet />
+        </div>
       </AppShell.Main>
     </AppShell>
   );
