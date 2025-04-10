@@ -109,7 +109,7 @@ const AddProductForm = ({
         { data: segmentsData, isLoading: segmentsLoading },
         { data: categoriesData, isLoading: categoriesLoading },
         { data: subCategoriesData, isLoading: subCategoriesLoading },
-        { data: gmmSubCategoriesData, isLoading: gmmSubCategoriesLoading },
+        { isLoading: gmmSubCategoriesLoading },
         { data: brandsData, isLoading: brandsLoading },
         { data: countriesData, isLoading: countriesLoading },
         // { data: currenciesData },
