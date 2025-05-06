@@ -175,20 +175,32 @@ const Navbar = () => {
             <UnstyledButton
               onClick={() => navigate({ to: "/profile" })}
               title="Profile"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
             >
-              <AvatarIcon />
+              <AvatarIcon hasOutline={!isDesktopNavbarCollapsed} />
             </UnstyledButton>
             <UnstyledButton
               onClick={() => navigate({ to: "/settings" })}
               title="Settings"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
             >
-              <SettingsIcon />
+              <SettingsIcon hasOutline={!isDesktopNavbarCollapsed} />
             </UnstyledButton>
             <UnstyledButton
               onClick={() => navigate({ to: "/notifications" })}
               title="Notifications"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
             >
-              <BellIcon />
+              <BellIcon hasOutline={!isDesktopNavbarCollapsed} />
             </UnstyledButton>
           </Group>
 
