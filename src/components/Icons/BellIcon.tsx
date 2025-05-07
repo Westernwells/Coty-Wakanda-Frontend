@@ -1,8 +1,11 @@
+import { cn } from "@/lib/utils";
+
 interface BellIconProps {
   hasOutline?: boolean;
+  isActive?: boolean;
 }
 
-const BellIcon = ({ hasOutline = true }: BellIconProps) => {
+const BellIcon = ({ hasOutline = true, isActive = false }: BellIconProps) => {
   return (
     <svg
       width="48"
@@ -10,8 +13,11 @@ const BellIcon = ({ hasOutline = true }: BellIconProps) => {
       viewBox="0 0 48 49"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={cn(
+        isActive && "bg-[#00EBB2] border border-[#00EBB2] rounded-full"
+      )}
     >
-      {hasOutline && (
+      {hasOutline && !isActive && (
         <rect
           x="0.5"
           y="1.30713"

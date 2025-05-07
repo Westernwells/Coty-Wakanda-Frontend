@@ -180,7 +180,13 @@ const Navbar = () => {
                   "focus:outline-none focus-visible:outline-none"
               )}
             >
-              <AvatarIcon hasOutline={!isDesktopNavbarCollapsed} />
+              <AvatarIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/profile", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/profile", fuzzy: true })}
+              />
             </UnstyledButton>
             <UnstyledButton
               onClick={() => navigate({ to: "/settings" })}
@@ -190,7 +196,13 @@ const Navbar = () => {
                   "focus:outline-none focus-visible:outline-none"
               )}
             >
-              <SettingsIcon hasOutline={!isDesktopNavbarCollapsed} />
+              <SettingsIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/settings", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/settings", fuzzy: true })}
+              />
             </UnstyledButton>
             <UnstyledButton
               onClick={() => navigate({ to: "/notifications" })}
@@ -200,7 +212,13 @@ const Navbar = () => {
                   "focus:outline-none focus-visible:outline-none"
               )}
             >
-              <BellIcon hasOutline={!isDesktopNavbarCollapsed} />
+              <BellIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/notifications", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/notifications", fuzzy: true })}
+              />
             </UnstyledButton>
           </Group>
 
