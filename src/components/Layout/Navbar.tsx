@@ -43,6 +43,8 @@ const Navbar = () => {
   const DESKTOP_NAVBAR_EXPANDED_WIDTH = 256;
   const DESKTOP_NAVBAR_COLLAPSED_WIDTH = 80;
 
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+
   const links =
     role === "admin"
       ? [
@@ -230,19 +232,24 @@ const Navbar = () => {
           >
             {links.map((link) => {
               const isActive = matchRoute({ to: link.link, fuzzy: true });
+              const isHovered = hoveredLink === link.link;
               return (
                 <Link
                   to={link.link}
                   key={link.label}
                   className={cn(
-                    "flex items-center gap-x-2 text-white [&.active]:text-primary [&.active]:bg-white rounded-[10px] [&.active]:font-medium py-3 hover:bg-white hover:bg-opacity-10 transition-all ease-in-out duration-300",
+                    "flex items-center gap-x-2 text-white [&.active]:text-primary [&.active]:bg-white rounded-[10px] [&.active]:font-medium py-3 hover:text-[#00EBB2] transition-all ease-in-out duration-300",
                     isDesktopNavbarCollapsed
                       ? "px-2 justify-center w-full"
                       : "px-2"
                   )}
                   title={isDesktopNavbarCollapsed ? link.label : undefined}
+                  onMouseEnter={() => setHoveredLink(link.link)}
+                  onMouseLeave={() => setHoveredLink(null)}
                 >
-                  <link.icon fill={isActive ? "#002554" : "#fff"} />
+                  <link.icon
+                    fill={isActive ? "#002554" : isHovered ? "#00EBB2" : "#fff"}
+                  />
                   {!isDesktopNavbarCollapsed && (
                     <span className="text-sm whitespace-nowrap">
                       {link.label}
