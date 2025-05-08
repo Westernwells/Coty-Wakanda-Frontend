@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+import { ChevronDownIcon } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
 
 interface Option {
@@ -11,6 +13,8 @@ interface CustomSelectProps {
   onChange: (value: string) => void;
   placeholder?: string;
   isChanged?: boolean;
+  className?: string;
+  noBorder?: boolean;
 }
 
 export function CustomSelect({
@@ -19,6 +23,8 @@ export function CustomSelect({
   onChange,
   placeholder = "Select...",
   isChanged = false,
+  className,
+  noBorder = false,
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -39,10 +45,17 @@ export function CustomSelect({
     <div ref={ref} className="relative w-full">
       <button
         type="button"
-        className={`flex items-center justify-between w-full min-w-[100px] max-w-[160px] px-3 py-2 border rounded-md bg-white text-gray-900 transition
-          focus:outline-none focus:ring-2 focus:ring-blue-500`}
+        className={cn(
+          "flex items-center justify-between w-full min-w-[100px] max-w-[160px] px-3 py-2 rounded-md bg-white text-gray-900 transition focus:outline-none focus:ring-1 focus:ring-primary",
+          className
+        )}
         style={{
-          border: isChanged ? "1px solid #0F62FE" : "1px solid #94a3b8",
+          border: noBorder
+            ? "none"
+            : isChanged
+              ? "1px solid #0F62FE"
+              : "1px solid #94a3b8",
+          backgroundColor: noBorder ? "#F2F4F6" : "white",
         }}
         onClick={() => setOpen((prev) => !prev)}
         title={selected ? selected.label : placeholder}
@@ -55,28 +68,17 @@ export function CustomSelect({
         >
           {!value || !selected ? placeholder : selected.label}
         </span>
-        <svg
-          className="w-4 h-4 ml-2 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <ChevronDownIcon className="w-4 h-4 ml-2 text-gray-600" />
       </button>
       {open && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-none shadow-lg max-h-60 overflow-auto">
           {options.map((opt) => (
             <li
               key={opt.value}
-              className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
-                value === opt.value ? "bg-blue-100 text-blue-700" : ""
-              }`}
+              className={`px-3 py-2 cursor-pointer transition-colors duration-150 
+                hover:bg-primary hover:text-white
+                ${value === opt.value ? "bg-primary text-white" : "text-gray-900"}
+              `}
               onClick={() => {
                 onChange(opt.value);
                 setOpen(false);

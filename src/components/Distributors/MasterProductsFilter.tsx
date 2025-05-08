@@ -6,17 +6,16 @@ import {
   CloseButton,
   Divider,
   Group,
-  Select,
   TextInput,
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import SearchIcon from "../Icons/SearchIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import { getHouses } from "@/api/get-houses";
+import { CustomSelect } from "../HomePage/CustomSelect";
 
 const MasterProductFilters = ({
   setFilters,
@@ -136,8 +135,8 @@ const MasterProductFilters = ({
       </div>
       <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
       <Group w="100% gap-4 sm:gap-5">
-        <>
-          <Select
+        <div className="grid grid-cols-1 w-full sm:grid-cols-3 gap-4 sm:gap-5">
+          {/* <Select
             {...form.getInputProps("brand_id")}
             aria-label="Filter by brand"
             placeholder="Filter by brand"
@@ -145,26 +144,35 @@ const MasterProductFilters = ({
             clearable
             className="grow"
             rightSection={<ChevronDownIcon />}
+          /> */}
+
+          <CustomSelect
+            value={form.values.brand_id}
+            options={brandOptions}
+            onChange={(val) => form.setFieldValue("brand_id", val)}
+            placeholder="Filter by brand"
+            className="min-w-max max-w-lg w-full"
+            noBorder
           />
-          <Select
-            {...form.getInputProps("house")}
-            aria-label="Filter by house"
+
+          <CustomSelect
+            value={form.values.house}
+            options={houseOptions}
+            onChange={(val) => form.setFieldValue("house", val)}
             placeholder="Filter by house"
-            data={houseOptions}
-            clearable
-            className="grow"
-            rightSection={<ChevronDownIcon />}
+            className="min-w-max max-w-lg w-full"
+            noBorder
           />
-          <Select
-            {...form.getInputProps("distributor_id")}
-            aria-label="Filter by distributor"
+
+          <CustomSelect
+            value={form.values.distributor_id}
+            options={distributorOptions}
+            onChange={(val) => form.setFieldValue("distributor_id", val)}
             placeholder="Filter by distributor"
-            data={distributorOptions}
-            clearable
-            className="grow"
-            rightSection={<ChevronDownIcon />}
+            className="min-w-max max-w-lg w-full"
+            noBorder
           />
-        </>
+        </div>
       </Group>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   CloseButton,
   Divider,
   Group,
-  Select,
   TextInput,
   Title,
   Checkbox,
@@ -17,9 +16,10 @@ import {
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import SearchIcon from "../Icons/SearchIcon";
 import ExitIcon from "../Icons/ExitIcon";
+import { CustomSelect } from "./CustomSelect";
+import { cn } from "@/lib/utils";
 
 const Filter = ({
   setFilters,
@@ -120,6 +120,11 @@ const Filter = ({
     setFilters({ ...form.values, brand_type: type });
   }
 
+  // Calculate grid columns based on select count
+  const selectCount = isProductsPage ? 3 : 2;
+  const gridColsClass =
+    selectCount === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 px-4";
+
   return (
     <div className="bg-[#F5F8FA] w-full rounded-[20px] p-6 mt-5">
       <Group justify="space-between" align="center">
@@ -173,60 +178,55 @@ const Filter = ({
         </button>
       </div>
       <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-      <Group w="100% gap-4 sm:gap-5">
+      <div className={cn("grid grid-cols-1", gridColsClass, "gap-4 w-full")}>
         {isProductsPage ? (
           <>
-            <Select
-              {...form.getInputProps("brand_id")}
-              aria-label="Filter brands"
+            <CustomSelect
+              value={form.values.brand_id}
+              options={brandOptions}
+              onChange={(val) => form.setFieldValue("brand_id", val)}
               placeholder="Filter brands"
-              data={brandOptions}
-              clearable
-              className="grow "
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-lg w-full"
+              noBorder
             />
-            <Select
-              {...form.getInputProps("sub_brand_id")}
-              aria-label="Filter brand pillars"
+            <CustomSelect
+              value={form.values.sub_brand_id}
+              options={brandPillarOptions}
+              onChange={(val) => form.setFieldValue("sub_brand_id", val)}
               placeholder="Filter brand pillars"
-              data={brandPillarOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-lg w-full"
+              noBorder
             />
-            <Select
-              {...form.getInputProps("distributor_id")}
-              aria-label="Filter distributors"
+            <CustomSelect
+              value={form.values.distributor_id}
+              options={distributorOptions}
+              onChange={(val) => form.setFieldValue("distributor_id", val)}
               placeholder="Filter distributors"
-              data={distributorOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-lg w-full"
+              noBorder
             />
           </>
         ) : (
           <>
-            <Select
-              {...form.getInputProps("region_id")}
-              aria-label="Filter by region"
+            <CustomSelect
+              value={form.values.region_id}
+              options={regionOptions}
+              onChange={(val) => form.setFieldValue("region_id", val)}
               placeholder="Filter by region"
-              data={regionOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-2xl w-full "
+              noBorder
             />
-            <Select
-              {...form.getInputProps("market_id")}
-              aria-label="Filter by market"
+            <CustomSelect
+              value={form.values.market_id}
+              options={marketOptions}
+              onChange={(val) => form.setFieldValue("market_id", val)}
               placeholder="Filter by market"
-              data={marketOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-2xl w-full"
+              noBorder
             />
           </>
         )}
-      </Group>
+      </div>
       {isProductsPage && (
         <Group gap={24} w="100%" className="mt-6">
           <div className="flex items-center gap-6 mt-4">
