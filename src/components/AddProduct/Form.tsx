@@ -47,6 +47,7 @@ import {
   textAreaStyles,
   textInputStyles,
 } from "../Shared/Styles";
+import { BrandTypeConfirmationModal } from "./brand-type-confirmation-modal";
 
 const AddProductForm = forwardRef(function AddProductForm(
   {
@@ -61,18 +62,6 @@ const AddProductForm = forwardRef(function AddProductForm(
   const navigate = useNavigate();
   const internalFormRef = useRef<HTMLFormElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      submit: () => {
-        internalFormRef.current?.requestSubmit();
-      },
-      isSubmitting,
-    }),
-    [isSubmitting]
-  );
-
   let productToEdit;
 
   if (product) {
@@ -114,6 +103,28 @@ const AddProductForm = forwardRef(function AddProductForm(
       },
     };
   }
+
+  const initialBrandType = useRef<string | undefined>(
+    isEdit
+      ? (productToEdit as unknown as { brand_type?: string })?.brand_type
+      : undefined
+  );
+  const [showBrandTypeModal, setShowBrandTypeModal] = useState(false);
+  const [pendingSubmitValues, setPendingSubmitValues] = useState<
+    | (Partial<ProductInput> & { brand_type?: string; brand_category?: string })
+    | null
+  >(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      submit: () => {
+        internalFormRef.current?.requestSubmit();
+      },
+      isSubmitting,
+    }),
+    [isSubmitting]
+  );
 
   const form = useForm<
     Partial<ProductInput> & { brand_type?: string; brand_category?: string }
@@ -288,6 +299,11 @@ const AddProductForm = forwardRef(function AddProductForm(
     <form
       ref={internalFormRef}
       onSubmit={form.onSubmit(async (values) => {
+        if (isEdit && values.brand_type !== initialBrandType.current) {
+          setPendingSubmitValues(values);
+          setShowBrandTypeModal(true);
+          return;
+        }
         setIsSubmitting(true);
         try {
           const { documents, ...toSubmit } = values;
@@ -1780,7 +1796,6 @@ const AddProductForm = forwardRef(function AddProductForm(
                             secondary: item.registered,
                           }}
                         >
-                          // @ts-expect-error
                           <PricingFields
                             isMirror
                             form={form}
@@ -1808,6 +1823,73 @@ const AddProductForm = forwardRef(function AddProductForm(
           }}
         />
       </FormSection>
+
+      <BrandTypeConfirmationModal
+        open={showBrandTypeModal}
+        oldType={
+          initialBrandType.current === "luxury"
+            ? "Luxury"
+            : initialBrandType.current === "mass"
+              ? "Mass"
+              : "-"
+        }
+        newType={
+          pendingSubmitValues?.brand_type === "luxury"
+            ? "Luxury"
+            : pendingSubmitValues?.brand_type === "mass"
+              ? "Mass"
+              : "-"
+        }
+        onCancel={() => {
+          setShowBrandTypeModal(false);
+          setPendingSubmitValues(null);
+        }}
+        onConfirm={() => {
+          setShowBrandTypeModal(false);
+          if (pendingSubmitValues) {
+            setIsSubmitting(true);
+            const values = pendingSubmitValues;
+            setPendingSubmitValues(null);
+            // Repeat the mutation logic for edit here
+            const { documents, ...toSubmit } = values;
+            const promises: Promise<ApiResponseFiles>[] = [];
+            documents?.map((doc: { title: string; url: string }) => {
+              const data = addDocument.mutateAsync({
+                productId: product?.id || 0,
+                data: {
+                  title: doc.title,
+                  url: doc.url,
+                },
+              });
+              promises.push(data);
+            });
+            updateProduct.mutate(
+              {
+                data: {
+                  ...toSubmit,
+                  grouping: Number(values.grouping),
+                  launch_date: values.launch_date?.toISOString().split("T")[0],
+                  discontinue_date: values.discontinue_date
+                    ?.toISOString()
+                    .split("T")[0],
+                  price_benchmark:
+                    (values.price_benchmark as PriceBenchmark) || null,
+                },
+              },
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({
+                    queryKey: ["products"],
+                    refetchType: "all",
+                  });
+                  navigate({ to: "/products" });
+                },
+                onSettled: () => setIsSubmitting(false),
+              }
+            );
+          }
+        }}
+      />
     </form>
   );
 });
