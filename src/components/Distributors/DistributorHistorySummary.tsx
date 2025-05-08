@@ -121,33 +121,33 @@ export function DistributorHistorySummary({
 
   return (
     <div className="bg-[#e9eef2] p-6 my-10 rounded-md text-primary-900 text-[17px] space-y-6">
-      <div>
-        <span className="font-semibold text-base">Distributor details</span>
-        <div className="text-[15px] font-normal mt-1">
-          Last update:{" "}
-          {distributorLog
-            ? `${formatDate(distributorLog.created_at)}, ${distributorLog.causer.name} ${distributorLog.causer.surname}`
-            : "-"}
+      {distributorLog && (
+        <div>
+          <span className="font-semibold text-base">Distributor details</span>
+          <div className="text-[15px] font-normal mt-1">
+            Last update:{" "}
+            {`${formatDate(distributorLog.created_at)}, ${distributorLog.causer.name} ${distributorLog.causer.surname}`}
+          </div>
         </div>
-      </div>
-      <div>
-        <span className="font-semibold text-base">Pricing rules</span>
-        <div className="text-[15px] font-normal mt-1">
-          Last update:{" "}
-          {pricingLog
-            ? `${formatDate(pricingLog.created_at)}, ${pricingLog.causer.name} ${pricingLog.causer.surname}`
-            : "-"}
+      )}
+      {pricingLog && (
+        <div>
+          <span className="font-semibold text-base">Pricing rules</span>
+          <div className="text-[15px] font-normal mt-1">
+            Last update:{" "}
+            {`${formatDate(pricingLog.created_at)}, ${pricingLog.causer.name} ${pricingLog.causer.surname}`}
+          </div>
         </div>
-      </div>
-      <div>
-        <span className="font-semibold text-base">Co-efficients</span>
-        <div className="text-[15px] font-normal mt-1">
-          Last update:{" "}
-          {coefficientsLog
-            ? `${formatDate(coefficientsLog.created_at)}, ${coefficientsLog.causer.name} ${coefficientsLog.causer.surname}`
-            : "-"}
+      )}
+      {coefficientsLog && (
+        <div>
+          <span className="font-semibold text-base">Co-efficients</span>
+          <div className="text-[15px] font-normal mt-1">
+            Last update:{" "}
+            {`${formatDate(coefficientsLog.created_at)}, ${coefficientsLog.causer.name} ${coefficientsLog.causer.surname}`}
+          </div>
         </div>
-      </div>
+      )}
       <div>
         <button
           className="text-primary underline text-[15px] font-normal hover:text-primary-700"
