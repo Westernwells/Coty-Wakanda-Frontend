@@ -12,12 +12,14 @@ import {
   TextInput,
   Title,
   Checkbox,
+  Button,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import SearchIcon from "../Icons/SearchIcon";
+import ExitIcon from "../Icons/ExitIcon";
 
 const Filter = ({
   setFilters,
@@ -124,6 +126,26 @@ const Filter = ({
         <Title order={2} className="text-primary font-semibold text-xl">
           Refine your results
         </Title>
+        <Button
+          rightSection={<ExitIcon />}
+          onClick={() => {
+            setFilters({
+              search: "",
+              region_id: "",
+              market_id: "",
+              brand_id: "",
+              sub_brand_id: "",
+              distributor_id: "",
+              division: "",
+              brand_type: "all",
+            });
+            form.reset();
+          }}
+          variant="outline"
+          className="border-primary  border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+        >
+          Clear filters
+        </Button>
       </Group>
 
       <div className="flex items-center gap-x-5 mt-6">
@@ -136,18 +158,11 @@ const Filter = ({
         />
         <button
           type="button"
-          className={twMerge("flex items-center gap-x-2 cursor-pointer group")}
+          className={twMerge(
+            "flex items-center gap-x-2 cursor-pointer group",
+            !form.getValues().search.length && "invisible"
+          )}
           onClick={() => {
-            setFilters({
-              search: "",
-              region_id: "",
-              market_id: "",
-              brand_id: "",
-              sub_brand_id: "",
-              distributor_id: "",
-              division: "",
-              brand_type: "all",
-            });
             form.reset();
           }}
         >

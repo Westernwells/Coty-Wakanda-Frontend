@@ -118,18 +118,21 @@ const MasterProductFilters = ({
           className="flex-grow"
           leftSection={<SearchIcon />}
         />
-        <div
+        <button
+          type="button"
           className={twMerge(
-            "flex items-center gap-x-2 cursor-pointer",
+            "flex items-center gap-x-2 cursor-pointer group",
             !form.getValues().search.length && "invisible"
           )}
-          onClick={() => form.reset()}
+          onClick={() => {
+            form.reset();
+          }}
         >
-          <CloseButton />
-          <span className="hidden sm:inline text-nowrap text-primary font-medium">
+          <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
+          <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
             Clear all
           </span>
-        </div>
+        </button>
       </div>
       <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
       <Group w="100% gap-4 sm:gap-5">
