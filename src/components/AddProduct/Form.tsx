@@ -115,13 +115,21 @@ const AddProductForm = forwardRef(function AddProductForm(
     };
   }
 
-  const form = useForm<Partial<ProductInput>>({
+  const form = useForm<
+    Partial<ProductInput> & { brand_type?: string; brand_category?: string }
+  >({
     mode: "uncontrolled",
     initialValues: isEdit
-      ? productToEdit
+      ? {
+          ...(productToEdit as object),
+          brand_type: undefined,
+          brand_category: undefined,
+        }
       : {
           price_benchmark: {},
           distributor_pricing: [],
+          brand_type: undefined,
+          brand_category: undefined,
         },
     validate: zodResolver(addProductSchema),
   });
@@ -135,7 +143,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     { data: brandsData, isLoading: brandsLoading },
     { data: countriesData, isLoading: countriesLoading },
     // { data: currenciesData },
-    { data: brandPillarsData, isLoading: brandPillarsLoading },
+    { isLoading: brandPillarsLoading },
     { data: productsListData, isLoading: productsLoading },
     { data: productDistributorsData, isLoading: productDistrubutorsLoading },
   ] = useQueries({
@@ -352,6 +360,46 @@ const AddProductForm = forwardRef(function AddProductForm(
       })}
     >
       <FormSection title="Product details" className="mt-2 sm:mt-5">
+        <Grid gutter={24}>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              label="Brand Type"
+              placeholder="Select brand type"
+              {...form.getInputProps("brand_type")}
+              data={[
+                { value: "luxury", label: "Luxury" },
+                { value: "mass", label: "Mass" },
+              ]}
+              classNames={selectStyles}
+              clearable
+            />
+          </Grid.Col>
+          {form.getValues().brand_type && (
+            <Grid.Col
+              span={{
+                sm: 6,
+                base: 12,
+              }}
+            >
+              <Select
+                label="Category"
+                placeholder="Select category"
+                {...form.getInputProps("brand_category")}
+                data={[
+                  { value: "formal", label: "Formal" },
+                  { value: "informal", label: "Informal" },
+                ]}
+                classNames={selectStyles}
+                clearable
+              />
+            </Grid.Col>
+          )}
+        </Grid>
         <Radio.Group
           {...form.getInputProps("pref")}
           name="pref"
@@ -503,7 +551,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={textInputStyles}
             />
           </Grid.Col>
-          <Grid.Col
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -514,7 +562,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="Material TR"
               classNames={textInputStyles}
             />
-          </Grid.Col>
+          </Grid.Col> */}
           <Grid.Col
             span={{
               sm: 6,
@@ -557,7 +605,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={selectStyles}
             />
           </Grid.Col>
-          <Grid.Col
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -575,7 +623,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={selectStyles}
               disabled={!form.getValues().brand_id}
             />
-          </Grid.Col>
+          </Grid.Col> */}
           <Grid.Col
             span={{
               sm: 6,
@@ -603,7 +651,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               allowNegative={false}
             />
           </Grid.Col>
-          <Grid.Col
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -617,7 +665,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               allowDecimal={false}
               allowNegative={false}
             />
-          </Grid.Col>
+          </Grid.Col> */}
           <Grid.Col
             span={{
               sm: 6,
@@ -630,7 +678,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={textInputStyles}
             />
           </Grid.Col>
-          <Grid.Col
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -641,7 +689,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="Article sub type"
               classNames={textInputStyles}
             />
-          </Grid.Col>
+          </Grid.Col> */}
           <Grid.Col
             span={{
               sm: 6,
@@ -664,7 +712,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={selectStyles}
             />
           </Grid.Col>
-          <Grid.Col
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -677,8 +725,8 @@ const AddProductForm = forwardRef(function AddProductForm(
               hideControls
               allowNegative={false}
             />
-          </Grid.Col>
-          <Grid.Col
+          </Grid.Col> */}
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -691,8 +739,8 @@ const AddProductForm = forwardRef(function AddProductForm(
               hideControls
               allowNegative={false}
             />
-          </Grid.Col>
-          <Grid.Col
+          </Grid.Col> */}
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -703,7 +751,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="Shade"
               classNames={textInputStyles}
             />
-          </Grid.Col>
+          </Grid.Col> */}
         </Grid>
       </FormSection>
 
@@ -744,7 +792,529 @@ const AddProductForm = forwardRef(function AddProductForm(
         </Grid>
       </FormSection>
 
-      <FormSection title="Product Pricing">
+      <FormSection title="Category heading">
+        <Grid
+          gutter={{
+            sm: 32,
+            base: 16,
+          }}
+        >
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("core_heading")}
+              label="Core heading"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("subcategory_id")}
+              label="Sub category"
+              data={
+                subCategoriesData?.data?.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })) || []
+              }
+              classNames={selectStyles}
+              disabled={!form.getValues().category_id}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("market_id")}
+              label="Market"
+              data={
+                marketsData?.data?.map((market) => ({
+                  value: market.id.toString(),
+                  label: market.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("segment_id")}
+              label="Segment"
+              data={
+                segmentsData?.data?.map((segment) => ({
+                  value: segment.id.toString(),
+                  label: segment.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("icp_eur")}
+              label="ICP_EUR"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("icp_usd")}
+              label="ICP_USD"
+              classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("factory")}
+              label="Factory"
+              classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("commodity_id")}
+              label="Commodity ID"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("country_id")}
+              label="Country of origin"
+              data={
+                countriesData?.data?.map((country) => ({
+                  value: country.id.toString(),
+                  label: country.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gender")}
+              label="Gender"
+              data={[
+                {
+                  value: "male",
+                  label: "Male",
+                },
+                {
+                  value: "female",
+                  label: "Female",
+                },
+              ]}
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_eur")}
+              label="Cssp Trex EUR"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col> */}
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_usd")}
+              label="Cssp Trex USD"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col> */}
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("shade")}
+              label="Shade"
+              classNames={textInputStyles}
+            />
+          </Grid.Col> */}
+        </Grid>
+      </FormSection>
+
+      <FormSection title="Category heading">
+        <Grid
+          gutter={{
+            sm: 32,
+            base: 16,
+          }}
+        >
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("size")}
+              label="Size & Dimension"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("length")}
+              label="Length"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("height")}
+              label="Height"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("width")}
+              label="Width"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("volume")}
+              label="Volume"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("gross_weight")}
+              label="Gross weight"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("net_weight")}
+              label="Net weight"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("units")}
+              label="Units"
+              classNames={textInputStyles}
+              allowDecimal={false}
+              allowNegative={false}
+              hideControls
+            />
+          </Grid.Col>
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("core_heading")}
+              label="Core heading"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("brand_category")}
+              label="Sub category"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("market")}
+              label="Market"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("segment")}
+              label="Segment"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("icp_eur")}
+              label="ICP_EUR"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("icp_usd")}
+              label="ICP_USD"
+              classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("factory")}
+              label="Factory"
+              classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("commodity_id")}
+              label="Commodity ID"
+              classNames={textInputStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("country_id")}
+              label="Country of origin"
+              data={
+                countriesData?.data?.map((country) => ({
+                  value: country.id.toString(),
+                  label: country.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("gender")}
+              label="Gender"
+              data={[
+                {
+                  value: "male",
+                  label: "Male",
+                },
+                {
+                  value: "female",
+                  label: "Female",
+                },
+              ]}
+              classNames={selectStyles}
+            />
+          </Grid.Col> */}
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_eur")}
+              label="Cssp Trex EUR"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col> */}
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <NumberInput
+              {...form.getInputProps("cssp_trex_usd")}
+              label="Cssp Trex USD"
+              classNames={textInputStyles}
+              hideControls
+              allowNegative={false}
+            />
+          </Grid.Col> */}
+          {/* <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <TextInput
+              {...form.getInputProps("shade")}
+              label="Shade"
+              classNames={textInputStyles}
+            />
+          </Grid.Col> */}
+        </Grid>
+      </FormSection>
+
+      {/* <FormSection title="Product Pricing">
         <Grid
           gutter={{
             sm: 32,
@@ -780,8 +1350,8 @@ const AddProductForm = forwardRef(function AddProductForm(
             />
           </Grid.Col>
         </Grid>
-      </FormSection>
-      <FormSection title="Product Origins">
+      </FormSection> */}
+      {/* <FormSection title="Product Origins">
         <Grid
           gutter={{
             sm: 32,
@@ -929,8 +1499,8 @@ const AddProductForm = forwardRef(function AddProductForm(
             />
           </Grid.Col>
         </Grid>
-      </FormSection>
-
+      </FormSection> */}
+      {/* 
       <FormSection title="Product Dimensions">
         <Grid
           gutter={{
@@ -1056,17 +1626,17 @@ const AddProductForm = forwardRef(function AddProductForm(
             />
           </Grid.Col>
         </Grid>
-      </FormSection>
+      </FormSection> */}
       <FormSection title="Price benchmark">
         <Grid
           gutter={{
-            sm: 24,
+            sm: 32,
             base: 16,
           }}
         >
           <Grid.Col
             span={{
-              sm: 4,
+              sm: 6,
               base: 12,
             }}
           >
@@ -1088,8 +1658,8 @@ const AddProductForm = forwardRef(function AddProductForm(
           </Grid.Col>
           <Grid.Col
             span={{
-              sm: 4,
-              base: 6,
+              sm: 6,
+              base: 12,
             }}
           >
             <Select
@@ -1110,8 +1680,27 @@ const AddProductForm = forwardRef(function AddProductForm(
           </Grid.Col>
           <Grid.Col
             span={{
-              sm: 4,
-              base: 6,
+              sm: 6,
+              base: 12,
+            }}
+          >
+            <Select
+              {...form.getInputProps("category_id")}
+              label="Category"
+              placeholder="Select Category"
+              data={
+                categoriesData?.data?.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+          <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
             }}
           >
             <NumberInput
@@ -1165,7 +1754,6 @@ const AddProductForm = forwardRef(function AddProductForm(
                         : "not registered",
                     }}
                   >
-                    // @ts-expect-error
                     <PricingFields
                       form={form}
                       prefix={`distributor_pricing.${item_idx}`}
