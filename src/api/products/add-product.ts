@@ -63,13 +63,13 @@ export const addProductSchema = z.object({
       coerce: true,
       message: "This field should have a numeric value",
     })
-    .min(1, { message: "This field is required" }),
+    .min(0, { message: "This field is required" }),
   icp_usd: z
     .number({
       coerce: true,
       message: "This field should have a numeric value",
     })
-    .min(1, { message: "This field is required" }),
+    .min(0, { message: "This field is required" }),
   factory: z.string().min(1, { message: "This field is required" }),
   commodity_id: z
     .number({

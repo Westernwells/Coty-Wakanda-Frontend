@@ -1,3 +1,9 @@
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { getCountries } from "@/api/get-countries";
@@ -42,14 +48,30 @@ import {
   textInputStyles,
 } from "../Shared/Styles";
 
-const AddProductForm = ({
-  isEdit = false,
-  product,
-}: {
-  isEdit?: boolean;
-  product?: Product;
-}) => {
+const AddProductForm = forwardRef(function AddProductForm(
+  {
+    isEdit = false,
+    product,
+  }: {
+    isEdit?: boolean;
+    product?: Product;
+  },
+  ref
+) {
   const navigate = useNavigate();
+  const internalFormRef = useRef<HTMLFormElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      submit: () => {
+        internalFormRef.current?.requestSubmit();
+      },
+      isSubmitting,
+    }),
+    [isSubmitting]
+  );
 
   let productToEdit;
 
@@ -256,68 +278,76 @@ const AddProductForm = ({
 
   return (
     <form
+      ref={internalFormRef}
       onSubmit={form.onSubmit(async (values) => {
-        const { documents, ...toSubmit } = values;
-        if (isEdit) {
-          const promises: Promise<ApiResponseFiles>[] = [];
-          documents?.map((doc: any) => {
-            const data = addDocument.mutateAsync({
-              productId: product?.id || 0,
-              data: {
-                title: doc.title,
-                url: doc.url,
-              },
+        setIsSubmitting(true);
+        try {
+          const { documents, ...toSubmit } = values;
+          if (isEdit) {
+            const promises: Promise<ApiResponseFiles>[] = [];
+            documents?.map((doc: { title: string; url: string }) => {
+              const data = addDocument.mutateAsync({
+                productId: product?.id || 0,
+                data: {
+                  title: doc.title,
+                  url: doc.url,
+                },
+              });
+              promises.push(data);
             });
-            promises.push(data);
-          });
-          updateProduct.mutate(
-            {
-              data: {
-                ...toSubmit,
-                grouping: Number(values.grouping),
-                launch_date: values.launch_date?.toISOString().split("T")[0],
-                discontinue_date: values.discontinue_date
-                  ?.toISOString()
-                  .split("T")[0],
-                price_benchmark:
-                  (values.price_benchmark as PriceBenchmark) || null,
+            updateProduct.mutate(
+              {
+                data: {
+                  ...toSubmit,
+                  grouping: Number(values.grouping),
+                  launch_date: values.launch_date?.toISOString().split("T")[0],
+                  discontinue_date: values.discontinue_date
+                    ?.toISOString()
+                    .split("T")[0],
+                  price_benchmark:
+                    (values.price_benchmark as PriceBenchmark) || null,
+                },
               },
-            },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({
-                  queryKey: ["products"],
-                  refetchType: "all",
-                });
-                navigate({ to: "/products" });
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({
+                    queryKey: ["products"],
+                    refetchType: "all",
+                  });
+                  navigate({ to: "/products" });
+                },
+                onSettled: () => setIsSubmitting(false),
+              }
+            );
+          } else {
+            addProduct.mutate(
+              {
+                data: {
+                  ...toSubmit,
+                  grouping: Number(values.grouping),
+                  launch_date: values.launch_date?.toISOString().split("T")[0],
+                  discontinue_date: values.discontinue_date
+                    ?.toISOString()
+                    .split("T")[0],
+                  price_benchmark:
+                    (values.price_benchmark as PriceBenchmark) || null,
+                  documents: documents,
+                },
               },
-            }
-          );
-        } else {
-          addProduct.mutate(
-            {
-              data: {
-                ...toSubmit,
-                grouping: Number(values.grouping),
-                launch_date: values.launch_date?.toISOString().split("T")[0],
-                discontinue_date: values.discontinue_date
-                  ?.toISOString()
-                  .split("T")[0],
-                price_benchmark:
-                  (values.price_benchmark as PriceBenchmark) || null,
-                documents: documents,
-              },
-            },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({
-                  queryKey: ["products"],
-                  refetchType: "all",
-                });
-                navigate({ to: "/products" });
-              },
-            }
-          );
+              {
+                onSuccess: () => {
+                  queryClient.invalidateQueries({
+                    queryKey: ["products"],
+                    refetchType: "all",
+                  });
+                  navigate({ to: "/products" });
+                },
+                onSettled: () => setIsSubmitting(false),
+              }
+            );
+          }
+        } catch {
+          setIsSubmitting(false);
         }
       })}
     >
@@ -1135,8 +1165,8 @@ const AddProductForm = ({
                         : "not registered",
                     }}
                   >
+                    // @ts-expect-error
                     <PricingFields
-                      // @ts-ignore
                       form={form}
                       prefix={`distributor_pricing.${item_idx}`}
                       coefficientsData={item.coefficients}
@@ -1162,9 +1192,9 @@ const AddProductForm = ({
                             secondary: item.registered,
                           }}
                         >
+                          // @ts-expect-error
                           <PricingFields
                             isMirror
-                            // @ts-ignore
                             form={form}
                             prefix={`distributor_pricing.${item_idx}.mirrors.${mirror_idx}`}
                             coefficientsData={mirror.coefficients}
@@ -1190,12 +1220,9 @@ const AddProductForm = ({
           }}
         />
       </FormSection>
-
-      <Group justify="flex-end" mt="md">
-        <Button type="submit">Submit</Button>
-      </Group>
     </form>
   );
-};
+});
 
+export { AddProductForm };
 export default AddProductForm;
