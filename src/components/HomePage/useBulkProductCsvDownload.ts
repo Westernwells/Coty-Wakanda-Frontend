@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getProducts } from "@/api/products/get-products";
-import { Product } from "@/types";
+import { Product, Filters } from "@/types";
 
 export interface CsvProductRow {
   [key: string]: string | number | null;
@@ -32,7 +32,7 @@ function mapProductToCsvRow(product: Product): CsvProductRow {
   };
 }
 
-export function useBulkProductCsvDownload() {
+export function useBulkProductCsvDownload(filter?: Filters) {
   const [csvData, setCsvData] = useState<CsvProductRow[]>([]);
   const [csvHeaders, setCsvHeaders] = useState<
     { label: string; key: string }[]
@@ -58,7 +58,7 @@ export function useBulkProductCsvDownload() {
       let cursor = 1;
       let hasNext = true;
       while (hasNext) {
-        const res = await getProducts({ cursor, page_size: 100 });
+        const res = await getProducts({ cursor, page_size: 100, filter });
         all = all.concat(res.data);
         hasNext = res.meta.has_next;
         cursor = res.meta.cursor;
@@ -74,7 +74,7 @@ export function useBulkProductCsvDownload() {
       setCsvError(true);
       setCsvLoading(false);
     }
-  }, []);
+  }, [filter]);
 
   return {
     csvData,

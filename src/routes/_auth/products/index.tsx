@@ -49,9 +49,9 @@ function RouteComponent() {
   };
 
   // Bulk CSV download logic for main button
-  const mainCsv = useBulkProductCsvDownload();
+  const mainCsv = useBulkProductCsvDownload(filter);
   // Bulk CSV download logic for dropdown
-  const bulkCsv = useBulkProductCsvDownload();
+  const bulkCsv = useBulkProductCsvDownload(filter);
 
   if (error || (!isLoading && !data)) {
     return (
