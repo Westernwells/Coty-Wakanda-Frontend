@@ -3,8 +3,9 @@ import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";
 import SubCategorySettings from "@/components/ApplicationSettings/SubCategorySettings";
 import Headline from "@/components/Shared/Headline";
-import { Group, Tabs } from "@mantine/core";
-import { createFileRoute } from "@tanstack/react-router";
+import { Button, Group, Tabs } from "@mantine/core";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { PackageOpen, ReceiptText } from "lucide-react";
 
 export const Route = createFileRoute("/_auth/application-settings")({
   component: RouteComponent,
@@ -13,7 +14,27 @@ export const Route = createFileRoute("/_auth/application-settings")({
 function RouteComponent() {
   return (
     <div className="w-full">
-      <Headline title="Innovations" />
+      <Headline title="Settings" />
+      <Group className="mt-5">
+        <Button
+          rightSection={<PackageOpen className="size-5" />}
+          variant="default"
+          className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+          component={Link}
+          to="/product-list"
+        >
+          Product List
+        </Button>
+        <Button
+          rightSection={<ReceiptText className="size-5" />}
+          variant="default"
+          className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+          component={Link}
+          to="/billing-list"
+        >
+          Billing List
+        </Button>
+      </Group>
       <section className="mt-3 sm:mt-8">
         <Tabs
           color="#002554"
