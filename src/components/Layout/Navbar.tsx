@@ -12,6 +12,7 @@ import {
   useMatchRoute,
   useNavigate,
 } from "@tanstack/react-router";
+import { useState } from "react";
 
 import Logo from "@/assets/logo.svg";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ import LightBulbIcon from "../Icons/LightBulbIcon";
 import PlusIcon from "../Icons/PlusIcon";
 import SettingsIcon from "../Icons/SettingsIcon";
 import ShoppingCart from "../Icons/ShoppingCartIcon";
+import CollapseIcon from "../Icons/CollapseIcon";
 
 const Navbar = () => {
   const matchRoute = useMatchRoute();
@@ -35,6 +37,14 @@ const Navbar = () => {
   const role = useUserStore((state) => state.user?.role);
   const [opened, { toggle }] = useDisclosure();
   const navigate = useNavigate();
+
+  const [isDesktopNavbarCollapsed, setIsDesktopNavbarCollapsed] =
+    useState(false);
+  const DESKTOP_NAVBAR_EXPANDED_WIDTH = 256;
+  const DESKTOP_NAVBAR_COLLAPSED_WIDTH = 80;
+
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+
   const links =
     role === "admin"
       ? [
@@ -73,7 +83,9 @@ const Navbar = () => {
   return (
     <AppShell
       navbar={{
-        width: 256,
+        width: isDesktopNavbarCollapsed
+          ? DESKTOP_NAVBAR_COLLAPSED_WIDTH
+          : DESKTOP_NAVBAR_EXPANDED_WIDTH,
         breakpoint: "md",
         collapsed: { mobile: !opened },
       }}
@@ -93,41 +105,156 @@ const Navbar = () => {
       {isSignedIn && (
         <AppShell.Navbar
           className={cn(
-            "bg-primary px-4 py-6 lg:py-10 lg:px-6 border-0 md:flex h-screen"
+            "bg-primary border-0 md:flex flex-col h-screen transition-all duration-300 ease-in-out",
+            isDesktopNavbarCollapsed
+              ? "px-2 py-3  lg:px-3"
+              : "px-4 py-3  lg:px-6"
           )}
         >
           <CloseButton
-            className="absolute text-white  right-4 md:hidden"
+            className="absolute text-white right-4 top-4 md:hidden"
             size="lg"
             bg="transparent"
             onClick={toggle}
           />
-          <div className="flex justify-center ">
-            <img src={Logo} alt="Logo" />
+          <div
+            className={cn(
+              "pb-6",
+              isDesktopNavbarCollapsed
+                ? "flex flex-col items-center"
+                : "flex flex-col items-stretch"
+            )}
+          >
+            <UnstyledButton
+              onClick={() =>
+                setIsDesktopNavbarCollapsed(!isDesktopNavbarCollapsed)
+              }
+              className={cn(
+                "hidden md:block text-white hover:bg-white hover:bg-opacity-10 rounded p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-white mb-2",
+                isDesktopNavbarCollapsed ? "self-end" : "self-end"
+              )}
+              aria-label={
+                isDesktopNavbarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
+            >
+              <CollapseIcon
+                stroke="white"
+                className={cn(
+                  "h-6 w-6 transition-transform duration-300 ease-in-out",
+                  isDesktopNavbarCollapsed && "transform rotate-180 "
+                )}
+              />
+            </UnstyledButton>
+
+            {!isDesktopNavbarCollapsed && (
+              <Link
+                to="/"
+                aria-label="Go to homepage"
+                className="self-center pt-4"
+              >
+                <img src={Logo} alt="Logo" />
+              </Link>
+            )}
+            {isDesktopNavbarCollapsed && (
+              <Link
+                to="/"
+                aria-label="Go to homepage"
+                className="flex justify-center w-full pt-2"
+              >
+                <img src={Logo} alt="Logo" className="w-12 h-auto" />
+              </Link>
+            )}
           </div>
-          <Group className="bg-white rounded-xl no-scrollbar py-3 px-5 bg-opacity-10 flex justify-center  gap-x-3 flex-nowrap my-5">
-            <UnstyledButton onClick={() => navigate({ to: "/profile" })}>
-              <AvatarIcon />
+
+          <Group
+            className={cn(
+              "bg-white rounded-xl py-3 bg-opacity-10 flex items-center gap-x-3 flex-nowrap mb-6",
+              isDesktopNavbarCollapsed
+                ? "flex-col px-2 gap-y-3"
+                : "justify-center px-5"
+            )}
+          >
+            <UnstyledButton
+              onClick={() => navigate({ to: "/profile" })}
+              title="Profile"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
+            >
+              <AvatarIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/profile", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/profile", fuzzy: true })}
+              />
             </UnstyledButton>
-            <UnstyledButton onClick={() => navigate({ to: "/settings" })}>
-              <SettingsIcon />
+            <UnstyledButton
+              onClick={() => navigate({ to: "/settings" })}
+              title="Settings"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
+            >
+              <SettingsIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/settings", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/settings", fuzzy: true })}
+              />
             </UnstyledButton>
-            <UnstyledButton onClick={() => navigate({ to: "/notifications" })}>
-              <BellIcon />
+            <UnstyledButton
+              onClick={() => navigate({ to: "/notifications" })}
+              title="Notifications"
+              className={cn(
+                isDesktopNavbarCollapsed &&
+                  "focus:outline-none focus-visible:outline-none"
+              )}
+            >
+              <BellIcon
+                hasOutline={
+                  !isDesktopNavbarCollapsed &&
+                  !matchRoute({ to: "/notifications", fuzzy: true })
+                }
+                isActive={!!matchRoute({ to: "/notifications", fuzzy: true })}
+              />
             </UnstyledButton>
           </Group>
 
-          <Stack className="gap-[10px] overflow-y-auto no-scrollbar">
+          <Stack
+            className={cn(
+              "gap-[10px] overflow-y-auto no-scrollbar flex-grow",
+              isDesktopNavbarCollapsed && "items-center"
+            )}
+          >
             {links.map((link) => {
               const isActive = matchRoute({ to: link.link, fuzzy: true });
+              const isHovered = hoveredLink === link.link;
               return (
                 <Link
                   to={link.link}
                   key={link.label}
-                  className="flex items-center gap-x-2 text-white [&.active]:text-primary [&.active]:bg-white rounded-[10px] [&.active]:font-medium px-2 py-3 hover:bg-white hover:bg-opacity-10 transition-all ease-in-out duration-300"
+                  className={cn(
+                    "flex items-center gap-x-2 text-white [&.active]:text-primary [&.active]:bg-white rounded-[10px] [&.active]:font-medium py-3 hover:text-[#00EBB2] transition-all ease-in-out duration-300",
+                    isDesktopNavbarCollapsed
+                      ? "px-2 justify-center w-full"
+                      : "px-2"
+                  )}
+                  title={isDesktopNavbarCollapsed ? link.label : undefined}
+                  onMouseEnter={() => setHoveredLink(link.link)}
+                  onMouseLeave={() => setHoveredLink(null)}
                 >
-                  <link.icon fill={isActive ? "#002554" : "#fff"} />
-                  <span className="text-sm">{link.label}</span>
+                  <link.icon
+                    fill={isActive ? "#002554" : isHovered ? "#00EBB2" : "#fff"}
+                  />
+                  {!isDesktopNavbarCollapsed && (
+                    <span className="text-sm whitespace-nowrap">
+                      {link.label}
+                    </span>
+                  )}
                 </Link>
               );
             })}

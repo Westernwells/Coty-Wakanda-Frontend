@@ -5,21 +5,21 @@ import { getRegions } from "@/api/get-regions";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { Filters } from "@/types";
 import {
-  Button,
   CloseButton,
   Divider,
   Group,
-  Radio,
-  Select,
   TextInput,
   Title,
+  Checkbox,
+  Button,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import ExitIcon from "../Icons/ExitIcon";
 import SearchIcon from "../Icons/SearchIcon";
+import ExitIcon from "../Icons/ExitIcon";
+import { CustomSelect } from "./CustomSelect";
+import { cn } from "@/lib/utils";
 
 const Filter = ({
   setFilters,
@@ -39,6 +39,7 @@ const Filter = ({
       sub_brand_id: "",
       distributor_id: "",
       division: "",
+      brand_type: "all",
     },
 
     onValuesChange: (values) => {
@@ -51,7 +52,7 @@ const Filter = ({
     { data: regionsData, error: regionsError },
     { data: brandsData, error: brandsError },
     { data: brandPillarsData, error: brandPillarsError },
-    // { data: distributorsData, error: distributorsError },
+    { data: distributorsData, error: distributorsError },
   ] = useQueries({
     queries: [
       {
@@ -90,14 +91,18 @@ const Filter = ({
       value: pillar.id.toString(),
       label: pillar.name,
     })) || [];
-  // const distributorOptions =
-  //     distributorsData?.data?.map((dist) => ({
-  //         value: dist.id.toString(),
-  //         label: dist.name,
-  //     })) || [];
+  const distributorOptions =
+    distributorsData?.data?.map((dist: { id: number; name: string }) => ({
+      value: dist.id.toString(),
+      label: dist.name,
+    })) || [];
 
   const hasError =
-    marketsError || regionsError || brandsError || brandPillarsError;
+    marketsError ||
+    regionsError ||
+    brandsError ||
+    brandPillarsError ||
+    distributorsError;
 
   if (hasError) {
     return (
@@ -109,13 +114,23 @@ const Filter = ({
     );
   }
 
+  // Checkbox logic: only one can be checked at a time, but styled as checkboxes
+  function handleBrandTypeChange(type: string) {
+    form.setFieldValue("brand_type", type);
+    setFilters({ ...form.values, brand_type: type });
+  }
+
+  // Calculate grid columns based on select count
+  const selectCount = isProductsPage ? 3 : 2;
+  const gridColsClass =
+    selectCount === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 px-4";
+
   return (
-    <div className="bg-white w-full rounded-[20px] p-6 mt-5">
+    <div className="bg-[#F5F8FA] w-full rounded-[20px] p-6 mt-5">
       <Group justify="space-between" align="center">
         <Title order={2} className="text-primary font-semibold text-xl">
           Refine your results
         </Title>
-
         <Button
           rightSection={<ExitIcon />}
           onClick={() => {
@@ -127,6 +142,7 @@ const Filter = ({
               sub_brand_id: "",
               distributor_id: "",
               division: "",
+              brand_type: "all",
             });
             form.reset();
           }}
@@ -145,97 +161,103 @@ const Filter = ({
           className="flex-grow"
           leftSection={<SearchIcon />}
         />
-        <div
+        <button
+          type="button"
           className={twMerge(
-            "flex items-center gap-x-2 cursor-pointer",
+            "flex items-center gap-x-2 cursor-pointer group",
             !form.getValues().search.length && "invisible"
           )}
-          onClick={() => form.reset()}
+          onClick={() => {
+            form.reset();
+          }}
         >
-          <CloseButton />
-          <span className="hidden sm:inline text-nowrap text-primary font-medium">
+          <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
+          <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
             Clear all
           </span>
-        </div>
+        </button>
       </div>
       <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-      <Group w="100% gap-4 sm:gap-5">
+      <div className={cn("grid grid-cols-1", gridColsClass, "gap-4 w-full")}>
         {isProductsPage ? (
           <>
-            <Select
-              {...form.getInputProps("brand_id")}
-              aria-label="Filter by brand"
-              placeholder="Filter by brand"
-              data={brandOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+            <CustomSelect
+              value={form.values.brand_id}
+              options={brandOptions}
+              onChange={(val) => form.setFieldValue("brand_id", val)}
+              placeholder="Filter brands"
+              className="min-w-max max-w-lg w-full"
+              noBorder
             />
-            <Select
-              {...form.getInputProps("sub_brand_id")}
-              aria-label="Filter by brand pillar"
-              placeholder="Filter by brand pillar"
-              data={brandPillarOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+            <CustomSelect
+              value={form.values.sub_brand_id}
+              options={brandPillarOptions}
+              onChange={(val) => form.setFieldValue("sub_brand_id", val)}
+              placeholder="Filter brand pillars"
+              className="min-w-max max-w-lg w-full"
+              noBorder
+            />
+            <CustomSelect
+              value={form.values.distributor_id}
+              options={distributorOptions}
+              onChange={(val) => form.setFieldValue("distributor_id", val)}
+              placeholder="Filter distributors"
+              className="min-w-max max-w-lg w-full"
+              noBorder
             />
           </>
         ) : (
           <>
-            <Select
-              {...form.getInputProps("region_id")}
-              aria-label="Filter by region"
+            <CustomSelect
+              value={form.values.region_id}
+              options={regionOptions}
+              onChange={(val) => form.setFieldValue("region_id", val)}
               placeholder="Filter by region"
-              data={regionOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-2xl w-full "
+              noBorder
             />
-            <Select
-              {...form.getInputProps("market_id")}
-              aria-label="Filter by market"
+            <CustomSelect
+              value={form.values.market_id}
+              options={marketOptions}
+              onChange={(val) => form.setFieldValue("market_id", val)}
               placeholder="Filter by market"
-              data={marketOptions}
-              clearable
-              className="grow"
-              rightSection={<ChevronDownIcon />}
+              className="min-w-max max-w-2xl w-full"
+              noBorder
             />
           </>
         )}
-      </Group>
-
+      </div>
       {isProductsPage && (
         <Group gap={24} w="100%" className="mt-6">
-          <Radio.Group name="brand_type" {...form.getInputProps("brand_type")}>
-            <Group
-              gap={24}
-              w="100%"
-              className="mt-[10px] flex-col sm:flex-row  items-start "
-            >
-              <Radio
-                value=""
-                label="All"
-                classNames={{
-                  label: "text-primary text-sm pl-[5px] sm:pl-2",
-                }}
-              />
-              <Radio
-                value="mass"
-                label="Mass"
-                classNames={{
-                  label: "text-primary text-sm pl-[5px] sm:pl-2",
-                }}
-              />
-              <Radio
-                value="luxury"
-                label="Luxury"
-                classNames={{
-                  label: "text-primary text-sm pl-[5px] sm:pl-2",
-                }}
-              />
-            </Group>
-          </Radio.Group>
+          <div className="flex items-center gap-6 mt-4">
+            <Checkbox
+              checked={form.values.brand_type === "all"}
+              onChange={() => handleBrandTypeChange("all")}
+              label={<span className="text-primary text-sm">All</span>}
+              className="min-w-[80px] "
+              classNames={{
+                input: "cursor-pointer",
+              }}
+            />
+            <Checkbox
+              checked={form.values.brand_type === "luxury"}
+              onChange={() => handleBrandTypeChange("luxury")}
+              label={<span className="text-primary text-sm">Luxury only</span>}
+              className="min-w-[120px] "
+              classNames={{
+                input: "cursor-pointer",
+              }}
+            />
+            <Checkbox
+              checked={form.values.brand_type === "mass"}
+              onChange={() => handleBrandTypeChange("mass")}
+              label={<span className="text-primary text-sm">Mass only</span>}
+              className="min-w-[120px] "
+              classNames={{
+                input: "cursor-pointer",
+              }}
+            />
+          </div>
         </Group>
       )}
     </div>

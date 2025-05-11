@@ -257,15 +257,15 @@ const EditInnovationProductForm = ({
                   className="mt-[10px] flex-col sm:flex-row  items-start "
                 >
                   <Radio
-                    value="sealable"
-                    label="Sealable"
+                    value="saleable"
+                    label="saleable"
                     classNames={{
                       label: "text-primary text-sm pl-[5px] sm:pl-2",
                     }}
                   />
                   <Radio
-                    value="non-sealable"
-                    label="Non-sealable"
+                    value="non-saleable"
+                    label="Non-saleable"
                     classNames={{
                       label: "text-primary text-sm pl-[5px] sm:pl-2",
                     }}

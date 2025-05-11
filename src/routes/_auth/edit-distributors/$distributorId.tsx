@@ -7,6 +7,7 @@ import Headline from "@/components/Shared/Headline";
 import LoadingSpinner from "@/components/Shared/LoadingSpinner";
 import { getDistributor } from "@/api/distributors/get-distributor";
 import { useQuery } from "@tanstack/react-query";
+import { DistributorHistorySummary } from "@/components/Distributors/DistributorHistorySummary";
 
 export const Route = createFileRoute("/_auth/edit-distributors/$distributorId")(
   {
@@ -44,6 +45,7 @@ function RouteComponent() {
         </Button>
       </section>
       <AddDistributorForm formData={data?.data} isEdit />
+      <DistributorHistorySummary distributorId={distributorId} />
     </div>
   );
 }

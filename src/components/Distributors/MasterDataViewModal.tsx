@@ -6,8 +6,7 @@ import {
   Meta,
 } from "@/types";
 import { Loader } from "@mantine/core";
-import { useEffect, useRef, useState } from "react";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { useEffect, useState, useCallback } from "react";
 import DistributorPrices from "./DistributorPrices";
 import ProductTable from "./ProductTable";
 
@@ -15,6 +14,8 @@ const MasterDataViewModal = ({
   filters,
   initialData,
   initialMeta,
+  tableHeader,
+  tableFields,
 }: {
   initialData: {
     products: MasterProduct[];
@@ -22,61 +23,103 @@ const MasterDataViewModal = ({
   };
   initialMeta: Meta;
   filters: MasterProductFilters;
+  tableHeader?: string[];
+  tableFields?: string[];
 }) => {
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
-  const productTableRef = useRef<HTMLDivElement>(null);
-  const distributorTableRef = useRef<HTMLDivElement>(null);
   const [masterProducts, setMasterProducts] = useState<{
     products: MasterProduct[];
     distributors: MasterDistributor[];
   }>(initialData);
-  const [meta, setMeta] = useState<Meta>(initialMeta);
-  const [hasMore, setHasMore] = useState(initialMeta.has_next);
+
+  const [productsMeta, setProductsMeta] = useState<Meta>(initialMeta);
+  const [productsHasMore, setProductsHasMore] = useState(initialMeta.has_next);
+  const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
 
   useEffect(() => {
     setMasterProducts(initialData);
-    setMeta(initialMeta);
-    setHasMore(initialMeta.has_next);
+    setProductsMeta(initialMeta);
+    setProductsHasMore(initialMeta.has_next);
+    setSelectedRow(null);
+    // Reset loading state as well
+    setProductsIsLoadingMore(false);
+    if (initialData.products.length === 0 && initialMeta.has_next) {
+      // This effect will be handled by the one below after state is set
+    }
   }, [filters, initialData, initialMeta]);
 
-  const fetchMoreDistributors = async () => {
-    if (!meta?.has_next) return;
+  const fetchMoreProductsData = useCallback(async () => {
+    if (!productsMeta?.has_next || productsIsLoadingMore) return;
 
+    setProductsIsLoadingMore(true);
     try {
       const response = await getMasterData({
-        cursor: meta.cursor,
-        page_size: 20,
+        cursor: productsMeta.cursor,
+        page_size: 20, // Consider making page_size configurable or consistent
         filter: filters,
       });
 
       setMasterProducts((prev) => ({
         products: [...prev.products, ...response.data.products],
+        // This distributor update strategy might need refinement later
+        // to handle potential duplicates or ensure data consistency.
+        // For now, retaining original logic for minimal targeted change.
         distributors: [...prev.distributors, ...response.data.distributors],
       }));
-      setMeta(response.meta);
-      setHasMore(response.meta.has_next);
+      setProductsMeta(response.meta);
+      setProductsHasMore(response.meta.has_next);
     } catch (error) {
-      console.error("Error fetching more distributors:", error);
-      setHasMore(false);
+      console.error("Error fetching more product data:", error);
+      // setProductsHasMore(false); // Consider implications
+    } finally {
+      setProductsIsLoadingMore(false);
     }
-  };
+  }, [productsMeta, productsIsLoadingMore, filters]);
 
-  if (!initialData.products.length) {
-    return <p>Sorry no data with current filters, please try changing them</p>;
+  useEffect(() => {
+    // This effect ensures that if the component loads with no products but expects more,
+    // it fetches them automatically.
+    if (
+      masterProducts.products.length === 0 &&
+      productsHasMore &&
+      !productsIsLoadingMore
+    ) {
+      fetchMoreProductsData();
+    }
+  }, [
+    masterProducts.products.length,
+    productsHasMore,
+    productsIsLoadingMore,
+    fetchMoreProductsData,
+  ]);
+
+  if (productsIsLoadingMore && masterProducts.products.length === 0) {
+    return (
+      <div className="bg-gray-50 mt-5 text-center py-4">
+        <Loader size="md" />
+      </div>
+    );
   }
 
-  const handleScroll = (
-    scrollingDiv: HTMLDivElement,
-    otherDiv: HTMLDivElement | null
-  ) => {
-    if (otherDiv) {
-      otherDiv.scrollTop = scrollingDiv.scrollTop;
-    }
-  };
-  return (
-    <div className=" bg-gray-50 mt-5">
-      {/* Filters Section */}
-      {/* <div className="max-w-7xl mx-auto px-4 py-4">
+  if (
+    !productsIsLoadingMore &&
+    masterProducts.products.length === 0 &&
+    !productsHasMore
+  ) {
+    return (
+      <div className="bg-gray-50 mt-5 text-center py-4">
+        <p className="text-gray-500">
+          No master products found with the current filters.
+        </p>
+      </div>
+    );
+  }
+
+  if (masterProducts.products.length > 0) {
+    return (
+      <div className=" bg-gray-50 mt-5">
+        {/* Filters Section */}
+        {/* <div className="max-w-7xl mx-auto px-4 py-4">
                 <div className="bg-white rounded-lg shadow p-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
@@ -131,59 +174,55 @@ const MasterDataViewModal = ({
                     </div>
                 </div>
             </div> */}
-      <InfiniteScroll
-        dataLength={masterProducts.products.length}
-        next={fetchMoreDistributors}
-        hasMore={hasMore}
-        loader={
-          <div className="text-center py-4">
-            <Loader size="md" />
-          </div>
-        }
-        endMessage={
-          <p className="text-center text-gray-500 py-4">
-            No more master products to load.
-          </p>
-        }
-      >
-        {initialData.products.length && (
-          <div className="mx-auto px-4 py-6">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* Product Table Section - 3/2 width */}
-              <div className="lg:col-span-3 bg-white rounded-lg shadow">
-                <ProductTable
-                  products={initialData.products}
-                  selectedRow={selectedRow}
-                  setSelectedRow={setSelectedRow}
-                  tableRef={productTableRef}
-                  onScroll={(e) =>
-                    handleScroll(
-                      e.target as HTMLDivElement,
-                      distributorTableRef.current
-                    )
-                  }
-                />
-              </div>
+        <div className="mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Product Table Section - 3/5 width */}
+            <div className="lg:col-span-3 bg-white rounded-lg shadow overflow-hidden">
+              <ProductTable
+                products={masterProducts.products}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                fetchMoreData={fetchMoreProductsData}
+                hasMore={productsHasMore}
+                isLoadingMore={productsIsLoadingMore}
+              />
+            </div>
 
-              {/* Distributor Prices Section - 2/5 width */}
-              <div className="lg:col-span-2 bg-white rounded-lg shadow">
-                <DistributorPrices
-                  distributors={initialData.distributors}
-                  selectedRow={selectedRow}
-                  setSelectedRow={setSelectedRow}
-                  tableRef={distributorTableRef}
-                  onScroll={(e) =>
-                    handleScroll(
-                      e.target as HTMLDivElement,
-                      productTableRef.current
-                    )
-                  }
-                />
-              </div>
+            {/* Distributor Prices Section - 2/5 width */}
+            <div className="lg:col-span-2 bg-white rounded-lg shadow overflow-hidden">
+              <DistributorPrices
+                distributors={masterProducts.distributors}
+                selectedRow={selectedRow}
+                setSelectedRow={setSelectedRow}
+                tableHeader={
+                  tableHeader || [
+                    "Billing Price",
+                    "RRSP",
+                    "C1",
+                    "French USD",
+                    "French EUR",
+                  ]
+                }
+                tableFields={
+                  tableFields || [
+                    "billing_price",
+                    "rrsp",
+                    "c1",
+                    "french_usd",
+                    "french_eur",
+                  ]
+                }
+              />
             </div>
           </div>
-        )}
-      </InfiniteScroll>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 mt-5 text-center py-4">
+      <Loader size="md" />
     </div>
   );
 };

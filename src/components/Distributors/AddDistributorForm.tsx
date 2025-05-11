@@ -177,6 +177,9 @@ const AddDistributorForm = ({
             className="mt-2 sm:mt-5"
           >
             <div className="bg-white rounded-2xl p-6">
+              <h2 className="text-lg font-semibold mb-6">
+                Distributor details
+              </h2>
               <div className="space-y-6">
                 <div>
                   <span className="text-primary font-medium text-sm mb-2 block">
@@ -334,7 +337,7 @@ const AddDistributorForm = ({
             </div>
 
             <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-lg font-semibold mb-6">Category heading</h2>
+              <h2 className="text-lg font-semibold mb-6">Pricing rules</h2>
               <div className="space-y-6">
                 <Grid gutter={24}>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
