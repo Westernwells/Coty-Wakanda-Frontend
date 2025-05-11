@@ -14,6 +14,8 @@ const MasterDataViewModal = ({
   filters,
   initialData,
   initialMeta,
+  tableHeader,
+  tableFields,
 }: {
   initialData: {
     products: MasterProduct[];
@@ -21,6 +23,8 @@ const MasterDataViewModal = ({
   };
   initialMeta: Meta;
   filters: MasterProductFilters;
+  tableHeader?: string[];
+  tableFields?: string[];
 }) => {
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [masterProducts, setMasterProducts] = useState<{
@@ -190,6 +194,24 @@ const MasterDataViewModal = ({
                 distributors={masterProducts.distributors}
                 selectedRow={selectedRow}
                 setSelectedRow={setSelectedRow}
+                tableHeader={
+                  tableHeader || [
+                    "Billing Price",
+                    "RRSP",
+                    "C1",
+                    "French USD",
+                    "French EUR",
+                  ]
+                }
+                tableFields={
+                  tableFields || [
+                    "billing_price",
+                    "rrsp",
+                    "c1",
+                    "french_usd",
+                    "french_eur",
+                  ]
+                }
               />
             </div>
           </div>

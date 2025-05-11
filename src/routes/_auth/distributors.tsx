@@ -9,6 +9,7 @@ import { getDistributors } from "@/api/distributors/get-distributors";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Filters } from "@/types";
+import { PackageOpen, ReceiptText } from "lucide-react";
 
 export const Route = createFileRoute("/_auth/distributors")({
   component: RouteComponent,
@@ -70,6 +71,24 @@ function RouteComponent() {
               to="#"
             >
               Import distributors
+            </Button>
+            <Button
+              rightSection={<PackageOpen className="size-5" />}
+              variant="default"
+              className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+              component={Link}
+              to="/product-list"
+            >
+              Product List
+            </Button>
+            <Button
+              rightSection={<ReceiptText className="size-5" />}
+              variant="default"
+              className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+              component={Link}
+              to="/billing-list"
+            >
+              Billing List
             </Button>
           </Group>
           <Button

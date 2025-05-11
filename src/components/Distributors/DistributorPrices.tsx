@@ -7,12 +7,16 @@ interface DistributorPricesProps {
   distributors: MasterDistributor[];
   selectedRow: string | null;
   setSelectedRow: (irc: string | null) => void;
+  tableHeader: string[];
+  tableFields: string[];
 }
 
 const DistributorPrices: React.FC<DistributorPricesProps> = ({
   distributors,
   selectedRow,
   setSelectedRow,
+  tableHeader,
+  tableFields,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingPrice, setEditingPrice] = useState<{
@@ -122,21 +126,14 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Billing Price
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                RRSP
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                C1
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                French USD
-              </th>
-              <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                French EUR
-              </th>
+              {tableHeader.map((header) => (
+                <th
+                  key={header}
+                  className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  {header}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -149,62 +146,83 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                   selectedRow === price.irc && "bg-primary/30"
                 )}
               >
-                <td className="px-2 py-1 text-sm text-gray-900">
-                  {editingPrice?.irc === price.irc ? (
-                    <input
-                      type="number"
-                      value={editingPrice.price}
-                      onChange={handlePriceChange}
-                      onBlur={handlePriceBlur}
-                      autoFocus
-                      className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
-                      step="0.01"
-                    />
-                  ) : (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePriceEdit(
-                          price.irc as string,
-                          Number(price.billing_price)
-                        );
-                      }}
-                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
-                    >
-                      ${Number(price.billing_price).toFixed(2)}
-                    </div>
-                  )}
-                </td>
-                <td className="px-2 py-1 text-sm text-gray-900">
-                  {editingRRSP?.irc === price.irc ? (
-                    <input
-                      type="number"
-                      value={editingRRSP.rrsp}
-                      onChange={handleRRSPChange}
-                      onBlur={handleRRSPBlur}
-                      autoFocus
-                      className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
-                      step="0.01"
-                    />
-                  ) : (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRRSPEdit(price.irc as string, Number(price.rrsp));
-                      }}
-                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
-                    >
-                      ${Number(price.rrsp).toFixed(2)}
-                    </div>
-                  )}
-                </td>
-                <td className="px-2 py-1 text-sm text-gray-900">{price.c1}</td>
-                <td className="px-2 py-1 text-sm text-gray-900">
-                  {price.french_eur}
-                </td>
-                <td className="px-2 py-1 text-sm text-gray-900">
-                  {price.french_usd}
-                </td>
+                {tableFields.map((field) => {
+                  // Special handling for editable fields
+                  if (field === "billing_price") {
+                    return (
+                      <td
+                        key={field}
+                        className="px-2 py-1 text-sm text-gray-900"
+                      >
+                        {editingPrice?.irc === price.irc ? (
+                          <input
+                            type="number"
+                            value={editingPrice.price}
+                            onChange={handlePriceChange}
+                            onBlur={handlePriceBlur}
+                            autoFocus
+                            className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                            step="0.01"
+                          />
+                        ) : (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePriceEdit(
+                                price.irc as string,
+                                Number(price.billing_price)
+                              );
+                            }}
+                            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                          >
+                            ${Number(price.billing_price).toFixed(2)}
+                          </div>
+                        )}
+                      </td>
+                    );
+                  }
+                  if (field === "rrsp") {
+                    return (
+                      <td
+                        key={field}
+                        className="px-2 py-1 text-sm text-gray-900"
+                      >
+                        {editingRRSP?.irc === price.irc ? (
+                          <input
+                            type="number"
+                            value={editingRRSP.rrsp}
+                            onChange={handleRRSPChange}
+                            onBlur={handleRRSPBlur}
+                            autoFocus
+                            className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                            step="0.01"
+                          />
+                        ) : (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRRSPEdit(
+                                price.irc as string,
+                                Number(price.rrsp)
+                              );
+                            }}
+                            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                          >
+                            ${Number(price.rrsp).toFixed(2)}
+                          </div>
+                        )}
+                      </td>
+                    );
+                  }
+                  // Default rendering for other fields
+                  return (
+                    <td key={field} className="px-2 py-1 text-sm text-gray-900">
+                      {(price as Record<string, string | number | null>)[
+                        field
+                      ] ?? "-"}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
