@@ -28,6 +28,9 @@ export function CustomSelect({
 }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const [dropdownWidth, setDropdownWidth] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -38,6 +41,12 @@ export function CustomSelect({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (ref.current) {
+      setDropdownWidth(`${ref.current.offsetWidth}px`);
+    }
+  }, [open]);
 
   const selected = options.find((opt) => opt.value === value);
 
@@ -71,7 +80,10 @@ export function CustomSelect({
         <ChevronDownIcon className="w-4 h-4 ml-2 text-gray-600" />
       </button>
       {open && (
-        <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-none shadow-lg max-h-60 overflow-auto">
+        <ul
+          className="absolute z-50 mt-1 max-w-2xl w-56 bg-white border border-gray-200 rounded-none shadow-lg max-h-60 overflow-auto"
+          style={{ minWidth: dropdownWidth, width: dropdownWidth }}
+        >
           {options.map((opt) => (
             <li
               key={opt.value}
