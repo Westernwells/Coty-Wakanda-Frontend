@@ -21,7 +21,6 @@ import {
   updateDistributorInputSchema,
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
-import { getBrands } from "@/api/get-brands";
 import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
@@ -395,8 +394,6 @@ const AddDistributorForm = ({
     { data: marketsData },
     { data: regionsData },
     { data: categoriesData },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    { data: brandsData },
     { data: currenciesData },
   ] = useQueries({
     queries: [
@@ -417,7 +414,6 @@ const AddDistributorForm = ({
         queryKey: ["categories"],
         queryFn: () => getCategories({ page_size: 9999 }),
       },
-      { queryKey: ["brands"], queryFn: getBrands },
       { queryKey: ["currencies"], queryFn: getCurrencies },
     ],
   });
