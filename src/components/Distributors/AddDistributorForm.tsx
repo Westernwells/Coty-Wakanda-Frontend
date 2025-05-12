@@ -5,9 +5,14 @@ import {
   Group,
   Loader,
   MultiSelect,
-  Radio,
   Select,
   TextInput,
+  Accordion,
+  ActionIcon,
+  Checkbox,
+  Table,
+  Text,
+  Badge,
 } from "@mantine/core";
 
 import { useAddDistributor } from "@/api/distributors/add-distributor";
@@ -16,7 +21,6 @@ import {
   updateDistributorInputSchema,
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
-import { getBrands } from "@/api/get-brands";
 import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
@@ -25,17 +29,14 @@ import { useForm, zodResolver } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { PlusIcon as LucidePlusIcon } from "lucide-react";
-import { useLayoutEffect } from "react";
+import { PlusIcon as LucidePlusIcon, CheckIcon, XIcon } from "lucide-react";
+import { useLayoutEffect, useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import PlusIcon from "../Icons/PlusIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import CoefficientsForm from "./CoefficientsForm";
 import CoefficientsTable from "./CoefficientsTable";
-import ProductBindingForm from "./ProductBindingForm";
-import ProductBindingsTable from "./ProductBindingTable";
 
 export type FormValues = updateDistributorInput & {
   coefficients: Array<{
@@ -45,6 +46,11 @@ export type FormValues = updateDistributorInput & {
     pref: Pref;
   }>;
 };
+
+const accountTypes = [
+  { value: "luxury", label: "Luxury" },
+  { value: "consumer_beauty", label: "Consumer Beauty" },
+];
 
 const AddDistributorForm = ({
   isEdit = false,
@@ -75,16 +81,319 @@ const AddDistributorForm = ({
   });
   const navigate = useNavigate();
 
-  const [opened, { open, close }] = useDisclosure(false);
-  const [
-    productBindingOpened,
-    { open: openProductBinding, close: closeProductBinding },
-  ] = useDisclosure(false);
+  // --- START Hardcoded Data for Marketed Brands ---
+  const initialMarketedBrandGroups = [
+    {
+      name: "Group 1",
+      brands: [
+        {
+          id: "calvin-klein",
+          name: "Calvin Klein",
+          approved: true,
+          proofs: ["Proof email.pdf", "Proof document 2.jpeg"],
+          coefficientType: "co-efficient",
+          billingType: "lux-french-rrsp",
+        },
+        {
+          id: "hugo-boss",
+          name: "Hugo Boss",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-billing",
+        },
+      ],
+    },
+    {
+      name: "Group 2",
+      brands: [
+        {
+          id: "davidoff-1",
+          name: "Davidoff",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-billing",
+        },
+        {
+          id: "chloe",
+          name: "Chloe",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-billing",
+        },
+        {
+          id: "escada",
+          name: "Escada",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-billing",
+        },
+      ],
+    },
+    {
+      name: "Group 3",
+      brands: [
+        {
+          id: "davidoff-2",
+          name: "Davidoff",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-billing",
+        },
+      ],
+    },
+  ];
+
+  const coefficientOptions = [
+    { value: "co-efficient", label: "Co-efficient" },
+    { value: "billing", label: "Billing" },
+  ];
+
+  const billingOptions = [
+    { value: "lux-french-rrsp", label: "Lux French RRSP $" },
+    { value: "lux-billing", label: "Lux Billing $" },
+    { value: "cb-french-rrsp", label: "CB French RRSP $" },
+    { value: "cb-billing", label: "CB Billing $" },
+  ];
+
+  // --- START Dummy Product Data ---
+  const dummyProducts = [
+    {
+      id: 1,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Hidden",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 2,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Hidden",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 3,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Hidden",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 4,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Visible",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 5,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Hidden",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 6,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Visible",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 7,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Visible",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+    {
+      id: 8,
+      name: "Product name",
+      c1Price: "Lorem",
+      cssp: 0.67,
+      status: "Visible",
+      icpEur: "Lorem",
+      icpUsd: "Lorem",
+      frenchEur: "Lorem",
+      frenchUsd: "Lorem",
+      rrsp: 0.67,
+      regionalBillingPrices: 0.67,
+      selected: false,
+    },
+  ];
+
+  // --- END Dummy Product Data ---
+
+  // --- END Hardcoded Data for Marketed Brands ---
+
+  // --- START Consumer Beauty Marketed Brands Data ---
+  const consumerBeautyMarketedBrandGroupsData = [
+    {
+      name: "Colour cosmetics",
+      brands: [
+        {
+          id: "bourjois",
+          name: "Bourjois",
+          approved: true,
+          proofs: ["Proof email.pdf", "Proof document 2.jpeg"],
+          coefficientType: "co-efficient",
+          billingType: "cb-french-rrsp",
+        },
+        {
+          id: "kyle",
+          name: "Kyle",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "cb-billing",
+        },
+      ],
+    },
+    {
+      name: "Mass fragrance",
+      brands: [
+        {
+          id: "adidas",
+          name: "Adidas",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-french-rrsp",
+        },
+        {
+          id: "beckham",
+          name: "Beckham",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-french-rrsp",
+        },
+        {
+          id: "another-name",
+          name: "Another name",
+          approved: true,
+          proofs: ["Proof email.pdf"],
+          coefficientType: "billing",
+          billingType: "lux-french-rrsp",
+        },
+      ],
+    },
+  ];
+  // --- END Consumer Beauty Marketed Brands Data ---
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, { open }] = useDisclosure(false);
+
+  // State for marketed brands
+  const [marketedBrandGroups, setMarketedBrandGroups] = useState(
+    initialMarketedBrandGroups
+  );
+  const [accordionValue, setAccordionValue] = useState<string[]>(
+    initialMarketedBrandGroups.map((g) => g.name)
+  );
+  // State for dummy products
+  const [dummyProductsState, setDummyProductsState] = useState(dummyProducts);
+  // State for dummy products selection
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
+
+  const allProductsSelected =
+    selectedProducts.length === dummyProductsState.length &&
+    dummyProductsState.length > 0;
+  const indeterminate =
+    selectedProducts.length > 0 &&
+    selectedProducts.length < dummyProductsState.length;
+
+  // --- Handler for main checkbox ---
+  const handleSelectAllChange = (checked: boolean) => {
+    setSelectedProducts(
+      checked ? dummyProductsState.map((product) => product.id) : []
+    );
+  };
+
+  // --- Handler for individual checkbox ---
+  const handleRowCheckboxChange = (productId: number, checked: boolean) => {
+    setSelectedProducts((prev) =>
+      checked ? [...prev, productId] : prev.filter((id) => id !== productId)
+    );
+  };
+
+  // --- Handler for applying bulk action ---
+  const handleApplyBulkAction = () => {
+    if (!bulkActionStatus || selectedProducts.length === 0) return;
+
+    const newStatus =
+      bulkActionStatus === "Visible to distributor" ? "Visible" : "Hidden";
+
+    setDummyProductsState((currentProducts) =>
+      currentProducts.map((product) =>
+        selectedProducts.includes(product.id)
+          ? { ...product, status: newStatus }
+          : product
+      )
+    );
+    setSelectedProducts([]);
+    setBulkActionStatus(null); // Reset bulk action select
+  };
+
   const [
     { data: marketsData },
     { data: regionsData },
     { data: categoriesData },
-    { data: brandsData },
     { data: currenciesData },
   ] = useQueries({
     queries: [
@@ -105,7 +414,6 @@ const AddDistributorForm = ({
         queryKey: ["categories"],
         queryFn: () => getCategories({ page_size: 9999 }),
       },
-      { queryKey: ["brands"], queryFn: getBrands },
       { queryKey: ["currencies"], queryFn: getCurrencies },
     ],
   });
@@ -135,6 +443,22 @@ const AddDistributorForm = ({
     }
   }, [formData, isEdit]);
 
+  // Effect to switch marketed brands based on account type
+  useEffect(() => {
+    if (form.values.type === "consumer_beauty") {
+      const currentConsumerBeautyGroups = consumerBeautyMarketedBrandGroupsData;
+      setMarketedBrandGroups(currentConsumerBeautyGroups);
+      setAccordionValue(currentConsumerBeautyGroups.map((group) => group.name));
+    } else {
+      // Default to luxury or handle other types if needed
+      const currentInitialGroups = initialMarketedBrandGroups;
+      setMarketedBrandGroups(currentInitialGroups);
+      setAccordionValue(currentInitialGroups.map((group) => group.name));
+    }
+    // Resetting accordion state when type changes might be needed depending on Accordion implementation
+    // Resetting selection state or other related states might also be needed
+  }, [form.values.type]);
+
   const updateDistributorMutations = useUpdateDistributor({
     mutationConfig: {
       onSuccess: () => navigate({ to: "/distributors" }),
@@ -145,12 +469,6 @@ const AddDistributorForm = ({
       onSuccess: () => navigate({ to: "/distributors" }),
     },
   });
-
-  const mirrorOptions = [
-    { value: 1, label: "1" },
-    { value: 2, label: "2" },
-    { value: 3, label: "3" },
-  ];
 
   return (
     <>
@@ -181,85 +499,31 @@ const AddDistributorForm = ({
                 Distributor details
               </h2>
               <div className="space-y-6">
-                <div>
-                  <span className="text-primary font-medium text-sm mb-2 block">
-                    Distributor type
-                  </span>
-                  <Radio.Group {...form.getInputProps("type")} name="type">
-                    <Group gap={24}>
-                      <Radio
-                        value="formal"
-                        label="Formal"
-                        classNames={{
-                          label: "text-primary text-sm pl-2",
-                        }}
-                      />
-                      <Radio
-                        value="hybrid"
-                        label="Hybrid"
-                        classNames={{
-                          label: "text-primary text-sm pl-2",
-                        }}
-                      />
-                      <Radio
-                        value="regional"
-                        label="Regional"
-                        classNames={{
-                          label: "text-primary text-sm pl-2",
-                        }}
-                      />
-                    </Group>
-                  </Radio.Group>
-                </div>
-
                 <Grid gutter={24}>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <TextInput
-                      {...form.getInputProps("name")}
-                      label="Business name"
-                      placeholder="Enter business name"
-                      classNames={textInputStyles}
+                    <span className="text-primary font-medium text-sm mb-2 block">
+                      Account type
+                    </span>
+                    <Select
+                      {...form.getInputProps("type")}
+                      placeholder="Select account type"
+                      data={accountTypes}
+                      rightSection={<ChevronDownIcon />}
+                      classNames={selectStyles}
+                      clearable
+                      searchable
+                      className="w-full"
                     />
                   </Grid.Col>
                 </Grid>
 
                 <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <MultiSelect
-                      {...form.getInputProps("regions")}
-                      label="Regions"
-                      placeholder="Select regions"
-                      data={
-                        regionsData?.data?.map((region) => ({
-                          value: region.id.toString(),
-                          label: region.name,
-                        })) || []
-                      }
-                      value={form.values.regions}
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      autoComplete="off"
-                      searchable
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <MultiSelect
-                      {...form.getInputProps("markets")}
-                      label="Markets/Countries"
-                      placeholder="Select markets/countries"
-                      value={form.values.markets}
-                      data={
-                        marketsData?.data?.map((market) => ({
-                          value: market.id.toString(),
-                          label: market.name,
-                        })) || []
-                      }
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                      autoComplete="off"
+                  <Grid.Col span={{ base: 12 }}>
+                    <TextInput
+                      {...form.getInputProps("name")}
+                      label="Business name"
+                      placeholder="Enter business name"
+                      classNames={textInputStyles}
                     />
                   </Grid.Col>
                 </Grid>
@@ -279,6 +543,53 @@ const AddDistributorForm = ({
                       label="Contact person"
                       placeholder="Enter contact person"
                       classNames={textInputStyles}
+                    />
+                  </Grid.Col>
+                </Grid>
+
+                <Grid gutter={24}>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <MultiSelect
+                      {...form.getInputProps("regions")}
+                      label="Regions"
+                      placeholder="Select regions"
+                      data={
+                        regionsData?.data?.map((region) => ({
+                          value: region.id.toString(),
+                          label: region.name,
+                        })) || []
+                      }
+                      value={form.values.regions}
+                      rightSection={<ChevronDownIcon />}
+                      classNames={{
+                        ...selectStyles,
+                        pill: "bg-[#0F62FE] text-white my-auto rounded-full px-2.5 mt-0.5 text-xs font-medium flex items-center",
+                      }}
+                      clearable
+                      autoComplete="off"
+                      searchable
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <MultiSelect
+                      {...form.getInputProps("markets")}
+                      label="Markets/Countries"
+                      placeholder="Select markets/countries"
+                      value={form.values.markets}
+                      data={
+                        marketsData?.data?.map((market) => ({
+                          value: market.id.toString(),
+                          label: market.name,
+                        })) || []
+                      }
+                      rightSection={<ChevronDownIcon />}
+                      classNames={{
+                        ...selectStyles,
+                        pill: "bg-[#0F62FE] text-white rounded-full px-2.5 mt-0.5 text-xs font-medium flex items-center",
+                      }}
+                      clearable
+                      searchable
+                      autoComplete="off"
                     />
                   </Grid.Col>
                 </Grid>
@@ -306,7 +617,10 @@ const AddDistributorForm = ({
                         })) || []
                       }
                       rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
+                      classNames={{
+                        ...selectStyles,
+                        pill: "bg-[#0F62FE] text-white rounded-full px-2.5 mt-0.5 text-xs font-medium flex items-center",
+                      }}
                       clearable
                       searchable
                     />
@@ -314,7 +628,7 @@ const AddDistributorForm = ({
                 </Grid>
 
                 <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                  {/* <Grid.Col span={{ sm: 6, base: 12 }}>
                     <MultiSelect
                       {...form.getInputProps("brands")}
                       label="Marketed COTY brands"
@@ -331,15 +645,7 @@ const AddDistributorForm = ({
                       clearable
                       searchable
                     />
-                  </Grid.Col>
-                </Grid>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-lg font-semibold mb-6">Pricing rules</h2>
-              <div className="space-y-6">
-                <Grid gutter={24}>
+                  </Grid.Col> */}
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <Select
                       {...form.getInputProps("currency")}
@@ -350,44 +656,6 @@ const AddDistributorForm = ({
                         currenciesData?.data?.map((currency: Currency) => ({
                           value: currency.code,
                           label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
-                        })) || []
-                      }
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                </Grid>
-
-                <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <Select
-                      {...form.getInputProps("mirror.group_one")}
-                      key={form.key("mirror.group_one")}
-                      label="Group 1 pricing mirror (optional)"
-                      placeholder="Select distributor"
-                      data={
-                        mirrorOptions.map((mirror) => ({
-                          value: mirror.value.toString(),
-                          label: mirror.label,
-                        })) || []
-                      }
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <Select
-                      {...form.getInputProps("mirror.group_two")}
-                      label="Group 2 pricing mirror (optional)"
-                      placeholder="Select distributor"
-                      data={
-                        mirrorOptions.map((mirror) => ({
-                          value: mirror.value.toString(),
-                          label: mirror.label,
                         })) || []
                       }
                       rightSection={<ChevronDownIcon />}
@@ -423,23 +691,456 @@ const AddDistributorForm = ({
                 </p>
               )}
             </div>
+            {/* START: Marketed COTY Brands Section */}
             <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-lg font-semibold mb-6">Products</h2>
-              <ProductBindingsTable distributorId={formData?.id || 0} />
-              <Button
-                variant="outline"
-                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                leftSection={<LucidePlusIcon size={24} />}
-                onClick={openProductBinding}
+              <h2 className="text-lg font-semibold mb-4">
+                Marketed COTY brands
+              </h2>
+              <Accordion
+                variant="separated"
+                classNames={{
+                  item: "bg-white border !rounded-xl overflow-hidden mb-4",
+                  control: "hover:bg-gray-50",
+                  content: "pt-0 pb-0 ",
+                  chevron: " [& > svg]:w-6 [& > svg]:h-6 ",
+                }}
+                styles={{
+                  control: { padding: "1rem" },
+                  item: { border: "1px solid #e0e0e0" },
+                  content: { paddingLeft: "0", paddingRight: "0" },
+                }}
+                multiple
+                value={accordionValue}
+                onChange={setAccordionValue}
               >
-                Add Product Binding
-              </Button>
-              {/* {form.errors.product && (
-                <p className="text-xs text-[#fa5252]">
-                  Co-effiencents is required
-                </p>
-              )} */}
+                {marketedBrandGroups.map((group) => (
+                  <div key={group.name} className="mb-4">
+                    <Text fw={500} mb="xs" className="pl-4">
+                      {group.name}
+                    </Text>
+                    <Accordion.Item value={group.name}>
+                      <Accordion.Control className="h-16 bg-gray-100">
+                        <div className="flex items-center w-full">
+                          <button className="text-primary ">
+                            Select brands
+                          </button>
+                        </div>
+                      </Accordion.Control>
+                      <Accordion.Panel>
+                        <Table verticalSpacing="md" highlightOnHover>
+                          <Table.Tbody>
+                            {group.brands.map((brand) => (
+                              <Table.Tr key={brand.id}>
+                                {/* Brand Name */}
+                                <Table.Td className="w-1/6">
+                                  <Text size="sm">{brand.name}</Text>
+                                </Table.Td>
+
+                                {/* Brand Approval */}
+                                <Table.Td className="w-[15%]">
+                                  <Checkbox
+                                    checked={brand.approved}
+                                    label="Brand approval"
+                                    classNames={{
+                                      root: "flex items-center",
+                                      input:
+                                        "border-gray-300 bg-gray-200 h-5 w-5",
+                                      label: "text-sm ml-2",
+                                      icon: "text-blue-500 ",
+                                    }}
+                                    icon={({ ...others }) => (
+                                      <CheckIcon {...others} />
+                                    )}
+                                    onChange={(event) => {
+                                      const newGroups = marketedBrandGroups.map(
+                                        (g) => {
+                                          if (g.name === group.name) {
+                                            return {
+                                              ...g,
+                                              brands: g.brands.map((b) =>
+                                                b.id === brand.id
+                                                  ? {
+                                                      ...b,
+                                                      approved:
+                                                        event.currentTarget
+                                                          .checked,
+                                                    }
+                                                  : b
+                                              ),
+                                            };
+                                          }
+                                          return g;
+                                        }
+                                      );
+                                      setMarketedBrandGroups(newGroups);
+                                    }}
+                                  />
+                                </Table.Td>
+
+                                {/* Upload Proof Button */}
+                                <Table.Td className="w-[15%]">
+                                  <Group gap="xs" align="center">
+                                    <button className="bg-primary rounded-md text-white p-1 text-sm">
+                                      Upload proof
+                                    </button>
+                                  </Group>
+                                </Table.Td>
+
+                                {/* Proof Files List */}
+                                <Table.Td className="w-1/4">
+                                  <div className="flex flex-col items-start gap-1">
+                                    {brand.proofs.map(
+                                      (proof: string, index: number) => (
+                                        <div
+                                          key={index}
+                                          className="flex items-center gap-2"
+                                        >
+                                          <Text
+                                            component="a"
+                                            href="#"
+                                            onClick={(e) => e.preventDefault()}
+                                            className="underline text-blue-600 hover:text-blue-800 cursor-pointer"
+                                          >
+                                            {proof}
+                                          </Text>
+                                          <ActionIcon
+                                            size="sm"
+                                            color="gray"
+                                            variant="transparent"
+                                            onClick={() => {
+                                              const newGroups =
+                                                marketedBrandGroups.map((g) => {
+                                                  if (g.name === group.name) {
+                                                    return {
+                                                      ...g,
+                                                      brands: g.brands.map(
+                                                        (b) =>
+                                                          b.id === brand.id
+                                                            ? {
+                                                                ...b,
+                                                                proofs:
+                                                                  b.proofs.filter(
+                                                                    (_, i) =>
+                                                                      i !==
+                                                                      index
+                                                                  ),
+                                                              }
+                                                            : b
+                                                      ),
+                                                    };
+                                                  }
+                                                  return g;
+                                                });
+                                              setMarketedBrandGroups(newGroups);
+                                            }}
+                                          >
+                                            <XIcon
+                                              size={14}
+                                              strokeWidth={1.5}
+                                            />
+                                          </ActionIcon>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                </Table.Td>
+
+                                {/* Coefficient Select */}
+                                <Table.Td className="w-1/6">
+                                  <Select
+                                    value={brand.coefficientType as string}
+                                    data={coefficientOptions}
+                                    rightSection={<ChevronDownIcon />}
+                                    classNames={{
+                                      ...selectStyles,
+                                      input: `${selectStyles.input} text-sm`,
+                                    }}
+                                    size="sm"
+                                    onChange={(value) => {
+                                      const newGroups = marketedBrandGroups.map(
+                                        (g) => {
+                                          if (g.name === group.name) {
+                                            return {
+                                              ...g,
+                                              brands: g.brands.map((b) =>
+                                                b.id === brand.id
+                                                  ? {
+                                                      ...b,
+                                                      coefficientType:
+                                                        value || "",
+                                                    }
+                                                  : b
+                                              ),
+                                            };
+                                          }
+                                          return g;
+                                        }
+                                      );
+                                      setMarketedBrandGroups(newGroups);
+                                    }}
+                                  />
+                                </Table.Td>
+
+                                {/* Billing Select */}
+                                <Table.Td className="w-1/6">
+                                  <Select
+                                    value={brand.billingType as string}
+                                    data={billingOptions}
+                                    rightSection={<ChevronDownIcon />}
+                                    classNames={{
+                                      ...selectStyles,
+                                      input: `${selectStyles.input} text-sm`,
+                                    }}
+                                    size="sm"
+                                    onChange={(value) => {
+                                      const newGroups = marketedBrandGroups.map(
+                                        (g) => {
+                                          if (g.name === group.name) {
+                                            return {
+                                              ...g,
+                                              brands: g.brands.map((b) =>
+                                                b.id === brand.id
+                                                  ? {
+                                                      ...b,
+                                                      billingType: value || "",
+                                                    }
+                                                  : b
+                                              ),
+                                            };
+                                          }
+                                          return g;
+                                        }
+                                      );
+                                      setMarketedBrandGroups(newGroups);
+                                    }}
+                                  />
+                                </Table.Td>
+
+                                {/* Delete Row Action */}
+                                <Table.Td className="w-[5%] text-right">
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    onClick={() => {
+                                      const newGroups = marketedBrandGroups.map(
+                                        (g) => {
+                                          if (g.name === group.name) {
+                                            return {
+                                              ...g,
+                                              brands: g.brands.filter(
+                                                (b) => b.id !== brand.id
+                                              ),
+                                            };
+                                          }
+                                          return g;
+                                        }
+                                      );
+                                      setMarketedBrandGroups(newGroups);
+                                    }}
+                                  >
+                                    <XIcon size={18} />
+                                  </ActionIcon>
+                                </Table.Td>
+                              </Table.Tr>
+                            ))}
+                          </Table.Tbody>
+                        </Table>
+                      </Accordion.Panel>
+                    </Accordion.Item>
+                  </div>
+                ))}
+              </Accordion>
             </div>
+            {/* END: Marketed COTY Brands Section */}
+
+            {/* START: Dummy Products Table Section */}
+            <div className="bg-white rounded-2xl p-6 mt-6">
+              <Group justify="space-between" mb="md">
+                <Group>
+                  <Select
+                    placeholder="Bulk action"
+                    data={["Visible to distributor", "Hidden from distributor"]} // Example actions
+                    size="sm"
+                    rightSection={<ChevronDownIcon />}
+                    classNames={{
+                      ...selectStyles,
+                      input: "h-10",
+                      root: "w-fit min-w-52 whitespace-nowrap",
+                    }}
+                    value={bulkActionStatus}
+                    onChange={setBulkActionStatus}
+                    clearable
+                  />
+                  <Button
+                    size="sm"
+                    className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                    onClick={handleApplyBulkAction}
+                    disabled={
+                      !bulkActionStatus || selectedProducts.length === 0
+                    }
+                  >
+                    Apply
+                  </Button>
+                </Group>
+                {/* Add other controls here if needed */}
+              </Group>
+              <div className="overflow-x-auto">
+                <Table
+                  verticalSpacing="sm"
+                  borderColor="transparent"
+                  striped="even"
+                  stripedColor="#F2F4F6"
+                >
+                  <Table.Thead className="bg-primary h-14">
+                    <Table.Tr>
+                      <Table.Th style={{ width: 40 }}>
+                        <Checkbox
+                          checked={allProductsSelected}
+                          indeterminate={indeterminate}
+                          onChange={(event) =>
+                            handleSelectAllChange(event.currentTarget.checked)
+                          }
+                          classNames={{ input: "bg-white border-gray-300" }}
+                        />
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        Product name
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        C1 Price
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        CSSP
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        Status
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        ICP EUR
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        ICP USD
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        French EUR
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        French USD
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        RRSP
+                      </Table.Th>
+                      <Table.Th className="text-white text-sm font-medium">
+                        Regional Billing Prices
+                      </Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {dummyProductsState.map((product) => (
+                      <Table.Tr
+                        key={product.id}
+                        className={
+                          selectedProducts.includes(product.id)
+                            ? "bg-blue-50"
+                            : ""
+                        }
+                      >
+                        <Table.Td>
+                          <Checkbox
+                            checked={selectedProducts.includes(product.id)}
+                            onChange={(event) =>
+                              handleRowCheckboxChange(
+                                product.id,
+                                event.currentTarget.checked
+                              )
+                            }
+                            classNames={{ input: "bg-white border-gray-300" }}
+                          />
+                        </Table.Td>
+                        <Table.Td>{product.name}</Table.Td>
+                        <Table.Td>{product.c1Price}</Table.Td>
+                        <Table.Td>{product.cssp}</Table.Td>
+                        <Table.Td>
+                          <Badge
+                            color={product.status === "Hidden" ? "red" : "blue"}
+                            variant="filled"
+                            radius="xl"
+                            className="px-3 py-1 font-normal"
+                          >
+                            {product.status}
+                          </Badge>
+                        </Table.Td>
+                        <Table.Td>{product.icpEur}</Table.Td>
+                        <Table.Td>{product.icpUsd}</Table.Td>
+                        <Table.Td>{product.frenchEur}</Table.Td>
+                        <Table.Td>{product.frenchUsd}</Table.Td>
+                        <Table.Td>{product.rrsp}</Table.Td>
+                        <Table.Td>{product.regionalBillingPrices}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </div>
+            </div>
+            {/* END: Dummy Products Table Section */}
+
+            {/* Comment out Pricing rules section */}
+            {/*
+            <div className="bg-white rounded-2xl p-6 mt-6">
+              <h2 className="text-lg font-semibold mb-6">Pricing rules</h2>
+              <div className="space-y-6">
+                <Grid gutter={24}>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <Select
+                      {...form.getInputProps("currency")}
+                      label="Currency"
+                      placeholder="Select currency"
+                      value={form.values.currency}
+                      data={
+                        currenciesData?.data?.map((currency: Currency) => ({
+                          value: currency.code,
+                          label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
+                        })) || []
+                      }
+                      rightSection={<ChevronDownIcon />}
+                      classNames={selectStyles}
+                      clearable
+                      searchable
+                    />
+                  </Grid.Col>
+                </Grid>
+
+                <Grid gutter={24}>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <Select
+                      {...form.getInputProps("mirror.group_one")}
+                      key={form.key("mirror.group_one")}
+                      label="Group 1 pricing mirror (optional)"
+                      placeholder="Select distributor"
+                      data={[]}
+                      rightSection={<ChevronDownIcon />}
+                      classNames={selectStyles}
+                      clearable
+                      searchable
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <Select
+                      {...form.getInputProps("mirror.group_two")}
+                      label="Group 2 pricing mirror (optional)"
+                      placeholder="Select distributor"
+                      data={[]}
+                      rightSection={<ChevronDownIcon />}
+                      classNames={selectStyles}
+                      clearable
+                      searchable
+                    />
+                  </Grid.Col>
+                </Grid>
+              </div>
+            </div>
+            */}
+
             <Group justify="flex-end" mt="xl" gap={10}>
               <Button
                 variant="outline"
@@ -458,7 +1159,7 @@ const AddDistributorForm = ({
               </Button>
             </Group>
           </form>
-          <CoefficientsForm
+          {/* <CoefficientsForm
             opened={opened}
             close={close}
             distributorId={formData?.id ?? undefined}
@@ -469,7 +1170,7 @@ const AddDistributorForm = ({
             close={closeProductBinding}
             distributorId={formData?.id ?? undefined}
             form={form}
-          />
+          /> */}
         </>
       )}
     </>
