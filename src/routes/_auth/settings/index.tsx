@@ -5,7 +5,6 @@ import { useUserStore } from "@/stores/userStore";
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
-import * as React from "react";
 import CoreCategorySettings from "@/components/ApplicationSettings/CoreCategorySettings";
 import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";

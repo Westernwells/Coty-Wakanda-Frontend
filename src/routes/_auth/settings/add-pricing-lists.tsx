@@ -146,7 +146,7 @@ function AddPricingListsComponent() {
       );
 
       const uniqueBrands = Array.from(
-        new Set(productsData.map((p) => p.brand?.name).filter(Boolean))
+        new Set(productsData.map((p) => p.brand_line).filter(Boolean))
       );
       setBrandOptions(
         uniqueBrands.map((brand) => ({ value: brand, label: brand }))
