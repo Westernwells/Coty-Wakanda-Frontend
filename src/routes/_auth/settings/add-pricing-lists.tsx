@@ -40,8 +40,8 @@ interface PricingListFormValues {
   name: string;
   type: string;
   description: string;
-  filterBrand: string;
-  filterBrandPillar: string;
+  house: string;
+  brand: string;
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -66,6 +66,13 @@ function AddPricingListsComponent() {
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
 
+  const [houseOptions, setHouseOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [brandOptions, setBrandOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
+
   const [apiFilters, setApiFilters] = useState<MasterProductFiltersType>({
     search: "",
     house: "",
@@ -78,8 +85,8 @@ function AddPricingListsComponent() {
       name: "",
       type: "",
       description: "",
-      filterBrand: "",
-      filterBrandPillar: "",
+      house: "",
+      brand: "",
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -91,15 +98,15 @@ function AddPricingListsComponent() {
   useEffect(() => {
     setApiFilters({
       search: searchTerm,
-      brand_id: form.values.filterBrand || "",
-      house: "",
+      brand_id: form.values.brand || "",
+      house: form.values.house || "",
       distributor_id: "",
     });
     setProductsData([]);
     setDistributorsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [searchTerm, form.values.filterBrand]);
+  }, [searchTerm, form.values.brand, form.values.house]);
 
   const {
     isLoading: isLoadingInitialProducts,
@@ -128,6 +135,27 @@ function AddPricingListsComponent() {
       setProductsHasMore(false);
     }
   }, [initialMasterDataResult, isLoadingInitialProducts]);
+
+  useEffect(() => {
+    if (productsData && productsData.length > 0) {
+      const uniqueHouses = Array.from(
+        new Set(productsData.map((p) => p.house).filter(Boolean))
+      );
+      setHouseOptions(
+        uniqueHouses.map((house) => ({ value: house, label: house }))
+      );
+
+      const uniqueBrands = Array.from(
+        new Set(productsData.map((p) => p.brand?.name).filter(Boolean))
+      );
+      setBrandOptions(
+        uniqueBrands.map((brand) => ({ value: brand, label: brand }))
+      );
+    } else {
+      setHouseOptions([]);
+      setBrandOptions([]);
+    }
+  }, [productsData]);
 
   const pricingTypes = [
     { value: "luxury", label: "Luxury" },
@@ -197,8 +225,8 @@ function AddPricingListsComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      filterBrand: "",
-      filterBrandPillar: "",
+      house: "",
+      brand: "",
     });
   };
 
@@ -370,20 +398,20 @@ function AddPricingListsComponent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <Select
-                  {...form.getInputProps("filterBrand")}
-                  label="Filter brands"
-                  placeholder="Filter brands"
-                  data={[{ value: "brand1", label: "Brand 1 (placeholder)" }]}
+                  {...form.getInputProps("house")}
+                  label="Filter house"
+                  placeholder="Filter house"
+                  data={houseOptions}
                   rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
                 />
                 <Select
-                  {...form.getInputProps("filterBrandPillar")}
-                  label="Filter brand pillars"
-                  placeholder="Filter brand pillars"
-                  data={[{ value: "pillar1", label: "Pillar 1 (placeholder)" }]}
+                  {...form.getInputProps("brand")}
+                  label="Filter brand"
+                  placeholder="Filter brand"
+                  data={brandOptions}
                   rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable

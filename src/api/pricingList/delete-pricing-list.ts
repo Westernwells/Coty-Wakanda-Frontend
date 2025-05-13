@@ -16,7 +16,7 @@ export function useDeletePricingList({
   return useMutation<DeletePricingListResponse, Error, number>({
     mutationFn: async (id: number) => {
       const response = await axios.delete<DeletePricingListResponse>(
-        `/pricing-list/${id}`
+        `/pricing-lists/${id}`
       );
       return response.data;
     },

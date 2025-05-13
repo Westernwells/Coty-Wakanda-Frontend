@@ -24,6 +24,7 @@ import { getPricingList } from "@/api/pricingList/get-pricing-list";
 import { useUpdatePricingList } from "@/api/pricingList/update-pricing-list";
 import { useDeletePricingList } from "@/api/pricingList/delete-pricing-list";
 import { Link } from "@tanstack/react-router";
+import { Trash2Icon } from "lucide-react";
 
 interface PricingList {
   id: number;
@@ -217,9 +218,9 @@ const PricingListSettings = () => {
           bg="linear-gradient(180deg, rgba(0, 37, 84, 0.7) 0%, rgba(0, 235, 178, 0.7) 100%)"
           blur={3}
         />
-        <Modal.Content className="!items-center min-w-[70%]">
+        <Modal.Content className="!items-center min-w-[40%]">
           <Modal.Body>
-            <div className="bg-white rounded-2xl p-6 mt-6">
+            <div className="bg-white rounded-2xl p-6 ">
               <h2 className="text-xl font-semibold mb-6 text-primary">
                 Delete Pricing List
               </h2>
@@ -237,7 +238,7 @@ const PricingListSettings = () => {
                     Cancel
                   </Button>
                   <Button
-                    leftSection={<RefreshIcon />}
+                    leftSection={<Trash2Icon className="size-4" />}
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={() => {

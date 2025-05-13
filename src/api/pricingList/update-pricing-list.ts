@@ -39,7 +39,7 @@ export function useUpdatePricingList({
     mutationFn: async ({ data }) => {
       const { id, ...updateData } = data;
       const response = await axios.put<UpdatePricingListResponse>(
-        `/pricing-list/${id}`,
+        `/pricing-lists/${id}`,
         updateData
       );
       return response.data;
