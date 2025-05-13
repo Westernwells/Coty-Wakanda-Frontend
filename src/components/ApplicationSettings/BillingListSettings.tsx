@@ -137,7 +137,7 @@ const BillingListSettings = () => {
                           className="w-5 cursor-pointer"
                           onClick={() => {
                             navigate({
-                              to: `/_auth/settings/edit-billing-list/${element.id}`, // Updated route
+                              to: `/settings/edit-billing-list/${element.id}`, // Updated route
                             });
                           }}
                         >

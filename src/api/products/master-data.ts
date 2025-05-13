@@ -1,44 +1,43 @@
 import { axios } from "@/lib/axios";
 import {
-    MasterDistributor,
-    MasterProduct,
-    MasterProductFilters,
-    Meta,
+  MasterDistributor,
+  MasterProduct,
+  MasterProductFilters,
+  Meta,
 } from "@/types";
 
 type GetProductsParams = {
-    cursor?: number;
-    page_size?: number;
-    filter?: MasterProductFilters;
+  cursor?: number;
+  page_size?: number;
+  filter?: MasterProductFilters;
 };
 
 export type ApiResponse = {
-    message: string;
-    data: {
-        products: MasterProduct[];
-        distributors: MasterDistributor[];
-    };
-    meta: Meta;
+  message: string;
+  data: {
+    products: MasterProduct[];
+    distributors: MasterDistributor[];
+  };
+  meta: Meta;
 };
 
 export const getMasterData = async (
-    params?: GetProductsParams
+  params?: GetProductsParams
 ): Promise<ApiResponse> => {
-    const formattedParams =
-        params?.filter && "search" in params.filter
-            ? {
-                  cursor: params?.cursor || 1,
-                  page_size: params?.page_size || 20,
-                  search: params?.filter?.search || "",
-                  "filter[brand_id]": params?.filter?.brand_id || "",
-                  "filter[distributor_id]":
-                      params?.filter?.distributor_id || "",
-                  "filter[house]": params?.filter?.house || "",
-              }
-            : params;
+  const formattedParams =
+    params?.filter && "search" in params.filter
+      ? {
+          cursor: params?.cursor || 1,
+          page_size: params?.page_size || 20,
+          search: params?.filter?.search || "",
+          "filter[brand_id]": params?.filter?.brand_id || "",
+          "filter[distributor_id]": params?.filter?.distributor_id || "",
+          "filter[house]": params?.filter?.house || "",
+        }
+      : params;
 
-    const response = await axios.get("/product-master-data", {
-        params: formattedParams,
-    });
-    return response.data;
+  const response = await axios.get("/product-master-data", {
+    params: formattedParams,
+  });
+  return response.data;
 };

@@ -1,100 +1,137 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { getMasterData } from "@/api/products/master-data";
-import type {
-  MasterProduct,
-  MasterProductFilters as MasterProductFiltersType,
-} from "@/types";
+import { useState, useCallback } from "react";
+import {
+  getBillingProductList,
+  type Product,
+} from "@/api/billingList/get-billing-product-list";
+import type { BillingListFilters } from "@/types/billing-list";
 
 export interface BillingListCsvProductRow {
-  productId: string | number;
-  materialDescription: string | null;
-  brandLine: string | null;
-  house: string | null;
-  irc: string | null;
+  id: number;
+  product_type: string;
+  offering_number: string | null;
+  sku: string;
+  irc: string;
+  material_description: string;
+  material_tr: string | null;
+  article_type: string;
+  article_sub_type: string;
+  division: string | null;
+  icp_eur: string;
+  icp_usd: string;
+  cssp_trex_eur: string | null;
+  cssp_trex_usd: string | null;
+  brand_name: string;
+  brand_pillar_name: string;
+  price: string | number;
 }
 
 export const BILLING_LIST_CSV_HEADERS = [
-  { label: "House", key: "house" },
-  { label: "Description", key: "materialDescription" },
-  { label: "Brand Line", key: "brandLine" },
-  { label: "Article Type", key: "articleType" }, // Note: articleType is not in BillingListCsvProductRow, consider adding or removing
+  { label: "Brand Name", key: "brand_name" },
+  { label: "Description", key: "material_description" },
+  { label: "Brand Line (Pillar)", key: "brand_pillar_name" },
+  { label: "Article Type", key: "article_type" },
   { label: "IRC", key: "irc" },
-  { label: "Group", key: "group" }, // Note: group is not in BillingListCsvProductRow, consider adding or removing
+  { label: "Base Price", key: "price" },
 ];
 
-function mapMasterProductToCsvRow(
-  product: MasterProduct
-): BillingListCsvProductRow {
-  const p = product as any; // Keep existing cast, acknowledge potential type mismatch
+function mapProductToCsvRow(product: Product): BillingListCsvProductRow {
   return {
-    productId: p.id ?? "N/A",
-    materialDescription: p.material_description ?? "",
-    brandLine: p.brand_line ?? "",
-    house: p.house ?? "",
-    irc: p.irc ?? "",
-    // Missing articleType and group from headers if not added here
+    id: product.id,
+    product_type: product.product_type,
+    offering_number: product.offering_number,
+    sku: product.sku,
+    irc: product.irc,
+    material_description: product.material_description,
+    material_tr: product.material_tr,
+    article_type: product.article_type,
+    article_sub_type: product.article_sub_type,
+    division: product.division,
+    icp_eur: product.icp_eur,
+    icp_usd: product.icp_usd,
+    cssp_trex_eur: product.cssp_trex_eur,
+    cssp_trex_usd: product.cssp_trex_usd,
+    brand_name: product.brand?.name || "-",
+    brand_pillar_name: product.brand_pillar?.name || "-",
+    price: product.price || "-",
   };
 }
 
-export function useBillingListProductCsvDownload(
-  filters: MasterProductFiltersType
-) {
-  const [csvData, setCsvData] = useState<BillingListCsvProductRow[]>([]);
-  const [csvHeaders, setCsvHeaders] = useState<
-    { label: string; key: string }[]
-  >([]);
-  const [csvError, setCsvError] = useState<Error | null>(null);
-  const [csvLoading, setCsvLoading] = useState(false);
-  const [csvReady, setCsvReady] = useState(false);
-  const csvLinkRef = useRef<any>(null);
+function generateCsvContent(
+  data: BillingListCsvProductRow[],
+  headers: typeof BILLING_LIST_CSV_HEADERS
+): string {
+  const headerRow = headers.map((h) => h.label).join(",");
+  const dataRows = data.map((row) =>
+    headers
+      .map((header) => {
+        const value = String(
+          row[header.key as keyof BillingListCsvProductRow] || ""
+        );
+        return value.includes(",") ? `"${value}"` : value;
+      })
+      .join(",")
+  );
 
-  useEffect(() => {
-    if (csvReady && csvLinkRef.current?.link) {
-      csvLinkRef.current.link.click();
-      const timer = setTimeout(() => setCsvReady(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [csvReady]);
+  return [headerRow, ...dataRows].join("\n");
+}
+
+export function useBillingListProductCsvDownload(filters: BillingListFilters) {
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvError, setCsvError] = useState<Error | null>(null);
 
   const handleBulkDownload = useCallback(async () => {
     setCsvLoading(true);
     setCsvError(null);
-    setCsvData([]);
-    setCsvHeaders([]);
 
     try {
-      let allProducts: MasterProduct[] = [];
-      let currentCursor: number | string | null = 1;
+      let allProducts: Product[] = [];
+      let currentCursor: number | null = 1;
       let hasMoreData = true;
       const pageSize = 100;
 
       while (hasMoreData && currentCursor !== null) {
-        const response = await getMasterData({
+        const productsResponse = await getBillingProductList({
           cursor: currentCursor,
           page_size: pageSize,
-          filter: filters,
+          brand_ids: filters.brand_id ? [Number(filters.brand_id)] : undefined,
+          sub_brand_ids: filters.brand_pillar_id
+            ? [Number(filters.brand_pillar_id)]
+            : undefined,
         });
 
-        if (response.data?.products) {
-          allProducts = allProducts.concat(response.data.products);
+        if (!productsResponse?.data) {
+          throw new Error("Failed to fetch products data");
         }
 
-        hasMoreData = response.meta.has_next;
-        currentCursor = response.meta.cursor;
+        allProducts = allProducts.concat(productsResponse.data);
+        hasMoreData = productsResponse.meta.has_next;
+        currentCursor = productsResponse.meta.cursor;
 
         if (!hasMoreData) {
           break;
         }
       }
 
-      const csvRows = allProducts.map(mapMasterProductToCsvRow);
-      setCsvData(csvRows);
-      setCsvHeaders(BILLING_LIST_CSV_HEADERS);
-      setCsvReady(true);
+      const csvRows = allProducts.map(mapProductToCsvRow);
+      const csvContent = generateCsvContent(csvRows, BILLING_LIST_CSV_HEADERS);
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `billing-list-${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading product list CSV:", error);
+      console.error("Error generating CSV:", error);
       setCsvError(
-        error instanceof Error ? error : new Error("An unknown error occurred")
+        error instanceof Error ? error : new Error("Failed to generate CSV")
       );
     } finally {
       setCsvLoading(false);
@@ -102,12 +139,8 @@ export function useBillingListProductCsvDownload(
   }, [filters]);
 
   return {
-    csvData,
-    csvHeaders,
-    csvError,
     csvLoading,
-    csvReady,
-    csvLinkRef,
+    csvError,
     handleBulkDownload,
   };
 }

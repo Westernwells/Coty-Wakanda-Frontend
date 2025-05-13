@@ -43,7 +43,7 @@ const MasterProductFilters = ({
     { data: housesData, error: housesError },
   ] = useQueries({
     queries: [
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       {
         queryKey: ["distributors"],
         queryFn: () => getDistributors({ page_size: 100 }),
@@ -56,7 +56,7 @@ const MasterProductFilters = ({
   });
 
   const brandOptions =
-    brandsData?.data?.map((brand) => ({
+    brandsData?.data?.map((brand: { id: number; name: string }) => ({
       value: brand.id.toString(),
       label: brand.name,
     })) || [];

@@ -18,7 +18,6 @@ import {
 } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Upload } from "lucide-react";
-import { CSVLink } from "react-csv";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -28,15 +27,9 @@ import { getPricingListById } from "@/api/pricingList/get-pricing-list-by-id";
 import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 import AddPricingListProductTable from "@/components/AddPricingList/AddPricingListProductTable";
-import AddPricingListDistributorPrices from "@/components/AddPricingList/AddPricingListDistributorPrices";
-import type {
-  MasterProduct,
-  MasterDistributor,
-  MasterProductFilters as MasterProductFiltersType,
-  Meta,
-  PricingList,
-} from "@/types";
-import { getMasterData } from "@/api/products/master-data";
+import type { Product, Meta } from "@/api/pricingList/get-pricing-product-list";
+import { getPricingProductList } from "@/api/pricingList/get-pricing-product-list";
+import type { PricingList, PricingListFilters } from "@/types";
 import Headline from "@/components/Shared/Headline";
 import { usePricingListProductCsvDownload } from "@/lib/hooks/usePricingListProductCsvDownload";
 
@@ -52,6 +45,7 @@ interface PricingListFormValues {
   description: string;
   house: string;
   brand: string;
+  brandPillar: string;
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -71,10 +65,8 @@ function EditPricingListComponent() {
   const formId = "edit-pricing-list-form";
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [productsData, setProductsData] = useState<MasterProduct[]>([]);
-  const [distributorsData, setDistributorsData] = useState<MasterDistributor[]>(
-    []
-  );
+  const [productsData, setProductsData] = useState<Product[]>([]);
+
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
   const [productsMeta, setProductsMeta] = useState<Meta | null>(null);
   const [productsHasMore, setProductsHasMore] = useState(false);
@@ -90,15 +82,16 @@ function EditPricingListComponent() {
     { value: string; label: string }[]
   >([]);
 
-  const [apiFilters, setApiFilters] = useState<MasterProductFiltersType>({
+  const [apiFilters, setApiFilters] = useState<PricingListFilters>({
     search: "",
-    house: "",
     brand_id: "",
-    distributor_id: "",
+    brand_pillar_id: "",
   });
 
-  const { csvData, csvHeaders, csvLoading, csvLinkRef, handleBulkDownload } =
-    usePricingListProductCsvDownload(apiFilters);
+  const {
+    csvLoading: isDownloadingCsv,
+    handleBulkDownload: handleDownloadCsv,
+  } = usePricingListProductCsvDownload(apiFilters);
 
   const form = useForm<PricingListFormValues>({
     initialValues: {
@@ -107,6 +100,7 @@ function EditPricingListComponent() {
       description: "",
       house: "",
       brand: "",
+      brandPillar: "",
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -133,6 +127,7 @@ function EditPricingListComponent() {
           description: existingPricingListData.description || "",
           house: "",
           brand: "",
+          brandPillar: "",
           selectedProductsWithPrices:
             existingPricingListData.products?.map((p) => ({
               product_id: String(p.id),
@@ -148,61 +143,59 @@ function EditPricingListComponent() {
     setApiFilters({
       search: searchTerm,
       brand_id: form.values.brand || "",
-      house: form.values.house || "",
-      distributor_id: "",
+      brand_pillar_id: form.values.brandPillar || "",
     });
     if (!isLoadingExistingPricingList) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setSelectedTableRow(null);
     }
   }, [
     searchTerm,
     form.values.brand,
-    form.values.house,
+    form.values.brandPillar,
     isLoadingExistingPricingList,
   ]);
 
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
-    data: initialMasterDataResult,
-  } = useQuery<Awaited<ReturnType<typeof getMasterData>>, Error>({
-    queryKey: ["masterDataForEditPricingList", apiFilters],
+    data: initialProductsData,
+  } = useQuery<Awaited<ReturnType<typeof getPricingProductList>>, Error>({
+    queryKey: [
+      "pricingProductList",
+      form.values.brand,
+      form.values.brandPillar,
+      searchTerm,
+    ],
     queryFn: () =>
-      getMasterData({ cursor: 1, page_size: PAGE_SIZE, filter: apiFilters }),
+      getPricingProductList({
+        cursor: 1,
+        page_size: PAGE_SIZE,
+        brand_ids: form.values.brand ? [Number(form.values.brand)] : undefined,
+        sub_brand_ids: form.values.brandPillar
+          ? [Number(form.values.brandPillar)]
+          : undefined,
+      }),
     enabled: true,
   });
 
   useEffect(() => {
-    if (initialMasterDataResult?.data) {
-      setProductsData(initialMasterDataResult.data.products);
-      setDistributorsData(initialMasterDataResult.data.distributors);
-      setProductsMeta(initialMasterDataResult.meta);
-      setProductsHasMore(initialMasterDataResult.meta.has_next);
-    } else if (
-      !isLoadingInitialProducts &&
-      initialMasterDataResult === undefined
-    ) {
+    if (initialProductsData?.data) {
+      setProductsData(initialProductsData.data);
+      setProductsMeta(initialProductsData.meta);
+      setProductsHasMore(initialProductsData.meta.has_next);
+    } else if (!isLoadingInitialProducts && initialProductsData === undefined) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setProductsHasMore(false);
     }
-  }, [initialMasterDataResult, isLoadingInitialProducts]);
+  }, [initialProductsData, isLoadingInitialProducts]);
 
   useEffect(() => {
     if (productsData && productsData.length > 0) {
-      const uniqueHouses = Array.from(
-        new Set(productsData.map((p) => p.house).filter(Boolean))
-      );
-      setHouseOptions(
-        uniqueHouses.map((house) => ({ value: house, label: house }))
-      );
-
       const uniqueBrands = Array.from(
-        new Set(productsData.map((p) => p.brand_line).filter(Boolean))
+        new Set(productsData.map((p) => p.brand?.name).filter(Boolean))
       );
       setBrandOptions(
         uniqueBrands.map((brand) => ({ value: brand, label: brand }))
@@ -279,19 +272,15 @@ function EditPricingListComponent() {
 
     setProductsIsLoadingMore(true);
     try {
-      const response = await getMasterData({
+      const response = await getPricingProductList({
         cursor: productsMeta.cursor,
         page_size: PAGE_SIZE,
-        filter: apiFilters,
+        brand_ids: form.values.brand ? [Number(form.values.brand)] : undefined,
+        sub_brand_ids: form.values.brandPillar
+          ? [Number(form.values.brandPillar)]
+          : undefined,
       });
-      setProductsData((prev) => [...prev, ...response.data.products]);
-      setDistributorsData((prev) => {
-        const existingDistributorIds = new Set(prev.map((d) => d.id));
-        const newDistributors = response.data.distributors.filter(
-          (dist) => !existingDistributorIds.has(dist.id)
-        );
-        return [...prev, ...newDistributors];
-      });
+      setProductsData((prev) => [...prev, ...response.data]);
       setProductsMeta(response.meta);
       setProductsHasMore(response.meta.has_next);
     } catch (error) {
@@ -299,7 +288,12 @@ function EditPricingListComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, apiFilters]);
+  }, [
+    productsIsLoadingMore,
+    productsMeta,
+    form.values.brand,
+    form.values.brandPillar,
+  ]);
 
   const isProductListLoading =
     isLoadingInitialProducts || isLoadingExistingPricingList;
@@ -480,22 +474,12 @@ function EditPricingListComponent() {
                     variant="outline"
                     leftSection={<Download size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
-                    onClick={handleBulkDownload}
-                    loading={csvLoading}
-                    disabled={csvLoading}
+                    onClick={handleDownloadCsv}
+                    loading={isDownloadingCsv}
+                    disabled={isDownloadingCsv || productsData.length === 0}
                   >
                     Download list
                   </Button>
-                  {csvData.length > 0 && (
-                    <CSVLink
-                      data={csvData}
-                      headers={csvHeaders}
-                      filename={`pricing_list_${pricingListId}_products.csv`}
-                      className="hidden"
-                      ref={csvLinkRef}
-                      target="_blank"
-                    />
-                  )}
                   <Button
                     variant="outline"
                     leftSection={<Upload size={16} />}
@@ -525,7 +509,7 @@ function EditPricingListComponent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-4">
-                  <div className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                  <div className=" bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                     <AddPricingListProductTable
                       products={productsData}
                       selectedRow={selectedTableRow}
@@ -533,15 +517,6 @@ function EditPricingListComponent() {
                       fetchMoreData={fetchMoreAddPricingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
-                    />
-                  </div>
-                  <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                    <AddPricingListDistributorPrices
-                      distributors={distributorsData}
-                      selectedRow={selectedTableRow}
-                      setSelectedRow={setSelectedTableRow}
-                      tableHeader={["Base Price"]}
-                      tableFields={["billing_price"]}
                     />
                   </div>
                 </div>

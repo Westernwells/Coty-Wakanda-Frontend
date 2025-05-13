@@ -46,7 +46,10 @@ export function useUpdateBillingList({
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
+      queryClient.invalidateQueries({
+        queryKey: ["billing-lists"],
+        refetchType: "all",
+      });
     },
     ...mutationConfig,
   });

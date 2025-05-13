@@ -51,7 +51,7 @@ const AddInnovationForm = ({
 }) => {
   const [{ data: brandsData }, { data: brandPillarsData }] = useQueries({
     queries: [
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       {
         queryKey: ["brandPillars"],
         queryFn: () =>

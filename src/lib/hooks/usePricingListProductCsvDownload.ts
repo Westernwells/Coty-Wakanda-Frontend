@@ -1,108 +1,137 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { getMasterData } from "@/api/products/master-data";
-import type {
-  MasterProduct,
-  MasterProductFilters as MasterProductFiltersType,
-} from "@/types";
+import { useState, useCallback } from "react";
+import {
+  getPricingProductList,
+  type Product,
+} from "@/api/pricingList/get-pricing-product-list";
+import type { BillingListFilters } from "@/types/billing-list";
 
-// Define the structure for a row in the CSV
 export interface PricingListCsvProductRow {
-  // Assuming these fields exist based on their usage for filters/options
-  // If MasterProduct type is more limited, this needs adjustment
-  productId: string | number; // Assuming 'id' exists on MasterProduct
-  materialDescription: string | null; // Assuming 'material_description' exists
-  brandLine: string | null;
-  house: string | null;
-  irc: string | null; // Assuming 'irc' exists
+  id: number;
+  product_type: string;
+  offering_number: string | null;
+  sku: string;
+  irc: string;
+  material_description: string;
+  material_tr: string | null;
+  article_type: string;
+  article_sub_type: string;
+  division: string | null;
+  icp_eur: string;
+  icp_usd: string;
+  cssp_trex_eur: string | null;
+  cssp_trex_usd: string | null;
+  brand_name: string;
+  brand_pillar_name: string;
+  price: string | number;
 }
 
-// Define the CSV headers
 export const PRICING_LIST_CSV_HEADERS = [
-  { label: "House", key: "house" },
-  { label: "Description", key: "materialDescription" },
-  { label: "Brand Line", key: "brandLine" },
-  { label: "Article Type", key: "articleType" },
+  { label: "Brand Name", key: "brand_name" },
+  { label: "Description", key: "material_description" },
+  { label: "Brand Line (Pillar)", key: "brand_pillar_name" },
+  { label: "Article Type", key: "article_type" },
   { label: "IRC", key: "irc" },
-  { label: "Group", key: "group" },
+  { label: "Base Price", key: "price" },
 ];
 
-// Helper function to map a MasterProduct to a CsvProductRow
-function mapMasterProductToCsvRow(
-  product: MasterProduct
-): PricingListCsvProductRow {
-  // Casting to any temporarily to bypass potential MasterProduct type issues
-  // This should be revisited once MasterProduct's actual shape is confirmed
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const p = product as any;
+function mapProductToCsvRow(product: Product): PricingListCsvProductRow {
   return {
-    productId: p.id ?? "N/A",
-    materialDescription: p.material_description ?? "",
-    brandLine: p.brand_line ?? "",
-    house: p.house ?? "",
-    irc: p.irc ?? "",
+    id: product.id,
+    product_type: product.product_type,
+    offering_number: product.offering_number,
+    sku: product.sku,
+    irc: product.irc,
+    material_description: product.material_description,
+    material_tr: product.material_tr,
+    article_type: product.article_type,
+    article_sub_type: product.article_sub_type,
+    division: product.division,
+    icp_eur: product.icp_eur,
+    icp_usd: product.icp_usd,
+    cssp_trex_eur: product.cssp_trex_eur,
+    cssp_trex_usd: product.cssp_trex_usd,
+    brand_name: product.brand?.name || "-",
+    brand_pillar_name: product.brand_pillar?.name || "-",
+    price: product.price || "-",
   };
 }
 
-export function usePricingListProductCsvDownload(
-  filters: MasterProductFiltersType
-) {
-  const [csvData, setCsvData] = useState<PricingListCsvProductRow[]>([]);
-  const [csvHeaders, setCsvHeaders] = useState<
-    { label: string; key: string }[]
-  >([]);
-  const [csvError, setCsvError] = useState<Error | null>(null);
-  const [csvLoading, setCsvLoading] = useState(false);
-  const [csvReady, setCsvReady] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const csvLinkRef = useRef<any>(null); // For react-csv CSVLink component
+function generateCsvContent(
+  data: PricingListCsvProductRow[],
+  headers: typeof PRICING_LIST_CSV_HEADERS
+): string {
+  const headerRow = headers.map((h) => h.label).join(",");
+  const dataRows = data.map((row) =>
+    headers
+      .map((header) => {
+        const value = String(
+          row[header.key as keyof PricingListCsvProductRow] || ""
+        );
+        return value.includes(",") ? `"${value}"` : value;
+      })
+      .join(",")
+  );
 
-  useEffect(() => {
-    if (csvReady && csvLinkRef.current?.link) {
-      csvLinkRef.current.link.click();
-      const timer = setTimeout(() => setCsvReady(false), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [csvReady]);
+  return [headerRow, ...dataRows].join("\n");
+}
+
+export function usePricingListProductCsvDownload(filters: BillingListFilters) {
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvError, setCsvError] = useState<Error | null>(null);
 
   const handleBulkDownload = useCallback(async () => {
     setCsvLoading(true);
     setCsvError(null);
-    setCsvData([]);
-    setCsvHeaders([]);
 
     try {
-      let allProducts: MasterProduct[] = [];
-      let currentCursor: number | string | null = 1;
+      let allProducts: Product[] = [];
+      let currentCursor: number | null = 1;
       let hasMoreData = true;
       const pageSize = 100;
 
       while (hasMoreData && currentCursor !== null) {
-        const response = await getMasterData({
+        const productsResponse = await getPricingProductList({
           cursor: currentCursor,
           page_size: pageSize,
-          filter: filters,
+          brand_ids: filters.brand_id ? [Number(filters.brand_id)] : undefined,
+          sub_brand_ids: filters.brand_pillar_id
+            ? [Number(filters.brand_pillar_id)]
+            : undefined,
         });
 
-        if (response.data?.products) {
-          allProducts = allProducts.concat(response.data.products);
+        if (!productsResponse?.data) {
+          throw new Error("Failed to fetch products data");
         }
 
-        hasMoreData = response.meta.has_next;
-        currentCursor = response.meta.cursor;
+        allProducts = allProducts.concat(productsResponse.data);
+        hasMoreData = productsResponse.meta.has_next;
+        currentCursor = productsResponse.meta.cursor;
 
         if (!hasMoreData) {
           break;
         }
       }
 
-      const csvRows = allProducts.map(mapMasterProductToCsvRow);
-      setCsvData(csvRows);
-      setCsvHeaders(PRICING_LIST_CSV_HEADERS);
-      setCsvReady(true);
+      const csvRows = allProducts.map(mapProductToCsvRow);
+      const csvContent = generateCsvContent(csvRows, PRICING_LIST_CSV_HEADERS);
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `pricing-list-${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading product list CSV:", error);
+      console.error("Error generating CSV:", error);
       setCsvError(
-        error instanceof Error ? error : new Error("An unknown error occurred")
+        error instanceof Error ? error : new Error("Failed to generate CSV")
       );
     } finally {
       setCsvLoading(false);
@@ -110,12 +139,8 @@ export function usePricingListProductCsvDownload(
   }, [filters]);
 
   return {
-    csvData,
-    csvHeaders,
-    csvError,
     csvLoading,
-    csvReady,
-    csvLinkRef,
+    csvError,
     handleBulkDownload,
   };
 }

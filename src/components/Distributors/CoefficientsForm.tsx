@@ -48,7 +48,7 @@ function CoefficientsForm({
         queryKey: ["categories"],
         queryFn: () => getCategories({ page_size: 999999 }),
       },
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
     ],
   });
   const updateCoefficientMutations = useUpdateCoefficient({

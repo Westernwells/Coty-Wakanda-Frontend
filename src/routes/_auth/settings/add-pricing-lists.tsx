@@ -13,7 +13,6 @@ import { useForm } from "@mantine/form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Upload } from "lucide-react";
-import { CSVLink } from "react-csv";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -22,28 +21,30 @@ import { useAddPricingList } from "@/api/pricingList/add-pricing-list";
 import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 import AddPricingListProductTable from "@/components/AddPricingList/AddPricingListProductTable";
-import AddPricingListDistributorPrices from "@/components/AddPricingList/AddPricingListDistributorPrices";
 import type {
-  MasterProduct,
-  MasterDistributor,
-  MasterProductFilters as MasterProductFiltersType,
+  Product,
   Meta,
-} from "@/types";
-import { getMasterData } from "@/api/products/master-data";
+  GetPricingProductListParams,
+} from "@/api/pricingList/get-pricing-product-list";
+import { getPricingProductList } from "@/api/pricingList/get-pricing-product-list";
 import Headline from "@/components/Shared/Headline";
+import { getBrands, type Brand as ApiBrand } from "@/api/get-brands";
+import {
+  getBrandPillars,
+  type Pillar as ApiPillar,
+} from "@/api/get-brandPillars";
 import { usePricingListProductCsvDownload } from "@/lib/hooks/usePricingListProductCsvDownload";
 
 export const Route = createFileRoute("/_auth/settings/add-pricing-lists")({
   component: AddPricingListsComponent,
 });
 
-// Define an interface for the form values
 interface PricingListFormValues {
   name: string;
   type: string;
   description: string;
-  house: string;
   brand: string;
+  brandPillar: string;
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -59,39 +60,29 @@ function AddPricingListsComponent() {
   const formId = "add-pricing-list-form";
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [productsData, setProductsData] = useState<MasterProduct[]>([]);
-  const [distributorsData, setDistributorsData] = useState<MasterDistributor[]>(
-    []
-  );
+  const [productsData, setProductsData] = useState<Product[]>([]);
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
   const [productsMeta, setProductsMeta] = useState<Meta | null>(null);
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
 
-  const [houseOptions, setHouseOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
+  const [brandPillarOptions, setBrandPillarOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
 
-  const [apiFilters, setApiFilters] = useState<MasterProductFiltersType>({
-    search: "",
-    house: "",
-    brand_id: "",
-    distributor_id: "",
-  });
-
-  const { csvData, csvHeaders, csvLoading, csvLinkRef, handleBulkDownload } =
-    usePricingListProductCsvDownload(apiFilters);
+  const [pricingProductListParams, setPricingProductListParams] =
+    useState<GetPricingProductListParams>({});
 
   const form = useForm<PricingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      house: "",
       brand: "",
+      brandPillar: "",
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -101,66 +92,103 @@ function AddPricingListsComponent() {
   });
 
   useEffect(() => {
-    setApiFilters({
-      search: searchTerm,
-      brand_id: form.values.brand || "",
-      house: form.values.house || "",
-      distributor_id: "",
-    });
+    const selectedBrandId = form.values.brand;
+    const selectedBrandPillarId = form.values.brandPillar;
+
+    const params: GetPricingProductListParams = {
+      page_size: PAGE_SIZE,
+    };
+    if (selectedBrandId) {
+      params.brand_ids = [Number(selectedBrandId)];
+    }
+    if (selectedBrandPillarId) {
+      params.sub_brand_ids = [Number(selectedBrandPillarId)];
+    }
+    setPricingProductListParams(params);
+
     setProductsData([]);
-    setDistributorsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [searchTerm, form.values.brand, form.values.house]);
+  }, [searchTerm, form.values.brand, form.values.brandPillar, brandOptions]);
 
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
-    data: initialMasterDataResult,
-  } = useQuery<Awaited<ReturnType<typeof getMasterData>>, Error>({
-    queryKey: ["masterDataForAddPricingList", apiFilters],
+    data: initialPricingProductListResult,
+  } = useQuery<Awaited<ReturnType<typeof getPricingProductList>>, Error>({
+    queryKey: ["pricingProductList", pricingProductListParams],
     queryFn: () =>
-      getMasterData({ cursor: 1, page_size: PAGE_SIZE, filter: apiFilters }),
+      getPricingProductList({ ...pricingProductListParams, cursor: undefined }),
     enabled: true,
   });
 
   useEffect(() => {
-    if (initialMasterDataResult?.data) {
-      setProductsData(initialMasterDataResult.data.products);
-      setDistributorsData(initialMasterDataResult.data.distributors);
-      setProductsMeta(initialMasterDataResult.meta);
-      setProductsHasMore(initialMasterDataResult.meta.has_next);
+    if (initialPricingProductListResult?.data) {
+      setProductsData(initialPricingProductListResult.data);
+      setProductsMeta(initialPricingProductListResult.meta);
+      setProductsHasMore(initialPricingProductListResult.meta.has_next);
     } else if (
       !isLoadingInitialProducts &&
-      initialMasterDataResult === undefined
+      initialPricingProductListResult === undefined
     ) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setProductsHasMore(false);
     }
-  }, [initialMasterDataResult, isLoadingInitialProducts]);
+  }, [initialPricingProductListResult, isLoadingInitialProducts]);
+
+  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<
+    ApiBrand[],
+    Error
+  >({
+    queryKey: ["allBrandsForAddPricingList"],
+    queryFn: async () => {
+      const response = await getBrands({ do_not_paginate: 1 });
+      return response.data;
+    },
+  });
 
   useEffect(() => {
-    if (productsData && productsData.length > 0) {
-      const uniqueHouses = Array.from(
-        new Set(productsData.map((p) => p.house).filter(Boolean))
-      );
-      setHouseOptions(
-        uniqueHouses.map((house) => ({ value: house, label: house }))
-      );
-
-      const uniqueBrands = Array.from(
-        new Set(productsData.map((p) => p.brand_line).filter(Boolean))
-      );
+    if (brandsData) {
       setBrandOptions(
-        uniqueBrands.map((brand) => ({ value: brand, label: brand }))
+        brandsData.map((brand: ApiBrand) => ({
+          value: brand.id.toString(),
+          label: brand.name,
+        }))
       );
     } else {
-      setHouseOptions([]);
       setBrandOptions([]);
     }
-  }, [productsData]);
+  }, [brandsData]);
+
+  const selectedBrandIdFromForm = form.values.brand;
+  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
+    ApiPillar[],
+    Error
+  >({
+    queryKey: ["brandPillarsForAddPricingList", selectedBrandIdFromForm],
+    queryFn: async () => {
+      if (!selectedBrandIdFromForm) return [];
+      const response = await getBrandPillars({
+        filter: { brand_id: selectedBrandIdFromForm },
+      });
+      return response.data;
+    },
+    enabled: !!selectedBrandIdFromForm,
+  });
+
+  useEffect(() => {
+    if (brandPillarsData) {
+      setBrandPillarOptions(
+        brandPillarsData.map((pillar: ApiPillar) => ({
+          value: pillar.id.toString(),
+          label: pillar.name,
+        }))
+      );
+    } else if (!selectedBrandIdFromForm) {
+      setBrandPillarOptions([]);
+    }
+  }, [brandPillarsData, selectedBrandIdFromForm]);
 
   const pricingTypes = [
     { value: "luxury", label: "Luxury" },
@@ -170,11 +198,10 @@ function AddPricingListsComponent() {
   const handleSubmit = (values: PricingListFormValues) => {
     const { name, type, description, selectedProductsWithPrices } = values;
 
-    // Ensure selectedProductsWithPrices is an array before mapping
     const productsPayload = (selectedProductsWithPrices || [])
       .map((p) => ({
-        product_id: Number(p.product_id), // Convert string ID to number
-        price: Number(p.price), // Ensure price is a number
+        product_id: Number(p.product_id),
+        price: Number(p.price),
       }))
       .filter(
         (p) =>
@@ -182,16 +209,16 @@ function AddPricingListsComponent() {
           !isNaN(p.product_id) &&
           p.price !== undefined &&
           !isNaN(p.price)
-      ); // Filter out invalid entries
+      );
 
     console.log(
-      "Form submitted. Name:",
+      "Form submitted for Pricing List. Name:",
       name,
       "Type:",
       type,
       "Description:",
       description,
-      "Products to include:",
+      "Products:",
       productsPayload
     );
 
@@ -202,21 +229,19 @@ function AddPricingListsComponent() {
           type,
           description,
           products: productsPayload,
-          // 'file' field is omitted as file upload functionality for this specific purpose is not yet implemented.
         },
       },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+          queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
           navigate({
             to: "/settings",
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            search: { tab: "pricing" } as any,
+            search: { tab: "pricing" },
             replace: true,
           });
         },
         onError: (error) => {
-          // Optional: Add error handling, e.g., show a notification
           console.error("Error adding pricing list:", error);
         },
       }
@@ -235,8 +260,8 @@ function AddPricingListsComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      house: "",
       brand: "",
+      brandPillar: "",
     });
   };
 
@@ -244,25 +269,18 @@ function AddPricingListsComponent() {
     if (
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
-      !productsMeta.cursor
+      productsMeta.cursor === null
     )
       return;
 
     setProductsIsLoadingMore(true);
     try {
-      const response = await getMasterData({
+      const response = await getPricingProductList({
+        ...pricingProductListParams,
         cursor: productsMeta.cursor,
         page_size: PAGE_SIZE,
-        filter: apiFilters,
       });
-      setProductsData((prev) => [...prev, ...response.data.products]);
-      setDistributorsData((prev) => {
-        const existingDistributorIds = new Set(prev.map((d) => d.id));
-        const newDistributors = response.data.distributors.filter(
-          (dist) => !existingDistributorIds.has(dist.id)
-        );
-        return [...prev, ...newDistributors];
-      });
+      setProductsData((prev) => [...prev, ...response.data]);
       setProductsMeta(response.meta);
       setProductsHasMore(response.meta.has_next);
     } catch (error) {
@@ -270,7 +288,7 @@ function AddPricingListsComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, apiFilters]);
+  }, [productsIsLoadingMore, productsMeta, pricingProductListParams]);
 
   const isProductListLoading = isLoadingInitialProducts;
   const noProductsFound =
@@ -278,6 +296,14 @@ function AddPricingListsComponent() {
     !initialProductsError &&
     productsData.length === 0 &&
     !productsHasMore;
+
+  const {
+    csvLoading: isDownloadingCsv,
+    handleBulkDownload: handleDownloadCsv,
+  } = usePricingListProductCsvDownload({
+    brand_id: form.values.brand,
+    brand_pillar_id: form.values.brandPillar,
+  });
 
   return (
     <>
@@ -303,7 +329,7 @@ function AddPricingListsComponent() {
             <Button
               variant="default"
               leftSection={<ExitIcon />}
-              className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+              className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
               onClick={handleCancel}
             >
               Cancel
@@ -409,24 +435,26 @@ function AddPricingListsComponent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <Select
-                  {...form.getInputProps("house")}
-                  label="Filter house"
-                  placeholder="Filter house"
-                  data={houseOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                />
-                <Select
                   {...form.getInputProps("brand")}
-                  label="Filter brand"
-                  placeholder="Filter brand"
+                  label="Filter by Brand"
+                  placeholder="Select Brand"
                   data={brandOptions}
                   rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
+                  disabled={isLoadingBrands}
+                />
+                <Select
+                  {...form.getInputProps("brandPillar")}
+                  label="Filter by Brand Pillar"
+                  placeholder="Select Brand Pillar"
+                  data={brandPillarOptions}
+                  rightSection={<ChevronDownIcon />}
+                  classNames={selectStyles}
+                  searchable
+                  clearable
+                  disabled={isLoadingBrandPillars || !selectedBrandIdFromForm}
                 />
               </div>
             </div>
@@ -440,22 +468,12 @@ function AddPricingListsComponent() {
                     variant="outline"
                     leftSection={<Download size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
-                    onClick={handleBulkDownload}
-                    loading={csvLoading}
-                    disabled={csvLoading}
+                    onClick={handleDownloadCsv}
+                    loading={isDownloadingCsv}
+                    disabled={isDownloadingCsv || productsData.length === 0}
                   >
                     Download list
                   </Button>
-                  {csvData.length > 0 && (
-                    <CSVLink
-                      data={csvData}
-                      headers={csvHeaders}
-                      filename="pricing_list_products.csv"
-                      className="hidden"
-                      ref={csvLinkRef}
-                      target="_blank"
-                    />
-                  )}
                   <Button
                     variant="outline"
                     leftSection={<Upload size={16} />}
@@ -477,7 +495,8 @@ function AddPricingListsComponent() {
               ) : noProductsFound ? (
                 <div className="text-center py-10 text-gray-500">
                   <p>
-                    No products found. Try adjusting filters or search term.
+                    No products found. Try adjusting brand filter or search
+                    term.
                   </p>
                   <p className="text-sm mt-1">
                     Alternatively, upload a product list.
@@ -485,7 +504,7 @@ function AddPricingListsComponent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-4">
-                  <div className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                  <div className="lg:col-span-5 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                     <AddPricingListProductTable
                       products={productsData}
                       selectedRow={selectedTableRow}
@@ -493,15 +512,6 @@ function AddPricingListsComponent() {
                       fetchMoreData={fetchMoreAddPricingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
-                    />
-                  </div>
-                  <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                    <AddPricingListDistributorPrices
-                      distributors={distributorsData}
-                      selectedRow={selectedTableRow}
-                      setSelectedRow={setSelectedTableRow}
-                      tableHeader={["Base Price"]}
-                      tableFields={["billing_price"]}
                     />
                   </div>
                 </div>

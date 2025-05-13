@@ -190,7 +190,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           }),
         enabled: !!form.getValues().category_id,
       },
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       { queryKey: ["countries"], queryFn: getCountries },
       // { queryKey: ["currencies"], queryFn: getCurrencies },
       {

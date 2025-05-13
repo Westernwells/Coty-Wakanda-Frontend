@@ -89,7 +89,7 @@ const EditInnovationProductForm = ({
         queryKey: ["categories"],
         queryFn: () => getCategories({ page_size: 999999 }),
       },
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       { queryKey: ["countriues"], queryFn: getCountries },
       // { queryKey: ["currencies"], queryFn: getCurrencies },
       // { queryKey: ["brandPillars"], queryFn: getBrandPillars },

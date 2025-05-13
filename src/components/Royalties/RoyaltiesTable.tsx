@@ -39,7 +39,7 @@ const RoyaltiesTable = () => {
 
   const { data: brandsData } = useQuery({
     queryKey: ["brands"],
-    queryFn: getBrands,
+    queryFn: () => getBrands(),
   });
   const addRoyaltyMutation = useAddRoyalty({ mutationConfig: {} });
   const updateRoyaltyMutation = useUpdateRoyalty({

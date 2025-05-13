@@ -13,7 +13,6 @@ import { useForm } from "@mantine/form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Upload } from "lucide-react";
-import { CSVLink } from "react-csv";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -22,15 +21,19 @@ import { useAddBillingList } from "@/api/billingList/add-billing-list";
 import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 import AddBillingListProductTable from "@/components/AddBillingList/AddBillingListProductTable";
-import AddBillingListDistributorPrices from "@/components/AddBillingList/AddBillingListDistributorPrices";
-import type {
-  MasterProduct,
-  MasterDistributor,
-  MasterProductFilters as MasterProductFiltersType,
-  Meta,
-} from "@/types";
-import { getMasterData } from "@/api/products/master-data";
+import type { BillingListFilters } from "@/types/billing-list";
+import {
+  getBillingProductList,
+  type Product,
+  type Meta,
+  type GetBillingProductListParams,
+} from "@/api/billingList/get-billing-product-list";
 import Headline from "@/components/Shared/Headline";
+import { getBrands, type Brand as ApiBrand } from "@/api/get-brands";
+import {
+  getBrandPillars,
+  type Pillar as ApiPillar,
+} from "@/api/get-brandPillars";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
 
 export const Route = createFileRoute("/_auth/settings/add-billing-list")({
@@ -41,8 +44,8 @@ interface BillingListFormValues {
   name: string;
   type: string;
   description: string;
-  house: string;
   brand: string;
+  brandPillar: string;
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -58,39 +61,35 @@ function AddBillingListComponent() {
   const formId = "add-billing-list-form";
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [productsData, setProductsData] = useState<MasterProduct[]>([]);
-  const [distributorsData, setDistributorsData] = useState<MasterDistributor[]>(
-    []
-  );
+  const [productsData, setProductsData] = useState<Product[]>([]);
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
   const [productsMeta, setProductsMeta] = useState<Meta | null>(null);
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
 
-  const [houseOptions, setHouseOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
+  const [brandPillarOptions, setBrandPillarOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
 
-  const [apiFilters, setApiFilters] = useState<MasterProductFiltersType>({
+  const [apiFilters, setApiFilters] = useState<BillingListFilters>({
     search: "",
-    house: "",
     brand_id: "",
-    distributor_id: "",
+    brand_pillar_id: "",
   });
 
-  const { csvData, csvHeaders, csvLoading, csvLinkRef, handleBulkDownload } =
-    useBillingListProductCsvDownload(apiFilters);
+  const [billingProductListParams, setBillingProductListParams] =
+    useState<GetBillingProductListParams>({});
 
   const form = useForm<BillingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      house: "",
       brand: "",
+      brandPillar: "",
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -99,67 +98,120 @@ function AddBillingListComponent() {
     },
   });
 
+  const {
+    csvLoading: isDownloadingCsv,
+    csvError: downloadError,
+    handleBulkDownload: handleDownloadCsv,
+  } = useBillingListProductCsvDownload(apiFilters);
+
   useEffect(() => {
+    const selectedBrandId = form.values.brand;
+    const selectedBrandPillarId = form.values.brandPillar;
+
+    const params: GetBillingProductListParams = {
+      page_size: PAGE_SIZE,
+    };
+    if (selectedBrandId) {
+      params.brand_ids = [Number(selectedBrandId)];
+    }
+    if (selectedBrandPillarId) {
+      params.sub_brand_ids = [Number(selectedBrandPillarId)];
+    }
+    setBillingProductListParams(params);
+
     setApiFilters({
       search: searchTerm,
-      brand_id: form.values.brand || "",
-      house: form.values.house || "",
-      distributor_id: "",
+      brand_id: selectedBrandId || "",
+      brand_pillar_id: selectedBrandPillarId || "",
     });
+
     setProductsData([]);
-    setDistributorsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [searchTerm, form.values.brand, form.values.house]);
+  }, [searchTerm, form.values.brand, form.values.brandPillar, brandOptions]);
 
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
-    data: initialMasterDataResult,
-  } = useQuery<Awaited<ReturnType<typeof getMasterData>>, Error>({
-    queryKey: ["masterDataForAddBillingList", apiFilters],
+    data: initialBillingProductListResult,
+  } = useQuery<Awaited<ReturnType<typeof getBillingProductList>>, Error>({
+    queryKey: ["billingProductList", billingProductListParams],
     queryFn: () =>
-      getMasterData({ cursor: 1, page_size: PAGE_SIZE, filter: apiFilters }),
+      getBillingProductList({ ...billingProductListParams, cursor: undefined }),
     enabled: true,
   });
 
+  console.log(initialBillingProductListResult);
+
   useEffect(() => {
-    if (initialMasterDataResult?.data) {
-      setProductsData(initialMasterDataResult.data.products);
-      setDistributorsData(initialMasterDataResult.data.distributors);
-      setProductsMeta(initialMasterDataResult.meta);
-      setProductsHasMore(initialMasterDataResult.meta.has_next);
+    if (initialBillingProductListResult?.data) {
+      setProductsData(initialBillingProductListResult.data);
+      setProductsMeta(initialBillingProductListResult.meta);
+      setProductsHasMore(initialBillingProductListResult.meta.has_next);
     } else if (
       !isLoadingInitialProducts &&
-      initialMasterDataResult === undefined
+      initialBillingProductListResult === undefined
     ) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setProductsHasMore(false);
     }
-  }, [initialMasterDataResult, isLoadingInitialProducts]);
+  }, [initialBillingProductListResult, isLoadingInitialProducts]);
+
+  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<
+    ApiBrand[],
+    Error
+  >({
+    queryKey: ["allBrandsForAddBillingList"],
+    queryFn: async () => {
+      const response = await getBrands({ do_not_paginate: 1 });
+      return response.data;
+    },
+  });
 
   useEffect(() => {
-    if (productsData && productsData.length > 0) {
-      const uniqueHouses = Array.from(
-        new Set(productsData.map((p) => p.house).filter(Boolean))
-      );
-      setHouseOptions(
-        uniqueHouses.map((house) => ({ value: house, label: house }))
-      );
-
-      const uniqueBrands = Array.from(
-        new Set(productsData.map((p) => p.brand_line).filter(Boolean))
-      );
+    if (brandsData) {
       setBrandOptions(
-        uniqueBrands.map((brand) => ({ value: brand, label: brand }))
+        brandsData.map((brand: ApiBrand) => ({
+          value: brand.id.toString(),
+          label: brand.name,
+        }))
       );
     } else {
-      setHouseOptions([]);
       setBrandOptions([]);
     }
-  }, [productsData]);
+  }, [brandsData]);
+
+  const selectedBrandIdFromForm = form.values.brand;
+  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
+    ApiPillar[],
+    Error
+  >({
+    queryKey: ["brandPillarsForAddBillingList", selectedBrandIdFromForm],
+    queryFn: async () => {
+      if (!selectedBrandIdFromForm) return [];
+      const response = await getBrandPillars({
+        filter: { brand_id: selectedBrandIdFromForm },
+      });
+      return response.data;
+    },
+    enabled: !!selectedBrandIdFromForm,
+  });
+
+  console.log({ brandPillarsData });
+
+  useEffect(() => {
+    if (brandPillarsData) {
+      setBrandPillarOptions(
+        brandPillarsData.map((pillar: ApiPillar) => ({
+          value: pillar.id.toString(),
+          label: pillar.name,
+        }))
+      );
+    } else if (!selectedBrandIdFromForm) {
+      setBrandPillarOptions([]);
+    }
+  }, [brandPillarsData, selectedBrandIdFromForm]);
 
   const billingTypes = [
     { value: "luxury", label: "Luxury" },
@@ -205,6 +257,8 @@ function AddBillingListComponent() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
+          queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
+          queryClient.invalidateQueries({ queryKey: ["billingList"] });
           navigate({
             to: "/settings",
             search: { tab: "billing" },
@@ -230,8 +284,8 @@ function AddBillingListComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      house: "",
       brand: "",
+      brandPillar: "",
     });
   };
 
@@ -239,25 +293,18 @@ function AddBillingListComponent() {
     if (
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
-      !productsMeta.cursor
+      productsMeta.cursor === null
     )
       return;
 
     setProductsIsLoadingMore(true);
     try {
-      const response = await getMasterData({
+      const response = await getBillingProductList({
+        ...billingProductListParams,
         cursor: productsMeta.cursor,
         page_size: PAGE_SIZE,
-        filter: apiFilters,
       });
-      setProductsData((prev) => [...prev, ...response.data.products]);
-      setDistributorsData((prev) => {
-        const existingDistributorIds = new Set(prev.map((d) => d.id));
-        const newDistributors = response.data.distributors.filter(
-          (dist) => !existingDistributorIds.has(dist.id)
-        );
-        return [...prev, ...newDistributors];
-      });
+      setProductsData((prev) => [...prev, ...response.data]);
       setProductsMeta(response.meta);
       setProductsHasMore(response.meta.has_next);
     } catch (error) {
@@ -265,7 +312,7 @@ function AddBillingListComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, apiFilters]);
+  }, [productsIsLoadingMore, productsMeta, billingProductListParams]);
 
   const isProductListLoading = isLoadingInitialProducts;
   const noProductsFound =
@@ -404,24 +451,26 @@ function AddBillingListComponent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <Select
-                  {...form.getInputProps("house")}
-                  label="Filter house"
-                  placeholder="Filter house"
-                  data={houseOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                />
-                <Select
                   {...form.getInputProps("brand")}
-                  label="Filter brand"
-                  placeholder="Filter brand"
+                  label="Filter by Brand"
+                  placeholder="Select Brand"
                   data={brandOptions}
                   rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
+                  disabled={isLoadingBrands}
+                />
+                <Select
+                  {...form.getInputProps("brandPillar")}
+                  label="Filter by Brand Pillar"
+                  placeholder="Select Brand Pillar"
+                  data={brandPillarOptions}
+                  rightSection={<ChevronDownIcon />}
+                  classNames={selectStyles}
+                  searchable
+                  clearable
+                  disabled={isLoadingBrandPillars || !selectedBrandIdFromForm}
                 />
               </div>
             </div>
@@ -435,22 +484,12 @@ function AddBillingListComponent() {
                     variant="outline"
                     leftSection={<Download size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
-                    onClick={handleBulkDownload}
-                    loading={csvLoading}
-                    disabled={csvLoading}
+                    onClick={handleDownloadCsv}
+                    loading={isDownloadingCsv}
+                    disabled={isDownloadingCsv || productsData.length === 0}
                   >
                     Download list
                   </Button>
-                  {csvData.length > 0 && (
-                    <CSVLink
-                      data={csvData}
-                      headers={csvHeaders}
-                      filename="billing_list_products.csv"
-                      className="hidden"
-                      ref={csvLinkRef}
-                      target="_blank"
-                    />
-                  )}
                   <Button
                     variant="outline"
                     leftSection={<Upload size={16} />}
@@ -460,6 +499,12 @@ function AddBillingListComponent() {
                   </Button>
                 </Group>
               </div>
+
+              {downloadError && (
+                <div className="text-center py-2 text-red-500 mb-4">
+                  <p>Error downloading products: {downloadError.message}</p>
+                </div>
+              )}
 
               {initialProductsError ? (
                 <div className="text-center py-10 text-red-500">
@@ -472,7 +517,8 @@ function AddBillingListComponent() {
               ) : noProductsFound ? (
                 <div className="text-center py-10 text-gray-500">
                   <p>
-                    No products found. Try adjusting filters or search term.
+                    No products found. Try adjusting brand filter or search term
+                    (search is client-side).
                   </p>
                   <p className="text-sm mt-1">
                     Alternatively, upload a product list.
@@ -480,7 +526,7 @@ function AddBillingListComponent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-4">
-                  <div className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                  <div className="lg:col-span-5 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                     <AddBillingListProductTable
                       products={productsData}
                       selectedRow={selectedTableRow}
@@ -488,15 +534,6 @@ function AddBillingListComponent() {
                       fetchMoreData={fetchMoreAddBillingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
-                    />
-                  </div>
-                  <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                    <AddBillingListDistributorPrices
-                      distributors={distributorsData}
-                      selectedRow={selectedTableRow}
-                      setSelectedRow={setSelectedTableRow}
-                      tableHeader={["Base Price"]}
-                      tableFields={["billing_price"]}
                     />
                   </div>
                 </div>

@@ -211,6 +211,18 @@ export interface MasterProductFilters {
   distributor_id: string;
 }
 
+export interface BillingListFilters {
+  search: string;
+  brand_id: string;
+  brand_pillar_id: string;
+}
+
+export interface PricingListFilters {
+  search: string;
+  brand_id: string;
+  brand_pillar_id: string;
+}
+
 export interface BindingFilters {
   brand_id: string;
   sub_brand_id: string;

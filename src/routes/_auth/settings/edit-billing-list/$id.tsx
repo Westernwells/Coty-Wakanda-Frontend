@@ -18,7 +18,6 @@ import {
 } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Upload } from "lucide-react";
-import { CSVLink } from "react-csv";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -30,15 +29,7 @@ import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 // Changed component imports
 import AddBillingListProductTable from "@/components/AddBillingList/AddBillingListProductTable";
-import AddBillingListDistributorPrices from "@/components/AddBillingList/AddBillingListDistributorPrices";
-import type {
-  MasterProduct,
-  MasterDistributor,
-  MasterProductFilters as MasterProductFiltersType,
-  Meta,
-  // BillingListDetail should come from get-billing-list-by-id.ts if defined there,
-  // or a generic type if not. For now, let's assume a structure based on API usage.
-} from "@/types";
+import type { BillingListFilters } from "@/types";
 // Define BillingListDetail based on get-billing-list-by-id.ts structure
 interface BillingListDetail {
   id: number;
@@ -53,9 +44,19 @@ interface BillingListDetail {
   }>;
 }
 
-import { getMasterData } from "@/api/products/master-data";
+import {
+  getBillingProductList,
+  type Product as BillingListApiProduct,
+  type Meta as BillingListApiMeta,
+  type GetBillingProductListParams,
+} from "@/api/billingList/get-billing-product-list";
 import Headline from "@/components/Shared/Headline";
-// Changed hook import
+// Import APIs for brands and brand pillars
+import { getBrands, type Brand as ApiBrand } from "@/api/get-brands"; // Renamed imported Brand to ApiBrand
+import {
+  getBrandPillars,
+  type Pillar as ApiPillar,
+} from "@/api/get-brandPillars";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
 
 // Changed route and param name
@@ -68,8 +69,8 @@ interface BillingListFormValues {
   name: string;
   type: string;
   description: string;
-  house: string; // For filtering master data, not part of BillingList itself
-  brand: string; // For filtering master data
+  brand: string; // Keep brand for filtering master data
+  brandPillar: string; // Changed from house to brandPillar
   selectedProductsWithPrices: Array<{
     product_id: string; // IRC or ID from MasterProduct
     price: string | number; // The billing value/price for this product
@@ -90,43 +91,41 @@ function EditBillingListComponent() {
   const formId = "edit-billing-list-form"; // Changed form ID
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [productsData, setProductsData] = useState<MasterProduct[]>([]);
-  const [distributorsData, setDistributorsData] = useState<MasterDistributor[]>(
-    []
-  );
+  const [productsData, setProductsData] = useState<BillingListApiProduct[]>([]);
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
-  const [productsMeta, setProductsMeta] = useState<Meta | null>(null);
+  const [productsMeta, setProductsMeta] = useState<BillingListApiMeta | null>(
+    null
+  );
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
   const [formInitializedForId, setFormInitializedForId] = useState<
     number | null
   >(null);
 
-  const [houseOptions, setHouseOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
+  const [brandPillarOptions, setBrandPillarOptions] = useState<
+    { value: string; label: string }[]
+  >([]);
 
-  const [apiFilters, setApiFilters] = useState<MasterProductFiltersType>({
+  const [apiFilters, setApiFilters] = useState<BillingListFilters>({
     search: "",
-    house: "",
     brand_id: "",
-    distributor_id: "",
+    brand_pillar_id: "",
   });
 
-  // Changed hook and variable names
-  const { csvData, csvHeaders, csvLoading, csvLinkRef, handleBulkDownload } =
-    useBillingListProductCsvDownload(apiFilters);
+  // Derived state for getBillingProductList parameters
+  const [billingProductListParams, setBillingProductListParams] =
+    useState<GetBillingProductListParams>({});
 
   const form = useForm<BillingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      house: "",
       brand: "",
+      brandPillar: "",
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -151,8 +150,8 @@ function EditBillingListComponent() {
           name: existingBillingListData.name,
           type: existingBillingListData.type,
           description: existingBillingListData.description || "",
-          house: "", // Filters are not part of the billing list data itself
-          brand: "", // Filters are not part of the billing list data itself
+          brand: "",
+          brandPillar: "",
           selectedProductsWithPrices:
             existingBillingListData.products?.map((p) => ({
               product_id: p.product_id.toString(), // Use product_id from fetched data
@@ -165,74 +164,143 @@ function EditBillingListComponent() {
   }, [existingBillingListData, form, billingListId, formInitializedForId]);
 
   useEffect(() => {
+    const params: GetBillingProductListParams = {
+      billing_list_id: billingListId,
+      // cursor will be handled by useQuery and fetchMore
+      page_size: PAGE_SIZE,
+    };
+    if (form.values.brand) {
+      params.brand_ids = [Number(form.values.brand)];
+    }
+    if (form.values.brandPillar) {
+      // Assuming brandPillar maps to sub_brand_ids
+      params.sub_brand_ids = [Number(form.values.brandPillar)];
+    }
+    // searchTerm is not directly part of GetBillingProductListParams
+    // distributor_id from apiFilters is also not part of GetBillingProductListParams
+
+    setBillingProductListParams(params);
+
+    // Also update the generic apiFilters for other potential consumers like CSV download
+    // Note: CSV download might need adjustments if it heavily relied on search/distributor_id from masterData
     setApiFilters({
       search: searchTerm,
       brand_id: form.values.brand || "",
-      house: form.values.house || "",
-      distributor_id: "",
+      brand_pillar_id: form.values.brandPillar || "",
     });
+
     if (!isLoadingExistingBillingList) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setSelectedTableRow(null);
     }
   }, [
     searchTerm,
     form.values.brand,
-    form.values.house,
+    form.values.brandPillar,
     isLoadingExistingBillingList,
+    billingListId, // Added billingListId
   ]);
 
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
-    data: initialMasterDataResult,
-  } = useQuery<Awaited<ReturnType<typeof getMasterData>>, Error>({
-    queryKey: ["masterDataForEditBillingList", apiFilters], // Changed queryKey
-    queryFn: () =>
-      getMasterData({ cursor: 1, page_size: PAGE_SIZE, filter: apiFilters }),
-    enabled: true, // Always enabled to fetch product/distributor master data
+    data: initialBillingProductsResult,
+  } = useQuery<Awaited<ReturnType<typeof getBillingProductList>>, Error>({
+    queryKey: ["billingListProducts", billingProductListParams],
+    queryFn: () => {
+      const paramsForApi = { ...billingProductListParams };
+      if (billingProductListParams.cursor !== undefined) {
+        paramsForApi.cursor = billingProductListParams.cursor;
+      }
+      return getBillingProductList(paramsForApi);
+    },
+    enabled:
+      !!billingListId && Object.keys(billingProductListParams).length > 0,
   });
 
   useEffect(() => {
-    if (initialMasterDataResult?.data) {
-      setProductsData(initialMasterDataResult.data.products);
-      setDistributorsData(initialMasterDataResult.data.distributors);
-      setProductsMeta(initialMasterDataResult.meta);
-      setProductsHasMore(initialMasterDataResult.meta.has_next);
+    if (initialBillingProductsResult?.data) {
+      // Use initialBillingProductsResult
+      setProductsData(initialBillingProductsResult.data); // data is Product[]
+      setProductsMeta(initialBillingProductsResult.meta);
+      setProductsHasMore(initialBillingProductsResult.meta.has_next);
     } else if (
       !isLoadingInitialProducts &&
-      initialMasterDataResult === undefined
+      initialBillingProductsResult === undefined
     ) {
       setProductsData([]);
-      setDistributorsData([]);
       setProductsMeta(null);
       setProductsHasMore(false);
     }
-  }, [initialMasterDataResult, isLoadingInitialProducts]);
+  }, [initialBillingProductsResult, isLoadingInitialProducts]);
 
+  // Fetch Brands
+  const { data: brandsData, isLoading: isLoadingBrands } = useQuery<
+    ApiBrand[],
+    Error
+  >({
+    queryKey: ["allBrandsForBillingList"],
+    queryFn: async () => {
+      const response = await getBrands({ do_not_paginate: 1 });
+      return response.data;
+    },
+  });
+
+  // Effect to update brandOptions when brandsData changes
   useEffect(() => {
-    if (productsData && productsData.length > 0) {
-      const uniqueHouses = Array.from(
-        new Set(productsData.map((p) => p.house).filter(Boolean))
-      );
-      setHouseOptions(
-        uniqueHouses.map((house) => ({ value: house, label: house }))
-      );
-      const uniqueBrands = Array.from(
-        new Set(productsData.map((p) => p.brand_line).filter(Boolean))
-      );
+    if (brandsData) {
       setBrandOptions(
-        uniqueBrands.map((brand) => ({ value: brand, label: brand }))
+        brandsData.map((brand: ApiBrand) => ({
+          value: brand.id.toString(),
+          label: brand.name,
+        }))
       );
     } else {
-      setHouseOptions([]);
-      setBrandOptions([]);
+      setBrandOptions([]); // Clear options if data is not available
     }
-  }, [productsData]);
+  }, [brandsData]);
 
-  // Assuming billing types are similar or need adjustment
+  // Fetch Brand Pillars, dependent on selected brand
+  const selectedBrandId = form.values.brand;
+  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
+    ApiPillar[],
+    Error
+  >({
+    queryKey: ["brandPillarsForBillingList", selectedBrandId],
+    queryFn: async () => {
+      if (!selectedBrandId) return [];
+      const response = await getBrandPillars({
+        filter: { brand_id: selectedBrandId },
+      });
+      return response.data;
+    },
+    enabled: !!selectedBrandId,
+  });
+
+  // Effect to update brandPillarOptions when brandPillarsData changes
+  useEffect(() => {
+    if (brandPillarsData) {
+      setBrandPillarOptions(
+        brandPillarsData.map((pillar: ApiPillar) => ({
+          value: pillar.id.toString(),
+          label: pillar.name,
+        }))
+      );
+    } else if (!selectedBrandId) {
+      setBrandPillarOptions([]);
+    }
+  }, [brandPillarsData, selectedBrandId]);
+
+  // Clear brand pillar options and field value if brand changes and no new brand is selected
+  useEffect(() => {
+    if (!selectedBrandId) {
+      setBrandPillarOptions([]);
+      form.setFieldValue("brandPillar", "");
+    }
+  }, [selectedBrandId, form]);
+
+  // Re-add billingTypes constant
   const billingTypes = [
     { value: "luxury", label: "Luxury" },
     { value: "consumer beauty", label: "Consumer Beauty" },
@@ -253,25 +321,26 @@ function EditBillingListComponent() {
     updateBillingListMutation.mutate(
       {
         data: {
-          // Wrap the payload in a 'data' object
           id: billingListId,
           name,
           type,
           description,
           products: productsPayload,
         },
-        // file: undefined // if file upload is part of update
       },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["billing-lists"] }); // Changed queryKey
+          // Invalidate all billing list related queries
+          queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
+          queryClient.invalidateQueries({ queryKey: ["billingList"] });
+          queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
+          // Also invalidate the specific billing list being edited
           queryClient.invalidateQueries({
             queryKey: ["billingList", billingListId],
-          }); // Changed queryKey
+          });
           navigate({
             to: "/settings",
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            search: { tab: "billing" } as any, // Changed tab
+            search: { tab: "billing" },
             replace: true,
           });
         },
@@ -294,34 +363,27 @@ function EditBillingListComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      house: "",
       brand: "",
+      brandPillar: "",
     });
   };
 
   const fetchMoreEditBillingListProducts = useCallback(async () => {
-    // Renamed function
     if (
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
-      !productsMeta.cursor
+      productsMeta.cursor === null // Check for null cursor
     )
       return;
     setProductsIsLoadingMore(true);
     try {
-      const response = await getMasterData({
-        cursor: productsMeta.cursor,
+      const response = await getBillingProductList({
+        // Changed API call
+        ...billingProductListParams, // Use current filters
+        cursor: productsMeta.cursor, // Use current cursor from meta
         page_size: PAGE_SIZE,
-        filter: apiFilters,
       });
-      setProductsData((prev) => [...prev, ...response.data.products]);
-      setDistributorsData((prev) => {
-        const existingDistributorIds = new Set(prev.map((d) => d.id));
-        const newDistributors = response.data.distributors.filter(
-          (dist) => !existingDistributorIds.has(dist.id)
-        );
-        return [...prev, ...newDistributors];
-      });
+      setProductsData((prev) => [...prev, ...response.data]); // response.data is Product[]
       setProductsMeta(response.meta);
       setProductsHasMore(response.meta.has_next);
     } catch (error) {
@@ -329,7 +391,7 @@ function EditBillingListComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, apiFilters]);
+  }, [productsIsLoadingMore, productsMeta, billingProductListParams]); // Added billingProductListParams
 
   const isProductListLoading =
     isLoadingInitialProducts || isLoadingExistingBillingList;
@@ -338,6 +400,12 @@ function EditBillingListComponent() {
     !initialProductsError &&
     productsData.length === 0 &&
     !productsHasMore;
+
+  const {
+    csvLoading: isDownloadingCsv,
+    csvError: downloadError,
+    handleBulkDownload: handleDownloadCsv,
+  } = useBillingListProductCsvDownload(apiFilters);
 
   if (isLoadingExistingBillingList) {
     return (
@@ -477,16 +545,6 @@ function EditBillingListComponent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <Select
-                  {...form.getInputProps("house")}
-                  label="Filter house"
-                  placeholder="Filter house"
-                  data={houseOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                />
-                <Select
                   {...form.getInputProps("brand")}
                   label="Filter brand"
                   placeholder="Filter brand"
@@ -495,6 +553,22 @@ function EditBillingListComponent() {
                   classNames={selectStyles}
                   searchable
                   clearable
+                  disabled={isLoadingBrands}
+                />
+                <Select
+                  {...form.getInputProps("brandPillar")}
+                  label="Filter brand pillar"
+                  placeholder={
+                    isLoadingBrandPillars
+                      ? "Loading pillars..."
+                      : "Filter brand pillar"
+                  }
+                  data={brandPillarOptions}
+                  rightSection={<ChevronDownIcon />}
+                  classNames={selectStyles}
+                  searchable
+                  clearable
+                  disabled={isLoadingBrandPillars || !selectedBrandId}
                 />
               </div>
             </div>
@@ -508,38 +582,33 @@ function EditBillingListComponent() {
                     variant="outline"
                     leftSection={<Download size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
-                    onClick={handleBulkDownload}
-                    loading={csvLoading}
-                    disabled={csvLoading}
+                    onClick={handleDownloadCsv}
+                    loading={isDownloadingCsv}
+                    disabled={isDownloadingCsv || productsData.length === 0}
                   >
                     Download list
                   </Button>
-                  {csvData.length > 0 && (
-                    <CSVLink
-                      data={csvData}
-                      headers={csvHeaders}
-                      filename="billing_list_products.csv" // Changed filename
-                      className="hidden"
-                      ref={csvLinkRef}
-                      target="_blank"
-                    />
-                  )}
                   <Button
                     variant="outline"
                     leftSection={<Upload size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
-                    // Add upload functionality if needed
                   >
                     Upload list
                   </Button>
                 </Group>
               </div>
 
+              {downloadError && (
+                <div className="text-center py-2 text-red-500 mb-4">
+                  <p>Error downloading products: {downloadError.message}</p>
+                </div>
+              )}
+
               {initialProductsError ? (
                 <div className="text-center py-10 text-red-500">
                   <p>Error loading products: {initialProductsError.message}</p>
                 </div>
-              ) : isProductListLoading && productsData.length === 0 ? ( // Show loader if main data or product data is loading and list is empty
+              ) : isProductListLoading && productsData.length === 0 ? (
                 <div className="text-center py-10">
                   <Loader />
                 </div>
@@ -554,8 +623,7 @@ function EditBillingListComponent() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-4">
-                  <div className="lg:col-span-3 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                    {/* Changed component and fetch function name */}
+                  <div className="lg:col-span-5 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
                     <AddBillingListProductTable
                       products={productsData}
                       selectedRow={selectedTableRow}
@@ -563,17 +631,6 @@ function EditBillingListComponent() {
                       fetchMoreData={fetchMoreEditBillingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
-                    />
-                  </div>
-                  <div className="lg:col-span-2 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
-                    {/* Changed component */}
-                    <AddBillingListDistributorPrices
-                      distributors={distributorsData}
-                      selectedRow={selectedTableRow}
-                      setSelectedRow={setSelectedTableRow}
-                      // Adjust tableHeader and tableFields if billing list values differ
-                      tableHeader={["Base Price"]} // Or relevant header for billing value
-                      tableFields={["billing_price"]} // Field from MasterDistributor data for billing value
                     />
                   </div>
                 </div>
