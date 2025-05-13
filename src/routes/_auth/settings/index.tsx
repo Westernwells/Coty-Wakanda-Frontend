@@ -13,7 +13,7 @@ import PricingListSettings from "@/components/ApplicationSettings/PricingListSet
 import { z } from "zod";
 
 // Define search params schema
-const settingsSearchSchema = z.object({
+export const settingsSearchSchema = z.object({
   tab: z.string().optional(),
 });
 

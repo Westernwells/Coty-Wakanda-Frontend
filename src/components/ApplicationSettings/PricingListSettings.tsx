@@ -1,29 +1,16 @@
-import {
-  Button,
-  Group,
-  Loader,
-  Modal,
-  Select,
-  Table,
-  TextInput,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
+import { Button, Group, Loader, Modal, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import PlusIcon from "../Icons/PlusIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
 import TrashIcon from "../Icons/TrashIcon";
 import ErrorCard from "../Shared/ErrorCard";
-import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { getPricingList } from "@/api/pricingList/get-pricing-list";
-import { useUpdatePricingList } from "@/api/pricingList/update-pricing-list";
 import { useDeletePricingList } from "@/api/pricingList/delete-pricing-list";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Trash2Icon } from "lucide-react";
 
 interface PricingList {
@@ -35,7 +22,6 @@ interface PricingList {
 }
 
 const PricingListSettings = () => {
-  const [opened, { open, close }] = useDisclosure(false);
   const [openedDelete, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [id, setId] = useState<number>(0);
@@ -43,35 +29,20 @@ const PricingListSettings = () => {
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [cursor, setCursor] = useState<number>(1);
   const queryClient = useQueryClient();
-
-  const form = useForm({
-    initialValues: {
-      name: "",
-      type: "",
-      description: "",
-    },
-  });
+  const navigate = useNavigate();
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["pricing-list", cursor],
+    queryKey: ["pricing-lists", cursor],
     queryFn: () => getPricingList({ cursor, page_size: 20 }),
   });
 
   console.log({ data });
 
-  const updatePricingListMutation = useUpdatePricingList({
-    mutationConfig: {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-        close(); // Close modal on successful update
-      },
-    },
-  });
   const deletePricingListMutation = useDeletePricingList({
     mutationConfig: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-        closeDelete(); // Close modal on successful delete
+        closeDelete();
       },
     },
   });
@@ -92,11 +63,6 @@ const PricingListSettings = () => {
       setCursor((prev) => prev + 1);
     }
   };
-
-  const pricingTypes = [
-    { value: "luxury", label: "Luxury" },
-    { value: "consumer beauty", label: "Consumer Beauty" },
-  ];
 
   return (
     <div className="w-full">
@@ -170,13 +136,9 @@ const PricingListSettings = () => {
                         <Table.Td
                           className="w-5 cursor-pointer"
                           onClick={() => {
-                            setId(element.id);
-                            form.setValues({
-                              name: element.name,
-                              type: element.type,
-                              description: element.description || "",
+                            navigate({
+                              to: `/settings/edit-pricing-list/${element.id}`,
                             });
-                            open();
                           }}
                         >
                           <PencilIcon />
@@ -204,7 +166,6 @@ const PricingListSettings = () => {
       <Modal.Root
         opened={openedDelete}
         onClose={() => {
-          form.reset();
           setId(0);
           closeDelete();
         }}
@@ -250,92 +211,6 @@ const PricingListSettings = () => {
                   </Button>
                 </Group>
               </div>
-            </div>
-          </Modal.Body>
-        </Modal.Content>
-      </Modal.Root>
-
-      {/* Edit Modal */}
-      <Modal.Root
-        opened={opened}
-        onClose={() => {
-          form.reset();
-          setId(0);
-          close();
-        }}
-        withinPortal={false}
-        trapFocus={false}
-        className={opened ? "absolute top-0 left-0 h-full w-full" : "hidden"}
-      >
-        <Modal.Overlay
-          bg="linear-gradient(180deg, rgba(0, 37, 84, 0.7) 0%, rgba(0, 235, 178, 0.7) 100%)"
-          blur={3}
-        />
-        <Modal.Content className="!items-center min-w-[70%]">
-          <Modal.Body>
-            <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-xl font-semibold mb-6 text-primary">
-                Edit Pricing List
-              </h2>
-              <form
-                onSubmit={form.onSubmit((values) => {
-                  if (id) {
-                    updatePricingListMutation.mutate({
-                      data: {
-                        id,
-                        ...values,
-                      },
-                    });
-                  }
-                })}
-              >
-                <div className="space-y-6">
-                  <TextInput
-                    {...form.getInputProps("name")}
-                    label="Name"
-                    placeholder="Enter pricing list name"
-                    classNames={textInputStyles}
-                    required
-                  />
-                  <Select
-                    {...form.getInputProps("type")}
-                    label="Type"
-                    placeholder="Select type"
-                    data={pricingTypes}
-                    rightSection={<ChevronDownIcon />}
-                    classNames={selectStyles}
-                    clearable
-                    searchable
-                    required
-                  />
-                  <TextInput
-                    {...form.getInputProps("description")}
-                    label="Description"
-                    placeholder="Enter description"
-                    classNames={textInputStyles}
-                  />
-                  <Group justify="flex-end" mt="xl" gap={10}>
-                    <Button
-                      variant="outline"
-                      className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                      leftSection={<ExitIcon />}
-                      onClick={close}
-                      type="button"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      leftSection={<RefreshIcon />}
-                      type="submit"
-                      variant="outline"
-                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                      loading={updatePricingListMutation.isPending}
-                    >
-                      Update
-                    </Button>
-                  </Group>
-                </div>
-              </form>
             </div>
           </Modal.Body>
         </Modal.Content>
