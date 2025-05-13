@@ -468,3 +468,62 @@ export type Royalty = {
   created_at: string;
   brand: Brand;
 };
+
+export interface ProductPrice {
+  id: number;
+  product_id: number; // if it's part of a larger product object, this might be redundant
+  price: number | string;
+  // currency?: string; // if currency can vary per price entry
+}
+
+export interface PricingListProduct {
+  id: number; // This is product_id from the perspective of the pricing list entry
+  product_type: string;
+  offering_number: string | null;
+  sku: string;
+  irc: string;
+  material_description: string;
+  material_tr: string | null;
+  article_type: string;
+  article_sub_type: string;
+  division: string | null;
+  icp_eur: string; // These seem like base product properties, not specific to a pricing list entry price
+  icp_usd: string;
+  cssp_trex_eur: string | null;
+  cssp_trex_usd: string | null;
+  created_at: string; // Product creation date
+  brand: {
+    id: number;
+    name: string;
+    type: string;
+    created_at: string;
+  };
+  brand_pillar: {
+    id: number;
+    name: string;
+    created_at: string;
+    brand: {
+      id: number;
+      name: string;
+      type: string;
+      created_at: string;
+    };
+  };
+  category: {
+    id: number;
+    name: string;
+    created_at: string;
+  };
+  base_price: string; // Base product price
+  // Pricing specific to this list
+  price: number | string; // The actual price for this product in this specific pricing list
+}
+
+export interface PricingList {
+  id: number;
+  name: string;
+  type: string;
+  description: string | null;
+  created_at: string; // Pricing list creation date
+  products: PricingListProduct[]; // Array of products with their specific prices for this list
+}
