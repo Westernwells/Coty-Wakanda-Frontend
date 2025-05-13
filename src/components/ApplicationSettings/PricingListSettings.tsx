@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
@@ -21,9 +21,9 @@ import TrashIcon from "../Icons/TrashIcon";
 import ErrorCard from "../Shared/ErrorCard";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { getPricingList } from "@/api/pricingList/get-pricing-list";
-import { useAddPricingList } from "@/api/pricingList/add-pricing-list";
 import { useUpdatePricingList } from "@/api/pricingList/update-pricing-list";
 import { useDeletePricingList } from "@/api/pricingList/delete-pricing-list";
+import { Link } from "@tanstack/react-router";
 
 interface PricingList {
   id: number;
@@ -41,6 +41,7 @@ const PricingListSettings = () => {
   const [pricingList, setPricingList] = useState<PricingList[]>([]);
   const [hasMore, setHasMore] = useState<boolean>(false);
   const [cursor, setCursor] = useState<number>(1);
+  const queryClient = useQueryClient();
 
   const form = useForm({
     initialValues: {
@@ -57,9 +58,22 @@ const PricingListSettings = () => {
 
   console.log({ data });
 
-  const addPricingListMutation = useAddPricingList();
-  const updatePricingListMutation = useUpdatePricingList();
-  const deletePricingListMutation = useDeletePricingList();
+  const updatePricingListMutation = useUpdatePricingList({
+    mutationConfig: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+        close(); // Close modal on successful update
+      },
+    },
+  });
+  const deletePricingListMutation = useDeletePricingList({
+    mutationConfig: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+        closeDelete(); // Close modal on successful delete
+      },
+    },
+  });
 
   useEffect(() => {
     if (data?.data) {
@@ -68,7 +82,7 @@ const PricingListSettings = () => {
       } else {
         setPricingList((prev) => [...prev, ...data.data]);
       }
-      setHasMore(data.data.length === 20); // If we got 20 items, there might be more
+      setHasMore(data.data.length === 20);
     }
   }, [data, cursor]);
 
@@ -91,7 +105,8 @@ const PricingListSettings = () => {
             rightSection={<PlusIcon />}
             variant="default"
             className="border-none mb-5 bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-            onClick={open}
+            component={Link}
+            to="/settings/add-pricing-lists"
           >
             Add pricing list
           </Button>
@@ -130,21 +145,27 @@ const PricingListSettings = () => {
                 >
                   <Table.Thead>
                     <Table.Tr className="bg-primary text-white">
-                      <Table.Th className="rounded-ss-xl">Names</Table.Th>
-                      <Table.Th>Type</Table.Th>
-                      <Table.Th>Description</Table.Th>
+                      <Table.Th className="rounded-ss-xl text-xl">
+                        Names
+                      </Table.Th>
+                      <Table.Th className="text-xl">Type</Table.Th>
+                      <Table.Th className="text-xl">Description</Table.Th>
                       <Table.Th></Table.Th>
                       <Table.Th className="rounded-se-xl"></Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
                     {pricingList.map((element) => (
-                      <Table.Tr key={element.id}>
-                        <Table.Td className="first:rounded-es-xl">
+                      <Table.Tr key={element.id} className="text-xl">
+                        <Table.Td className="first:rounded-es-xl text-xl font-medium">
                           {element.name}
                         </Table.Td>
-                        <Table.Td>{element.type}</Table.Td>
-                        <Table.Td>{element.description || "-"}</Table.Td>
+                        <Table.Td className="text-xl font-medium">
+                          {element.type}
+                        </Table.Td>
+                        <Table.Td className="text-xl font-medium">
+                          {element.description || "-"}
+                        </Table.Td>
                         <Table.Td
                           className="w-5 cursor-pointer"
                           onClick={() => {
@@ -202,6 +223,9 @@ const PricingListSettings = () => {
               <h2 className="text-xl font-semibold mb-6 text-primary">
                 Delete Pricing List
               </h2>
+              <p className="mb-4">
+                Are you sure you want to delete this pricing list?
+              </p>
               <div className="space-y-6">
                 <Group justify="flex-end" mt="xl" gap={10}>
                   <Button
@@ -214,13 +238,12 @@ const PricingListSettings = () => {
                   </Button>
                   <Button
                     leftSection={<RefreshIcon />}
-                    type="submit"
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={() => {
                       deletePricingListMutation.mutate(id);
-                      closeDelete();
                     }}
+                    loading={deletePricingListMutation.isPending}
                   >
                     Delete
                   </Button>
@@ -231,7 +254,7 @@ const PricingListSettings = () => {
         </Modal.Content>
       </Modal.Root>
 
-      {/* Add/Edit Modal */}
+      {/* Edit Modal */}
       <Modal.Root
         opened={opened}
         onClose={() => {
@@ -251,68 +274,67 @@ const PricingListSettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                {id ? "Edit Pricing List" : "Add Pricing List"}
+                Edit Pricing List
               </h2>
-              <div className="space-y-6">
-                <TextInput
-                  {...form.getInputProps("name")}
-                  label="Name"
-                  placeholder="Enter pricing list name"
-                  classNames={textInputStyles}
-                  required
-                />
-                <Select
-                  {...form.getInputProps("type")}
-                  label="Type"
-                  placeholder="Select type"
-                  data={pricingTypes}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  clearable
-                  searchable
-                  required
-                />
-                <TextInput
-                  {...form.getInputProps("description")}
-                  label="Description"
-                  placeholder="Enter description"
-                  classNames={textInputStyles}
-                />
-                <Group justify="flex-end" mt="xl" gap={10}>
-                  <Button
-                    variant="outline"
-                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                    leftSection={<ExitIcon />}
-                    onClick={close}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    leftSection={<RefreshIcon />}
-                    type="submit"
-                    variant="outline"
-                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                    onClick={() => {
-                      const formData = form.values;
-                      if (id) {
-                        updatePricingListMutation.mutate({
-                          data: {
-                            id,
-                            ...formData,
-                          },
-                        });
-                      } else {
-                        addPricingListMutation.mutate({
-                          data: formData,
-                        });
-                      }
-                      close();
-                    }}
-                  >
-                    {id ? "Update" : "Add"}
-                  </Button>
-                </Group>
-              </div>
+              <form
+                onSubmit={form.onSubmit((values) => {
+                  if (id) {
+                    updatePricingListMutation.mutate({
+                      data: {
+                        id,
+                        ...values,
+                      },
+                    });
+                  }
+                })}
+              >
+                <div className="space-y-6">
+                  <TextInput
+                    {...form.getInputProps("name")}
+                    label="Name"
+                    placeholder="Enter pricing list name"
+                    classNames={textInputStyles}
+                    required
+                  />
+                  <Select
+                    {...form.getInputProps("type")}
+                    label="Type"
+                    placeholder="Select type"
+                    data={pricingTypes}
+                    rightSection={<ChevronDownIcon />}
+                    classNames={selectStyles}
+                    clearable
+                    searchable
+                    required
+                  />
+                  <TextInput
+                    {...form.getInputProps("description")}
+                    label="Description"
+                    placeholder="Enter description"
+                    classNames={textInputStyles}
+                  />
+                  <Group justify="flex-end" mt="xl" gap={10}>
+                    <Button
+                      variant="outline"
+                      className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                      leftSection={<ExitIcon />}
+                      onClick={close}
+                      type="button"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      leftSection={<RefreshIcon />}
+                      type="submit"
+                      variant="outline"
+                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                      loading={updatePricingListMutation.isPending}
+                    >
+                      Update
+                    </Button>
+                  </Group>
+                </div>
+              </form>
             </div>
           </Modal.Body>
         </Modal.Content>

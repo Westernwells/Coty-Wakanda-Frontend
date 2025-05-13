@@ -4,7 +4,9 @@ import { axios } from "@/lib/axios";
 interface AddPricingListData {
   name: string;
   type: string;
-  description: string | null;
+  description: string;
+  file?: string | File;
+  products?: Array<{ product_id: number; price: number }>;
 }
 
 interface AddPricingListRequest {
@@ -33,13 +35,13 @@ export function useAddPricingList({
   return useMutation<AddPricingListResponse, Error, AddPricingListRequest>({
     mutationFn: async ({ data }) => {
       const response = await axios.post<AddPricingListResponse>(
-        "/pricing-list",
+        "/pricing-lists",
         data
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pricing-list"] });
+      queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
     },
     ...mutationConfig,
   });

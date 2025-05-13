@@ -4,23 +4,42 @@ import Headline from "@/components/Shared/Headline";
 import { useUserStore } from "@/stores/userStore";
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, Group } from "@mantine/core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import * as React from "react";
 import CoreCategorySettings from "@/components/ApplicationSettings/CoreCategorySettings";
 import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";
 import SubCategorySettings from "@/components/ApplicationSettings/SubCategorySettings";
 import PricingListSettings from "@/components/ApplicationSettings/PricingListSettings";
+import { z } from "zod";
 
-export const Route = createFileRoute("/_auth/settings")({
+// Define search params schema
+const settingsSearchSchema = z.object({
+  tab: z.string().optional(),
+});
+
+export const Route = createFileRoute("/_auth/settings/")({
+  validateSearch: settingsSearchSchema, // Validate search params
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const user = useUserStore((state) => state.user);
-  const [activeTab, setActiveTab] = useState<string | null>("system");
+  const search = Route.useSearch();
+
+  const [activeTab, setActiveTab] = useState<string | null>(
+    search.tab || "system"
+  );
   const [activeSegmentTab, setActiveSegmentTab] = useState<string | null>(
     "markets"
   );
+
+  // Effect to update tab if search param changes after initial load (optional, but good practice)
+  useEffect(() => {
+    if (search.tab && search.tab !== activeTab) {
+      setActiveTab(search.tab);
+    }
+  }, [search.tab, activeTab]);
 
   return (
     <div className="w-full">
