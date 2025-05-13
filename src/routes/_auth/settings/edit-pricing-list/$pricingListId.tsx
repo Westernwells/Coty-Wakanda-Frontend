@@ -18,6 +18,7 @@ import {
 } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Upload } from "lucide-react";
+import { CSVLink } from "react-csv";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -37,6 +38,7 @@ import type {
 } from "@/types";
 import { getMasterData } from "@/api/products/master-data";
 import Headline from "@/components/Shared/Headline";
+import { usePricingListProductCsvDownload } from "@/lib/hooks/usePricingListProductCsvDownload";
 
 export const Route = createFileRoute(
   "/_auth/settings/edit-pricing-list/$pricingListId"
@@ -94,6 +96,9 @@ function EditPricingListComponent() {
     brand_id: "",
     distributor_id: "",
   });
+
+  const { csvData, csvHeaders, csvLoading, csvLinkRef, handleBulkDownload } =
+    usePricingListProductCsvDownload(apiFilters);
 
   const form = useForm<PricingListFormValues>({
     initialValues: {
@@ -233,6 +238,7 @@ function EditPricingListComponent() {
           });
           navigate({
             to: "/settings",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             search: { tab: "pricing" } as any,
             replace: true,
           });
@@ -245,8 +251,10 @@ function EditPricingListComponent() {
   };
 
   const handleCancel = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     navigate({
       to: "/settings",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       search: { tab: "pricing" } as any,
       replace: true,
     });
@@ -324,6 +332,7 @@ function EditPricingListComponent() {
             className="border-none bg-transparent text-primary text-sm font-medium p-0 hover:bg-transparent focus:outline-none focus:ring-0"
             component={Link}
             to="/settings"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             search={{ tab: "pricing" } as any}
           >
             Back to Pricing list
@@ -471,9 +480,22 @@ function EditPricingListComponent() {
                     variant="outline"
                     leftSection={<Download size={16} />}
                     className="text-primary border-primary hover:bg-primary/5"
+                    onClick={handleBulkDownload}
+                    loading={csvLoading}
+                    disabled={csvLoading}
                   >
                     Download list
                   </Button>
+                  {csvData.length > 0 && (
+                    <CSVLink
+                      data={csvData}
+                      headers={csvHeaders}
+                      filename={`pricing_list_${pricingListId}_products.csv`}
+                      className="hidden"
+                      ref={csvLinkRef}
+                      target="_blank"
+                    />
+                  )}
                   <Button
                     variant="outline"
                     leftSection={<Upload size={16} />}
