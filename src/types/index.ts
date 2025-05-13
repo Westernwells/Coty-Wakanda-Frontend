@@ -527,3 +527,19 @@ export interface PricingList {
   created_at: string; // Pricing list creation date
   products: PricingListProduct[]; // Array of products with their specific prices for this list
 }
+
+export interface BillingList {
+  id: number;
+  name: string;
+  type: string;
+  description: string | null;
+  created_at: string;
+  file: File | null;
+  products: BillingListProduct[];
+}
+
+export interface BillingListProduct {
+  id: number;
+  product_id: number;
+  price: number;
+}

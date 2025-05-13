@@ -10,6 +10,7 @@ import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";
 import SubCategorySettings from "@/components/ApplicationSettings/SubCategorySettings";
 import PricingListSettings from "@/components/ApplicationSettings/PricingListSettings";
+import BillingListSettings from "@/components/ApplicationSettings/BillingListSettings";
 import { z } from "zod";
 
 // Define search params schema
@@ -145,7 +146,9 @@ function RouteComponent() {
             </Tabs.Panel>
 
             <Tabs.Panel value="billing">
-              <div className="mt-4">{/* Billing content will go here */}</div>
+              <div className="mt-4">
+                <BillingListSettings />
+              </div>
             </Tabs.Panel>
           </Tabs>
         ) : (

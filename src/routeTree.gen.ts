@@ -36,12 +36,14 @@ import { Route as AuthAddDistributorImport } from './routes/_auth/add-distributo
 import { Route as AuthSettingsIndexImport } from './routes/_auth/settings/index'
 import { Route as AuthProductsIndexImport } from './routes/_auth/products/index'
 import { Route as AuthSettingsAddPricingListsImport } from './routes/_auth/settings/add-pricing-lists'
+import { Route as AuthSettingsAddBillingListImport } from './routes/_auth/settings/add-billing-list'
 import { Route as AuthProductsProductIdImport } from './routes/_auth/products/$productId'
 import { Route as AuthInnovationForcastsSubmitForecastIdImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
 import { Route as AuthForecastDetailsProductIdImport } from './routes/_auth/forecast-details/$productId'
 import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
 import { Route as AuthEditDistributorsDistributorIdImport } from './routes/_auth/edit-distributors/$distributorId'
 import { Route as AuthSettingsEditPricingListPricingListIdImport } from './routes/_auth/settings/edit-pricing-list/$pricingListId'
+import { Route as AuthSettingsEditBillingListIdImport } from './routes/_auth/settings/edit-billing-list/$id'
 
 // Create/Update Routes
 
@@ -194,6 +196,14 @@ const AuthSettingsAddPricingListsRoute =
     getParentRoute: () => AuthRoute,
   } as any)
 
+const AuthSettingsAddBillingListRoute = AuthSettingsAddBillingListImport.update(
+  {
+    id: '/settings/add-billing-list',
+    path: '/settings/add-billing-list',
+    getParentRoute: () => AuthRoute,
+  } as any,
+)
+
 const AuthProductsProductIdRoute = AuthProductsProductIdImport.update({
   id: '/products/$productId',
   path: '/products/$productId',
@@ -231,6 +241,13 @@ const AuthSettingsEditPricingListPricingListIdRoute =
   AuthSettingsEditPricingListPricingListIdImport.update({
     id: '/settings/edit-pricing-list/$pricingListId',
     path: '/settings/edit-pricing-list/$pricingListId',
+    getParentRoute: () => AuthRoute,
+  } as any)
+
+const AuthSettingsEditBillingListIdRoute =
+  AuthSettingsEditBillingListIdImport.update({
+    id: '/settings/edit-billing-list/$id',
+    path: '/settings/edit-billing-list/$id',
     getParentRoute: () => AuthRoute,
   } as any)
 
@@ -427,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProductsProductIdImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/settings/add-billing-list': {
+      id: '/_auth/settings/add-billing-list'
+      path: '/settings/add-billing-list'
+      fullPath: '/settings/add-billing-list'
+      preLoaderRoute: typeof AuthSettingsAddBillingListImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/settings/add-pricing-lists': {
       id: '/_auth/settings/add-pricing-lists'
       path: '/settings/add-pricing-lists'
@@ -446,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthSettingsIndexImport
+      parentRoute: typeof AuthImport
+    }
+    '/_auth/settings/edit-billing-list/$id': {
+      id: '/_auth/settings/edit-billing-list/$id'
+      path: '/settings/edit-billing-list/$id'
+      fullPath: '/settings/edit-billing-list/$id'
+      preLoaderRoute: typeof AuthSettingsEditBillingListIdImport
       parentRoute: typeof AuthImport
     }
     '/_auth/settings/edit-pricing-list/$pricingListId': {
@@ -485,9 +516,11 @@ interface AuthRouteChildren {
   AuthForecastDetailsProductIdRoute: typeof AuthForecastDetailsProductIdRoute
   AuthInnovationForcastsSubmitForecastIdRoute: typeof AuthInnovationForcastsSubmitForecastIdRoute
   AuthProductsProductIdRoute: typeof AuthProductsProductIdRoute
+  AuthSettingsAddBillingListRoute: typeof AuthSettingsAddBillingListRoute
   AuthSettingsAddPricingListsRoute: typeof AuthSettingsAddPricingListsRoute
   AuthProductsIndexRoute: typeof AuthProductsIndexRoute
   AuthSettingsIndexRoute: typeof AuthSettingsIndexRoute
+  AuthSettingsEditBillingListIdRoute: typeof AuthSettingsEditBillingListIdRoute
   AuthSettingsEditPricingListPricingListIdRoute: typeof AuthSettingsEditPricingListPricingListIdRoute
 }
 
@@ -518,9 +551,11 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthInnovationForcastsSubmitForecastIdRoute:
     AuthInnovationForcastsSubmitForecastIdRoute,
   AuthProductsProductIdRoute: AuthProductsProductIdRoute,
+  AuthSettingsAddBillingListRoute: AuthSettingsAddBillingListRoute,
   AuthSettingsAddPricingListsRoute: AuthSettingsAddPricingListsRoute,
   AuthProductsIndexRoute: AuthProductsIndexRoute,
   AuthSettingsIndexRoute: AuthSettingsIndexRoute,
+  AuthSettingsEditBillingListIdRoute: AuthSettingsEditBillingListIdRoute,
   AuthSettingsEditPricingListPricingListIdRoute:
     AuthSettingsEditPricingListPricingListIdRoute,
 }
@@ -554,9 +589,11 @@ export interface FileRoutesByFullPath {
   '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
   '/products/$productId': typeof AuthProductsProductIdRoute
+  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
   '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
   '/products': typeof AuthProductsIndexRoute
   '/settings': typeof AuthSettingsIndexRoute
+  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
   '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
 }
 
@@ -587,9 +624,11 @@ export interface FileRoutesByTo {
   '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
   '/products/$productId': typeof AuthProductsProductIdRoute
+  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
   '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
   '/products': typeof AuthProductsIndexRoute
   '/settings': typeof AuthSettingsIndexRoute
+  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
   '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
 }
 
@@ -622,9 +661,11 @@ export interface FileRoutesById {
   '/_auth/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
   '/_auth/products/$productId': typeof AuthProductsProductIdRoute
+  '/_auth/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
   '/_auth/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
   '/_auth/products/': typeof AuthProductsIndexRoute
   '/_auth/settings/': typeof AuthSettingsIndexRoute
+  '/_auth/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
   '/_auth/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
 }
 
@@ -657,9 +698,11 @@ export interface FileRouteTypes {
     | '/forecast-details/$productId'
     | '/innovation-forcasts-submit/$forecastId'
     | '/products/$productId'
+    | '/settings/add-billing-list'
     | '/settings/add-pricing-lists'
     | '/products'
     | '/settings'
+    | '/settings/edit-billing-list/$id'
     | '/settings/edit-pricing-list/$pricingListId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -689,9 +732,11 @@ export interface FileRouteTypes {
     | '/forecast-details/$productId'
     | '/innovation-forcasts-submit/$forecastId'
     | '/products/$productId'
+    | '/settings/add-billing-list'
     | '/settings/add-pricing-lists'
     | '/products'
     | '/settings'
+    | '/settings/edit-billing-list/$id'
     | '/settings/edit-pricing-list/$pricingListId'
   id:
     | '__root__'
@@ -722,9 +767,11 @@ export interface FileRouteTypes {
     | '/_auth/forecast-details/$productId'
     | '/_auth/innovation-forcasts-submit/$forecastId'
     | '/_auth/products/$productId'
+    | '/_auth/settings/add-billing-list'
     | '/_auth/settings/add-pricing-lists'
     | '/_auth/products/'
     | '/_auth/settings/'
+    | '/_auth/settings/edit-billing-list/$id'
     | '/_auth/settings/edit-pricing-list/$pricingListId'
   fileRoutesById: FileRoutesById
 }
@@ -783,9 +830,11 @@ export const routeTree = rootRoute
         "/_auth/forecast-details/$productId",
         "/_auth/innovation-forcasts-submit/$forecastId",
         "/_auth/products/$productId",
+        "/_auth/settings/add-billing-list",
         "/_auth/settings/add-pricing-lists",
         "/_auth/products/",
         "/_auth/settings/",
+        "/_auth/settings/edit-billing-list/$id",
         "/_auth/settings/edit-pricing-list/$pricingListId"
       ]
     },
@@ -891,6 +940,10 @@ export const routeTree = rootRoute
       "filePath": "_auth/products/$productId.tsx",
       "parent": "/_auth"
     },
+    "/_auth/settings/add-billing-list": {
+      "filePath": "_auth/settings/add-billing-list.tsx",
+      "parent": "/_auth"
+    },
     "/_auth/settings/add-pricing-lists": {
       "filePath": "_auth/settings/add-pricing-lists.tsx",
       "parent": "/_auth"
@@ -901,6 +954,10 @@ export const routeTree = rootRoute
     },
     "/_auth/settings/": {
       "filePath": "_auth/settings/index.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/settings/edit-billing-list/$id": {
+      "filePath": "_auth/settings/edit-billing-list/$id.tsx",
       "parent": "/_auth"
     },
     "/_auth/settings/edit-pricing-list/$pricingListId": {
