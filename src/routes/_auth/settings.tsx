@@ -9,6 +9,7 @@ import CoreCategorySettings from "@/components/ApplicationSettings/CoreCategoryS
 import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";
 import SubCategorySettings from "@/components/ApplicationSettings/SubCategorySettings";
+import PricingListSettings from "@/components/ApplicationSettings/PricingListSettings";
 
 export const Route = createFileRoute("/_auth/settings")({
   component: RouteComponent,
@@ -121,7 +122,7 @@ function RouteComponent() {
 
             <Tabs.Panel value="pricing">
               <div className="mt-4">
-                {/* Pricing list content will go here */}
+                <PricingListSettings />
               </div>
             </Tabs.Panel>
 
