@@ -289,6 +289,7 @@ function AddBillingListComponent() {
             className="border-none bg-transparent text-primary text-sm font-medium p-0 hover:bg-transparent focus:outline-none focus:ring-0"
             component={Link}
             to="/settings"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             search={{ tab: "billing" } as any}
           >
             Back to Billing list

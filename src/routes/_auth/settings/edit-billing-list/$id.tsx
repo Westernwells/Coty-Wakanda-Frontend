@@ -47,9 +47,9 @@ interface BillingListDetail {
   description: string | null;
   created_at: string;
   products: Array<{
-    product_id: string;
-    price: string | number;
-    [key: string]: any;
+    product_id: number;
+    price: number;
+    id?: number;
   }>;
 }
 
@@ -140,7 +140,7 @@ function EditBillingListComponent() {
     isLoading: isLoadingExistingBillingList, // Changed variable name
   } = useQuery<BillingListDetail, Error>({
     queryKey: ["billingList", billingListId], // Changed queryKey
-    queryFn: () => getBillingListById(billingListId).then((res) => res.data), // Adjusted to match API response structure
+    queryFn: () => getBillingListById(billingListId), // Remove .then(res => res.data)
     enabled: !!billingListId,
   });
 
@@ -155,7 +155,7 @@ function EditBillingListComponent() {
           brand: "", // Filters are not part of the billing list data itself
           selectedProductsWithPrices:
             existingBillingListData.products?.map((p) => ({
-              product_id: p.product_id, // Use product_id from fetched data
+              product_id: p.product_id.toString(), // Use product_id from fetched data
               price: p.price,
             })) || [],
         });
@@ -244,19 +244,22 @@ function EditBillingListComponent() {
     // Map form values to the structure expected by updateBillingList API
     const productsPayload = (selectedProductsWithPrices || [])
       .map((p) => ({
-        product_id: p.product_id, // Assuming product_id is string IRC
+        product_id: p.product_id, // Keep as string, matches UpdateBillingListData
         price: Number(p.price), // Ensure price is a number
       }))
+      // Ensure product_id is present (it's a string) and price is valid
       .filter((p) => p.product_id && p.price !== undefined && !isNaN(p.price));
 
     updateBillingListMutation.mutate(
       {
-        // Payload for useUpdateBillingList (UpdateBillingListPayload)
-        id: billingListId,
-        name,
-        type,
-        description,
-        products: productsPayload,
+        data: {
+          // Wrap the payload in a 'data' object
+          id: billingListId,
+          name,
+          type,
+          description,
+          products: productsPayload,
+        },
         // file: undefined // if file upload is part of update
       },
       {
@@ -267,6 +270,7 @@ function EditBillingListComponent() {
           }); // Changed queryKey
           navigate({
             to: "/settings",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             search: { tab: "billing" } as any, // Changed tab
             replace: true,
           });
@@ -281,7 +285,7 @@ function EditBillingListComponent() {
   const handleCancel = () => {
     navigate({
       to: "/settings",
-      search: { tab: "billing" } as any, // Changed tab
+      search: { tab: "billing" }, // Changed tab
       replace: true,
     });
   };
@@ -358,6 +362,7 @@ function EditBillingListComponent() {
             className="border-none bg-transparent text-primary text-sm font-medium p-0 hover:bg-transparent focus:outline-none focus:ring-0"
             component={Link}
             to="/settings"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             search={{ tab: "billing" } as any} // Changed tab
           >
             Back to Billing list {/* Changed text */}

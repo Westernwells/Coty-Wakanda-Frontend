@@ -224,10 +224,9 @@ function AddPricingListsComponent() {
   };
 
   const handleCancel = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     navigate({
       to: "/settings",
-      search: { tab: "pricing" } as any,
+      search: { tab: "pricing" },
       replace: true,
     });
   };
