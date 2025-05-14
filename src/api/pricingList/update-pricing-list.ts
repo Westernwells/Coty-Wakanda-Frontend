@@ -6,6 +6,7 @@ interface UpdatePricingListData {
   name: string;
   type: string;
   description: string | null;
+  file?: unknown;
 }
 
 interface UpdatePricingListRequest {

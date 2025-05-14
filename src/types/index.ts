@@ -211,6 +211,18 @@ export interface MasterProductFilters {
   distributor_id: string;
 }
 
+export interface BillingListFilters {
+  search: string;
+  brand_id: string;
+  brand_pillar_id: string;
+}
+
+export interface PricingListFilters {
+  search: string;
+  brand_id: string;
+  brand_pillar_id: string;
+}
+
 export interface BindingFilters {
   brand_id: string;
   sub_brand_id: string;
@@ -526,4 +538,20 @@ export interface PricingList {
   description: string | null;
   created_at: string; // Pricing list creation date
   products: PricingListProduct[]; // Array of products with their specific prices for this list
+}
+
+export interface BillingList {
+  id: number;
+  name: string;
+  type: string;
+  description: string | null;
+  created_at: string;
+  file: File | null;
+  products: BillingListProduct[];
+}
+
+export interface BillingListProduct {
+  id: number;
+  product_id: number;
+  price: number;
 }

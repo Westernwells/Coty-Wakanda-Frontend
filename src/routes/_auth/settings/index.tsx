@@ -2,43 +2,45 @@ import AdminSettings from "@/components/SettingsPage/AdminSettings";
 import DistributorSettings from "@/components/SettingsPage/DistributorSettings";
 import Headline from "@/components/Shared/Headline";
 import { useUserStore } from "@/stores/userStore";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Tabs, Group } from "@mantine/core";
-import { useState, useEffect } from "react";
 import CoreCategorySettings from "@/components/ApplicationSettings/CoreCategorySettings";
 import MarketSettings from "@/components/ApplicationSettings/MarketSettings";
 import SegmentSettings from "@/components/ApplicationSettings/SegmentSettings";
 import SubCategorySettings from "@/components/ApplicationSettings/SubCategorySettings";
 import PricingListSettings from "@/components/ApplicationSettings/PricingListSettings";
+import BillingListSettings from "@/components/ApplicationSettings/BillingListSettings";
 import { z } from "zod";
+import { useState } from "react";
 
 // Define search params schema
 export const settingsSearchSchema = z.object({
-  tab: z.string().optional(),
+  tab: z.string().optional().default("system"),
 });
 
 export const Route = createFileRoute("/_auth/settings/")({
-  validateSearch: settingsSearchSchema, // Validate search params
+  validateSearch: settingsSearchSchema,
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const user = useUserStore((state) => state.user);
   const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const [activeSegmentTab, setActiveSegmentTab] = useState<string>("markets");
 
-  const [activeTab, setActiveTab] = useState<string | null>(
-    search.tab || "system"
-  );
-  const [activeSegmentTab, setActiveSegmentTab] = useState<string | null>(
-    "markets"
-  );
+  const handleTabChange = (value: string | null) => {
+    navigate({
+      search: (prev) => ({ ...prev, tab: value || "system" }),
+      replace: true,
+    });
+  };
 
-  // Effect to update tab if search param changes after initial load (optional, but good practice)
-  useEffect(() => {
-    if (search.tab && search.tab !== activeTab) {
-      setActiveTab(search.tab);
+  const handleSegmentTabChange = (value: string | null) => {
+    if (value) {
+      setActiveSegmentTab(value);
     }
-  }, [search.tab, activeTab]);
+  };
 
   return (
     <div className="w-full">
@@ -48,9 +50,8 @@ function RouteComponent() {
           <Tabs
             color="#002554"
             className="text-primary"
-            defaultValue="system"
-            value={activeTab}
-            onChange={setActiveTab}
+            value={search.tab}
+            onChange={handleTabChange}
           >
             <Tabs.List className="before:border-0 mb-6">
               <Tabs.Tab
@@ -90,9 +91,8 @@ function RouteComponent() {
               <Tabs
                 color="#002554"
                 className="text-primary hidden sm:block"
-                defaultValue="markets"
                 value={activeSegmentTab}
-                onChange={setActiveSegmentTab}
+                onChange={handleSegmentTabChange}
               >
                 <Group className="bg-white shadow-md rounded-t-lg p-6">
                   <Tabs.List className="before:border-0">
@@ -145,7 +145,9 @@ function RouteComponent() {
             </Tabs.Panel>
 
             <Tabs.Panel value="billing">
-              <div className="mt-4">{/* Billing content will go here */}</div>
+              <div className="mt-4">
+                <BillingListSettings />
+              </div>
             </Tabs.Panel>
           </Tabs>
         ) : (

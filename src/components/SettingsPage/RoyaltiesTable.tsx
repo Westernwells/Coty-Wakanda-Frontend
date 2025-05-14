@@ -22,7 +22,7 @@ const royalties = [
 const RoyaltiesTable = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [{ data: brandsData }] = useQueries({
-    queries: [{ queryKey: ["brands"], queryFn: getBrands }],
+    queries: [{ queryKey: ["brands"], queryFn: () => getBrands() }],
   });
   const form = useForm({
     initialValues: {

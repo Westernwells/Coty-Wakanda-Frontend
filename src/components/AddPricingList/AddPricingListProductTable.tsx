@@ -1,12 +1,11 @@
 import { cn } from "@/lib/utils";
-import { MasterProduct } from "@/types";
+import type { Product } from "@/api/pricingList/get-pricing-product-list";
 import React, { useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "@mantine/core";
 
 interface AddPricingListProductTableProps {
-  // Renamed interface
-  products: MasterProduct[];
+  products: Product[];
   selectedRow: string | null;
   setSelectedRow: React.Dispatch<React.SetStateAction<string | null>>;
   fetchMoreData: () => Promise<void>;
@@ -20,7 +19,6 @@ const TableLoader = () => (
   </div>
 );
 
-// Renamed component
 const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
   products,
   selectedRow,
@@ -37,9 +35,9 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
         <h2 className="text-xl font-semibold text-gray-800">Product List</h2>
       </div>
       <div
-        id="addPricingListProductTableScrollable" // Changed ID for uniqueness
+        id="addPricingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]" // This max-height might need adjustment based on the new page layout
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
       >
         <InfiniteScroll
           dataLength={products.length}
@@ -49,15 +47,12 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
             isLoadingMore ? (
               <TableLoader />
             ) : (
-              // Provide a minimal valid element for the loader when not loading more to avoid issues.
-              // An empty tr might be too minimal or cause layout shifts if not styled properly.
-              // A small div or a styled tr is better.
               <tr style={{ height: "50px" }}>
                 <td colSpan={6} />
               </tr>
             )
           }
-          scrollableTarget="addPricingListProductTableScrollable" // Changed ID
+          scrollableTarget="addPricingListProductTableScrollable"
           endMessage={
             <tr className="w-full">
               <td colSpan={6} className="text-center text-gray-500 py-4">
@@ -71,13 +66,13 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
                 <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  House
+                  Brand Name
                 </th>
                 <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Description
                 </th>
                 <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand Line
+                  Brand Line (Pillar)
                 </th>
                 <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Article Type
@@ -86,7 +81,10 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
                   IRC
                 </th>
                 <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Group
+                  Article Type
+                </th>
+                <th className="px-2 py-1 text-left text-xs  whitespace-nowrap font-medium text-gray-500 uppercase tracking-wider">
+                  Base Price
                 </th>
               </tr>
             </thead>
@@ -101,22 +99,29 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
                   )}
                 >
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.house}
+                    {product.brand?.name || "-"}
                   </td>
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.description}
+                    {product.material_description || "-"}
                   </td>
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.brand_line}
+                    {product.brand_pillar?.name || "-"}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                    {product.article_type || "-"}
+                  </td>
+                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                    {product.irc || "-"}
                   </td>
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
                     {product.article_type}
                   </td>
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.irc}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.group}
+                    {typeof product.price === "number" ||
+                    (typeof product.price === "string" &&
+                      product.price.trim() !== "")
+                      ? `$${Number(product.price).toFixed(2)}`
+                      : "-"}
                   </td>
                 </tr>
               ))}
@@ -128,4 +133,4 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
   );
 };
 
-export default AddPricingListProductTable; // Renamed export
+export default AddPricingListProductTable;

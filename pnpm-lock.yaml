@@ -35,6 +35,9 @@ importers:
       '@types/lodash.get':
         specifier: ^4.4.9
         version: 4.4.9
+      '@types/papaparse':
+        specifier: ^5.3.16
+        version: 5.3.16
       axios:
         specifier: ^1.7.8
         version: 1.7.8
@@ -47,6 +50,9 @@ importers:
       lucide-react:
         specifier: ^0.468.0
         version: 0.468.0(react@18.3.1)
+      papaparse:
+        specifier: ^5.5.2
+        version: 5.5.2
       prop-types:
         specifier: ^15.8.1
         version: 15.8.1
@@ -987,6 +993,9 @@ packages:
   '@types/node@20.17.9':
     resolution: {integrity: sha512-0JOXkRyLanfGPE2QRCwgxhzlBAvaRdCNMcvbd7jFfpmD4eEXll7LRwy5ymJmyeZqk7Nh7eD2LeUyQ68BbndmXw==}
 
+  '@types/papaparse@5.3.16':
+    resolution: {integrity: sha512-T3VuKMC2H0lgsjI9buTB3uuKj3EMD2eap1MOuEQuBQ44EnDx/IkGhU6EwiTf9zG3za4SKlmwKAImdDKdNnCsXg==}
+
   '@types/prop-types@15.7.13':
     resolution: {integrity: sha512-hCZTSvwbzWGvhqxp/RqVqwU999pBf2vp7hzIjiYOsl8wqOmUxkQ6ddw1cV3l8811+kdUFus/q4d1Y3E3SyEifA==}
 
@@ -1730,6 +1739,9 @@ packages:
 
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
+
+  papaparse@5.5.2:
+    resolution: {integrity: sha512-PZXg8UuAc4PcVwLosEEDYjPyfWnTEhOrUfdv+3Bx+NuAb+5NhDmXzg5fHWmdCh1mP5p7JAZfFr3IMQfcntNAdA==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -3019,6 +3031,10 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
+  '@types/papaparse@5.3.16':
+    dependencies:
+      '@types/node': 20.17.9
+
   '@types/prop-types@15.7.13': {}
 
   '@types/react-csv@1.1.10':
@@ -3775,6 +3791,8 @@ snapshots:
       p-limit: 3.1.0
 
   package-json-from-dist@1.0.1: {}
+
+  papaparse@5.5.2: {}
 
   parent-module@1.0.1:
     dependencies:

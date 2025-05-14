@@ -31,7 +31,7 @@ const FilterBindings = ({
     { data: brandPillarsData, error: brandPillarsError },
   ] = useQueries({
     queries: [
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       {
         queryKey: ["brandPillars", form.getValues().brand_id],
         queryFn: () =>

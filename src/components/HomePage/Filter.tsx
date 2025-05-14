@@ -60,7 +60,7 @@ const Filter = ({
         queryFn: () => getMarkets({ page_size: 99999 }),
       },
       { queryKey: ["regions"], queryFn: getRegions },
-      { queryKey: ["brands"], queryFn: getBrands },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
       { queryKey: ["brandPillars"], queryFn: () => getBrandPillars() },
       {
         queryKey: ["distributors"],
