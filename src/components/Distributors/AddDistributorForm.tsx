@@ -16,7 +16,7 @@ import {
 
 import { useAddDistributor } from "@/api/distributors/add-distributor";
 import {
-  updateDistributorInput,
+  UpdateDistributorInput,
   updateDistributorInputSchema,
   useUpdateDistributor,
 } from "@/api/distributors/update-distributor";
@@ -28,28 +28,32 @@ import { useForm, zodResolver } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, Save, XIcon } from "lucide-react";
 import { useLayoutEffect, useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
-import PlusIcon from "../Icons/PlusIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import CoefficientsTable from "./CoefficientsTable";
 import ProductsTable from "./ProductsTable";
 
-export type FormValues = updateDistributorInput & {
+export type FormValues = UpdateDistributorInput & {
   coefficients: Array<{
     value: string;
     brand_id: number;
     category_id: number;
     pref: Pref;
   }>;
+  brands: string[];
 };
 
 const accountTypes = [
+  { value: "hybrid", label: "Hybrid" },
+  { value: "formal", label: "Formal" },
+];
+
+const accountTypeCategories = [
   { value: "luxury", label: "Luxury" },
-  { value: "consumer_beauty", label: "Consumer Beauty" },
+  { value: "consumer beauty", label: "Consumer Beauty" },
 ];
 
 const AddDistributorForm = ({
@@ -60,26 +64,60 @@ const AddDistributorForm = ({
   formData?: Distributor;
 }) => {
   const form = useForm<FormValues>({
-    initialValues: {
-      type: "formal",
-      name: "",
-      regions: [],
-      markets: [],
-      company_registration_number: "",
-      contact_person: "",
-      contact_email: "",
-      categories: [],
-      brands: [],
-      currency: "",
-      coefficients: [],
-      mirror: {
-        group_one: "",
-        group_two: "",
-      },
-    },
     validate: zodResolver(updateDistributorInputSchema),
   });
   const navigate = useNavigate();
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const resetForm = () => {
+    if (formData) {
+      const formValues: FormValues = {
+        type: formData.type,
+        account_type: "luxury", // Default to luxury if not specified
+        name: formData.name,
+        company_registration_number: formData.company_registration_number,
+        contact_person: formData.contact_person,
+        contact_email: formData.contact_email,
+        currency: formData.currency,
+        regions: formData.regions.map((region) => region.id.toString()),
+        categories: formData.categories.map((category) =>
+          category.id.toString()
+        ),
+        markets: formData.markets.map((market) => market.id.toString()),
+        brands: formData.brands.map((brand) => brand.id.toString()),
+        coefficients: formData.coefficients.map((coefficient) => ({
+          value: coefficient.value,
+          brand_id: coefficient.brand.id,
+          category_id: coefficient.category.id,
+          pref: coefficient.pref,
+        })),
+      };
+      form.setValues(formValues);
+      setHasChanges(false);
+    }
+  };
+
+  // Track form changes
+  useEffect(() => {
+    if (isEdit && formData) {
+      const hasFormChanges =
+        form.values.type !== formData.type ||
+        form.values.name !== formData.name ||
+        form.values.company_registration_number !==
+          formData.company_registration_number ||
+        form.values.contact_person !== formData.contact_person ||
+        form.values.contact_email !== formData.contact_email ||
+        form.values.currency !== formData.currency ||
+        JSON.stringify(form.values.regions) !==
+          JSON.stringify(formData.regions.map((r) => r.id.toString())) ||
+        JSON.stringify(form.values.markets) !==
+          JSON.stringify(formData.markets.map((m) => m.id.toString())) ||
+        JSON.stringify(form.values.categories) !==
+          JSON.stringify(formData.categories.map((c) => c.id.toString()));
+
+      setHasChanges(hasFormChanges);
+    }
+  }, [form.values, formData, isEdit]);
 
   // --- START Hardcoded Data for Marketed Brands ---
   const initialMarketedBrandGroups = [
@@ -295,10 +333,6 @@ const AddDistributorForm = ({
           category_id: coefficient.category.id,
           pref: coefficient.pref,
         })),
-        mirror: {
-          group_one: formData.mirror.group_one?.toString(),
-          group_two: formData.mirror.group_two?.toString(),
-        },
       });
     }
   }, [formData, isEdit]);
@@ -344,20 +378,69 @@ const AddDistributorForm = ({
               if (isEdit) {
                 updateDistributorMutations.mutate({
                   distributorId: formData?.id as number,
-                  data: values,
+                  data: {
+                    type: values.type,
+                    account_type: values.account_type as
+                      | "luxury"
+                      | "consumer beauty",
+                    name: values.name,
+                    company_registration_number:
+                      values.company_registration_number,
+                    contact_person: values.contact_person,
+                    regions: values.regions,
+                    markets: values.markets,
+                    contact_email: values.contact_email,
+                    categories: values.categories,
+                    currency: values.currency,
+                  },
                 });
               } else {
                 addDistributorMutations.mutate({
-                  data: values,
+                  data: {
+                    type: values.type,
+                    name: values.name,
+                    regions: values.regions || [],
+                    markets: values.markets || [],
+                    company_registration_number:
+                      values.company_registration_number,
+                    contact_person: values.contact_person,
+                    contact_email: values.contact_email,
+                    categories: values.categories || [],
+                    brands: values.brands || [],
+                    currency: values.currency,
+                    coefficients: values.coefficients || [],
+                  },
                 });
               }
             })}
             className="mt-2 sm:mt-5"
           >
             <div className="bg-white rounded-2xl p-6">
-              <h2 className="text-lg font-semibold mb-6">
-                Distributor details
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-lg font-semibold">Distributor details</h2>
+                {isEdit && (
+                  <Group gap={10}>
+                    {hasChanges && (
+                      <Button
+                        variant="outline"
+                        className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                        leftSection={<ExitIcon />}
+                        onClick={resetForm}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                    <Button
+                      leftSection={<Save className="size-4" />}
+                      type="submit"
+                      variant="outline"
+                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    >
+                      Save Changes
+                    </Button>
+                  </Group>
+                )}
+              </div>
               <div className="space-y-6">
                 <Grid gutter={24}>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
@@ -366,8 +449,23 @@ const AddDistributorForm = ({
                     </span>
                     <Select
                       {...form.getInputProps("type")}
-                      placeholder="Select account type"
+                      placeholder="Select type"
                       data={accountTypes}
+                      rightSection={<ChevronDownIcon />}
+                      classNames={selectStyles}
+                      clearable
+                      searchable
+                      className="w-full"
+                    />
+                  </Grid.Col>
+                  <Grid.Col span={{ sm: 6, base: 12 }}>
+                    <span className="text-primary font-medium text-sm mb-2 block">
+                      Account category
+                    </span>
+                    <Select
+                      {...form.getInputProps("account_type")}
+                      placeholder="Select account category"
+                      data={accountTypeCategories}
                       rightSection={<ChevronDownIcon />}
                       classNames={selectStyles}
                       clearable
@@ -544,6 +642,7 @@ const AddDistributorForm = ({
                 </p>
               )}
             </div>
+
             {/* START: Marketed COTY Brands Section */}
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-lg font-semibold mb-4">
@@ -817,94 +916,7 @@ const AddDistributorForm = ({
                 onRowCheckboxChange={handleRowCheckboxChange}
               />
             )}
-
-            {/* Comment out Pricing rules section */}
-            {/*
-            <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-lg font-semibold mb-6">Pricing rules</h2>
-              <div className="space-y-6">
-                <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <Select
-                      {...form.getInputProps("currency")}
-                      label="Currency"
-                      placeholder="Select currency"
-                      value={form.values.currency}
-                      data={
-                        currenciesData?.data?.map((currency: Currency) => ({
-                          value: currency.code,
-                          label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
-                        })) || []
-                      }
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                </Grid>
-
-                <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <Select
-                      {...form.getInputProps("mirror.group_one")}
-                      key={form.key("mirror.group_one")}
-                      label="Group 1 pricing mirror (optional)"
-                      placeholder="Select distributor"
-                      data={[]}
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <Select
-                      {...form.getInputProps("mirror.group_two")}
-                      label="Group 2 pricing mirror (optional)"
-                      placeholder="Select distributor"
-                      data={[]}
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                    />
-                  </Grid.Col>
-                </Grid>
-              </div>
-            </div>
-            */}
-
-            <Group justify="flex-end" mt="xl" gap={10}>
-              <Button
-                variant="outline"
-                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                leftSection={<ExitIcon />}
-              >
-                Cancel
-              </Button>
-              <Button
-                leftSection={isEdit ? <RefreshIcon /> : <PlusIcon />}
-                type="submit"
-                variant="outline"
-                className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-              >
-                {isEdit ? "Update" : "Create"}
-              </Button>
-            </Group>
           </form>
-          {/* <CoefficientsForm
-            opened={opened}
-            close={close}
-            distributorId={formData?.id ?? undefined}
-            form={form}
-          />
-          <ProductBindingForm
-            opened={productBindingOpened}
-            close={closeProductBinding}
-            distributorId={formData?.id ?? undefined}
-            form={form}
-          /> */}
         </>
       )}
     </>

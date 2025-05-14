@@ -9,9 +9,13 @@ import {
 } from "@mantine/core";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { selectStyles } from "../Shared/Styles";
-import { useGetProductList } from "@/api/products/get-product-list";
+import { getProductList } from "@/api/products/get-product-list";
 import { useUpdateProductsStatus } from "@/api/products/update-product-status";
 import { notifications } from "@mantine/notifications";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useIntersection } from "@mantine/hooks";
+import { ProductListResponse } from "@/types";
 
 interface ProductsTableProps {
   distributorId: number;
@@ -32,11 +36,34 @@ const ProductsTable = ({
   onSelectAllChange,
   onRowCheckboxChange,
 }: ProductsTableProps) => {
-  const { data: productsData, isLoading: isLoadingProducts } =
-    useGetProductList({
-      distributorId,
-      pageSize: 100, // Adjust based on your needs
-    });
+  // Set up intersection observer
+  const { ref, entry } = useIntersection({
+    root: null,
+    threshold: 1,
+  });
+
+  // Use infinite query instead of regular query
+  const {
+    data: infiniteData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery<ProductListResponse>({
+    queryKey: ["products", { distributorId }],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await getProductList({
+        distributorId,
+        cursor: pageParam as number,
+        pageSize: 20,
+      });
+      return response;
+    },
+    getNextPageParam: (lastPage) => {
+      return lastPage.meta.has_next ? lastPage.meta.cursor + 1 : undefined;
+    },
+    initialPageParam: 1,
+  });
 
   const updateStatusMutation = useUpdateProductsStatus({
     config: {
@@ -58,7 +85,8 @@ const ProductsTable = ({
     },
   });
 
-  const products = productsData?.data || [];
+  // Combine all pages of products
+  const products = infiniteData?.pages.flatMap((page) => page.data) || [];
   const productIds = products.map((product) => product.id);
 
   const allProductsSelected =
@@ -79,7 +107,14 @@ const ProductsTable = ({
     });
   };
 
-  if (isLoadingProducts) {
+  // Load more when last row is visible
+  useEffect(() => {
+    if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [entry?.isIntersecting, fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  if (isLoading) {
     return (
       <div className="bg-white rounded-2xl p-6 mt-6 flex justify-center items-center min-h-[200px]">
         <Loader />
@@ -121,14 +156,15 @@ const ProductsTable = ({
           </Button>
         </Group>
       </Group>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto max-h-[1000px]">
         <Table
           verticalSpacing="sm"
           borderColor="transparent"
           striped="even"
           stripedColor="#F2F4F6"
+          stickyHeader
         >
-          <Table.Thead className="bg-primary h-14">
+          <Table.Thead className="bg-primary h-14 sticky top-0 z-10">
             <Table.Tr>
               <Table.Th style={{ width: 40 }}>
                 <Checkbox
@@ -174,12 +210,13 @@ const ProductsTable = ({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {products.map((product) => (
+            {products.map((product, index) => (
               <Table.Tr
                 key={product.id}
                 className={
                   selectedProducts.includes(product.id) ? "bg-blue-50" : ""
                 }
+                ref={index === products.length - 1 ? ref : undefined}
               >
                 <Table.Td>
                   <Checkbox
@@ -224,6 +261,11 @@ const ProductsTable = ({
             ))}
           </Table.Tbody>
         </Table>
+        {isFetchingNextPage && (
+          <div className="flex justify-center items-center py-4">
+            <Loader size="sm" />
+          </div>
+        )}
       </div>
     </div>
   );
