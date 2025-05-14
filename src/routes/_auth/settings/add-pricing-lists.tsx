@@ -210,7 +210,14 @@ function AddPricingListsComponent() {
     csvLoading: isDownloadingCsv,
     handleBulkDownload: handleDownloadCsv,
   } = usePricingListProductCsvDownload({
-    brand_id: form.values.brands[0],
+    mode: "add",
+    brandType: form.values.type,
+    filters: {
+      brand_id:
+        form.values.brands.length > 0
+          ? form.values.brands.join(",")
+          : undefined,
+    },
   });
 
   const handleSubmit = (values: PricingListFormValues) => {

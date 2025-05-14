@@ -280,7 +280,10 @@ function EditPricingListComponent() {
     csvLoading: isDownloadingCsv,
     handleBulkDownload: handleDownloadCsv,
   } = usePricingListProductCsvDownload({
-    brand_id: form.values.brands.join(","),
+    mode: "edit",
+    pricingListId: pricingListId.toString(),
+    brandType: form.values.type,
+    filters: { brand_id: form.values.brands.join(",") },
   });
 
   const handleCsvUpload = useCallback(
@@ -301,7 +304,7 @@ function EditPricingListComponent() {
             name: form.values.name,
             type: form.values.type,
             description: form.values.description,
-            file: data,
+            products: data,
           },
         },
         {

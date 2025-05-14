@@ -7,6 +7,7 @@ interface UpdatePricingListData {
   type: string;
   description: string | null;
   file?: unknown;
+  products?: unknown[];
 }
 
 interface UpdatePricingListRequest {
@@ -21,7 +22,7 @@ interface UpdatePricingListResponse {
     type: string;
     description: string | null;
     created_at: string;
-    products: [];
+    products?: unknown[];
   };
 }
 

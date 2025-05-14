@@ -27,11 +27,13 @@ export async function getPricingListByBrandType({
   cursor,
   pageSize,
   brandIds,
+  forceDoNotPaginate,
 }: {
   brandType: string;
   cursor: number;
   pageSize: number;
   brandIds?: number[];
+  forceDoNotPaginate?: boolean;
 }): Promise<GetPricingProductListResponse> {
   const params = new URLSearchParams();
   params.append("cursor", cursor.toString());
@@ -40,6 +42,10 @@ export async function getPricingListByBrandType({
 
   if (brandIds?.length) {
     params.append("filter[brand_id]", brandIds.join(","));
+    params.append("do_not_paginate", "1");
+  }
+
+  if (forceDoNotPaginate) {
     params.append("do_not_paginate", "1");
   }
 
@@ -55,12 +61,14 @@ export async function getPricingListByPricingId({
   cursor,
   pageSize,
   brandIds,
+  forceDoNotPaginate,
 }: {
   pricingId: string;
   brandType: string;
   cursor: number;
   pageSize: number;
   brandIds?: number[];
+  forceDoNotPaginate?: boolean;
 }): Promise<GetPricingProductListResponse> {
   const params = new URLSearchParams();
   params.append("cursor", cursor.toString());
@@ -69,6 +77,10 @@ export async function getPricingListByPricingId({
 
   if (brandIds?.length) {
     params.append("filter[brand_id]", brandIds.join(","));
+    params.append("do_not_paginate", "1");
+  }
+
+  if (forceDoNotPaginate) {
     params.append("do_not_paginate", "1");
   }
 
