@@ -28,7 +28,7 @@ import { useForm, zodResolver } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { PlusIcon as LucidePlusIcon, CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, XIcon } from "lucide-react";
 import { useLayoutEffect, useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
@@ -537,14 +537,7 @@ const AddDistributorForm = ({
                     distributorId={formData.id}
                   />
                 )}
-              <Button
-                variant="outline"
-                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                leftSection={<LucidePlusIcon size={24} />}
-                onClick={open}
-              >
-                Add co-efficients
-              </Button>
+
               {form.errors.coefficients && (
                 <p className="text-xs text-[#fa5252]">
                   Co-effiencents is required

@@ -5,7 +5,6 @@ import {
 import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
 import { Brand, getBrands } from "@/api/get-brands";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
-import { queryClient } from "@/main";
 import { Coefficient } from "@/types";
 import {
   Button,
@@ -61,7 +60,6 @@ function CoefficientsForm({
   const addCoefficientMutations = useAddCoefficient({
     mutationConfig: {
       onSuccess: () => {
-        // queryClient.invalidateQueries({queryKey: ['/distributors/$distributorId', distributorId], refetchType: "all"})
         close();
       },
     },
@@ -107,7 +105,6 @@ function CoefficientsForm({
       data: values,
       distributorId: distributorId || 0,
     });
-    queryClient.invalidateQueries({ queryKey: ["distributors"] });
     close();
   };
   return (
@@ -204,7 +201,7 @@ function CoefficientsForm({
                     <Button
                       leftSection={<RefreshIcon />}
                       variant="outline"
-                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px]   hover:bg-primary/90 transition-all ease-in-out duration-300"
                       disabled={
                         addCoefficientMutations.isPending ||
                         updateCoefficientMutations.isPending

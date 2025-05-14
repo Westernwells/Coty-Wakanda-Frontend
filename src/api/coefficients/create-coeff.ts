@@ -34,9 +34,16 @@ export const useAddCoefficient = ({
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
   return useMutation({
-    onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: ["distributors"] });
-      onSuccess?.(...args);
+    onSuccess: (_, variables, ...rest) => {
+      // Invalidate specific distributor data
+      queryClient.invalidateQueries({
+        queryKey: ["distributors", variables.distributorId],
+      });
+      // Invalidate general distributors list
+      queryClient.invalidateQueries({
+        queryKey: ["distributors"],
+      });
+      onSuccess?.(_, variables, ...rest);
     },
     ...restConfig,
     mutationFn: addCoefficient,
