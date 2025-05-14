@@ -71,7 +71,17 @@ export type Category = {
 
 export type Brand = {
   id: number;
+  brand_type_id: number;
   name: string;
+  active: boolean;
+  type: "Luxury" | "Mass";
+  created_at: string;
+  updated_at: string;
+  deleted_at: null | string;
+  pivot: {
+    distributor_id: number;
+    brand_id: number;
+  };
 };
 
 export type BrandPillar = {
@@ -114,11 +124,56 @@ export type LoginValues = {
 
 export interface Product {
   id: number;
+  pref: string;
+  product_type: string;
+  brand_pillar: {
+    id: number;
+    name: string;
+  };
+  grouping: number;
+  price: string;
+  launch_date: string | Date;
+  discontinue_date: string | Date;
+  offering_number: string;
   irc: string;
   sku: string;
   material_description: string;
+  ean_upc: string;
+  house: string;
+  line: string;
+  line_id: string;
+  line_number: string;
+  article_type: string;
+  article_sub_type: string;
+  division: string;
+  segment: Segment;
+  icp_eur: string;
+  icp_usd: string;
+  factory: string;
+  commodity_id: string;
+  gender: string;
+  size: string;
+  length: string;
+  height: string;
+  width: string;
+  volume: string;
+  gross_weight: string;
+  net_weight: string;
+  units: string;
+  created_at: string;
   brand: Brand;
   pricing: ProductPricing;
+  category: Category;
+  country: Country;
+  market: Market | null;
+  subcategory: Subcategory;
+  price_benchmark: PriceBenchmark | null;
+  documents: Document[];
+  distributor_pricing: DistributerPricing[];
+  gmm_category: Category;
+  gmm_subCategory: Subcategory;
+  gmm_market: Market;
+  gmm_segment: Segment;
 }
 
 export interface Country {
@@ -291,7 +346,10 @@ export interface ProductInput {
 }
 
 export interface ForecastData {
-  product: Pick<Product, "id" | "brand" | "sku" | "material_description">;
+  product: Pick<
+    Product,
+    "id" | "brand" | "sku" | "material_description" | "offering_number"
+  >;
   distributor?: Pick<Distributor, "id" | "name" | "currency">;
   cost: number;
   monthly_total: number;
@@ -316,7 +374,10 @@ export interface ForecastSubmitItem {
 }
 
 export interface ForecastDetailsData {
-  product: Pick<Product, "id" | "brand" | "material_description">;
+  product: Pick<
+    Product,
+    "id" | "brand" | "material_description" | "offering_number"
+  >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
   monthly_average: Record<string, DateValues>;

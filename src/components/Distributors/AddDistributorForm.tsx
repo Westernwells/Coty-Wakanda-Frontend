@@ -25,7 +25,6 @@ import { getCategories } from "@/api/listManagement/coreCategories/get-categorie
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { Distributor, Pref } from "@/types";
 import { useForm, zodResolver } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { CheckIcon, Save, XIcon } from "lucide-react";
@@ -256,7 +255,6 @@ const AddDistributorForm = ({
   // --- END Consumer Beauty Marketed Brands Data ---
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, { open }] = useDisclosure(false);
 
   // State for marketed brands
   const [marketedBrandGroups, setMarketedBrandGroups] = useState(
