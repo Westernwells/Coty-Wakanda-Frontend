@@ -7,6 +7,7 @@ import ExitIcon from "../Icons/ExitIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
 import TrashIcon from "../Icons/TrashIcon";
+import { Plus } from "lucide-react";
 import CoefficientsForm from "./CoefficientsForm";
 
 function CoefficientsTable({
@@ -20,6 +21,7 @@ function CoefficientsTable({
   const [pressedId, setPressedId] = useState<number | null>(null);
   const deleteCoefficientMutations = useDeleteCoefficient({});
   const [opened, { open, close }] = useDisclosure(false);
+  const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
   const [
     openedDeleteModal,
     { open: openDeleteModal, close: closeDeleteModal },
@@ -137,6 +139,22 @@ function CoefficientsTable({
         distributorId={distributorId ?? 0}
         data={editData}
       />
+      <CoefficientsForm
+        opened={addOpened}
+        close={closeAdd}
+        distributorId={distributorId ?? 0}
+        data={null}
+      />
+      <div className="flex justify-start mb-4 pt-8">
+        <Button
+          variant="outline"
+          className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+          leftSection={<Plus size={24} />}
+          onClick={openAdd}
+        >
+          Add co-efficients
+        </Button>
+      </div>
     </div>
   );
 }

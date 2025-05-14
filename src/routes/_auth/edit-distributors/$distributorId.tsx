@@ -26,6 +26,8 @@ function RouteComponent() {
     return <LoadingSpinner />;
   }
 
+  console.log(data?.data);
+
   return (
     <div className="w-full">
       <Headline title="Edit distributor" />

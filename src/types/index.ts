@@ -71,17 +71,7 @@ export type Category = {
 
 export type Brand = {
   id: number;
-  brand_type_id: number;
   name: string;
-  active: boolean;
-  type: "Luxury" | "Mass";
-  created_at: string;
-  updated_at: string;
-  deleted_at: null | string;
-  pivot: {
-    distributor_id: number;
-    brand_id: number;
-  };
 };
 
 export type BrandPillar = {
@@ -124,55 +114,11 @@ export type LoginValues = {
 
 export interface Product {
   id: number;
-  sku: string;
-  pref: string;
-  product_type: string;
-  brand_pillar: {
-    id: number;
-    name: string;
-  };
-  grouping: number;
-  price: string;
-  launch_date: string | Date;
-  discontinue_date: string | Date;
-  offering_number: string;
   irc: string;
+  sku: string;
   material_description: string;
-  ean_upc: string;
-  house: string;
-  line: string;
-  line_id: string;
-  line_number: string;
-  article_type: string;
-  article_sub_type: string;
-  division: string;
-  segment: Segment;
-  icp_eur: string;
-  icp_usd: string;
-  factory: string;
-  commodity_id: string;
-  gender: string;
-  size: string;
-  length: string;
-  height: string;
-  width: string;
-  volume: string;
-  gross_weight: string;
-  net_weight: string;
-  units: string;
-  created_at: string;
   brand: Brand;
-  category: Category;
-  country: Country;
-  market: Market | null;
-  subcategory: Subcategory;
-  price_benchmark: PriceBenchmark | null;
-  documents: Document[];
-  distributor_pricing: DistributerPricing[];
-  gmm_category: Category;
-  gmm_subCategory: Subcategory;
-  gmm_market: Market;
-  gmm_segment: Segment;
+  pricing: ProductPricing;
 }
 
 export interface Country {
@@ -255,7 +201,7 @@ export interface PriceBenchmark {
   product_id: string | number;
   index_value: string | number;
   comment: string;
-  brand?: Pick<Brand, "id" | "name" | "created_at">;
+  brand?: Pick<Brand, "id" | "name">;
   product?: Pick<Product, "id">;
 }
 
@@ -345,7 +291,7 @@ export interface ProductInput {
 }
 
 export interface ForecastData {
-  product: Pick<Product, "id" | "offering_number" | "brand" | "sku">;
+  product: Pick<Product, "id" | "brand" | "sku" | "material_description">;
   distributor?: Pick<Distributor, "id" | "name" | "currency">;
   cost: number;
   monthly_total: number;
@@ -370,7 +316,7 @@ export interface ForecastSubmitItem {
 }
 
 export interface ForecastDetailsData {
-  product: Pick<Product, "id" | "offering_number" | "brand">;
+  product: Pick<Product, "id" | "brand" | "material_description">;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
   monthly_average: Record<string, DateValues>;
@@ -391,7 +337,7 @@ export interface ForecastChartData {
 }
 
 export interface OrderData {
-  product: Pick<Product, "id" | "offering_number" | "brand" | "sku">;
+  product: Pick<Product, "id" | "brand" | "sku" | "material_description">;
   cost: number;
   monthly_total: number;
   sub_total: number;
@@ -407,7 +353,7 @@ export interface Innovation {
   format: string;
   forecast_deadline: string;
   created_at: string;
-  brand: Pick<Brand, "id" | "name" | "created_at">;
+  brand: Pick<Brand, "id" | "name">;
   brand_pillar: BrandPillar;
 }
 
@@ -554,4 +500,31 @@ export interface BillingListProduct {
   id: number;
   product_id: number;
   price: number;
+}
+
+export interface ProductPricing {
+  distributor_id: number;
+  icp_usd: number | null;
+  icp_eur: number | null;
+  french_usd: number | null;
+  french_eur: number | null;
+  rrsp: number | null;
+  regional_billing_price: number | null;
+  c1: number | null;
+  cssp: number | null;
+  status: string;
+}
+
+export interface PaginationMeta {
+  cursor: number;
+  page_size: number;
+  has_previous: boolean;
+  has_next: boolean;
+  total: number;
+}
+
+export interface ProductListResponse {
+  message: string;
+  data: Product[];
+  meta: PaginationMeta;
 }
