@@ -94,9 +94,6 @@ export function usePricingListProductCsvDownload(filters: BillingListFilters) {
           cursor: currentCursor,
           page_size: pageSize,
           brand_ids: filters.brand_id ? [Number(filters.brand_id)] : undefined,
-          sub_brand_ids: filters.brand_pillar_id
-            ? [Number(filters.brand_pillar_id)]
-            : undefined,
         });
 
         if (!productsResponse?.data) {
