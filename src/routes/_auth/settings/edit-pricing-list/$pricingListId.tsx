@@ -1,6 +1,7 @@
 import {
   Button,
   Group,
+  MultiSelect,
   Select,
   TextInput,
   Title,
@@ -27,19 +28,11 @@ import { getPricingListById } from "@/api/pricingList/get-pricing-list-by-id";
 import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 import AddPricingListProductTable from "@/components/AddPricingList/AddPricingListProductTable";
-import type {
-  Product,
-  Meta,
-  GetPricingProductListParams,
-} from "@/api/pricingList/get-pricing-product-list";
-import { getPricingProductList } from "@/api/pricingList/get-pricing-product-list";
+import type { Product, Meta } from "@/api/pricingList/get-pricing-product-list";
+import { getPricingListByPricingId } from "@/api/pricingList/get-pricing-list";
 import type { PricingList } from "@/types";
 import Headline from "@/components/Shared/Headline";
 import { getBrands, type Brand as ApiBrand } from "@/api/get-brands";
-import {
-  getBrandPillars,
-  type Pillar as ApiPillar,
-} from "@/api/get-brandPillars";
 import { usePricingListProductCsvDownload } from "@/lib/hooks/usePricingListProductCsvDownload";
 import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
 
@@ -53,8 +46,7 @@ interface PricingListFormValues {
   name: string;
   type: string;
   description: string;
-  brand: string;
-  brandPillar: string;
+  brands: string[];
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -84,20 +76,13 @@ function EditPricingListComponent() {
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [brandPillarOptions, setBrandPillarOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
-
-  const [pricingProductListParams, setPricingProductListParams] =
-    useState<GetPricingProductListParams>({});
 
   const form = useForm<PricingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      brand: "",
-      brandPillar: "",
+      brands: [],
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -105,26 +90,6 @@ function EditPricingListComponent() {
       type: (value) => (value ? null : "Type is required"),
     },
   });
-
-  useEffect(() => {
-    const selectedBrandId = form.values.brand;
-    const selectedBrandPillarId = form.values.brandPillar;
-
-    const params: GetPricingProductListParams = {
-      page_size: PAGE_SIZE,
-    };
-    if (selectedBrandId) {
-      params.brand_ids = [Number(selectedBrandId)];
-    }
-    if (selectedBrandPillarId) {
-      params.sub_brand_ids = [Number(selectedBrandPillarId)];
-    }
-    setPricingProductListParams(params);
-
-    setProductsData([]);
-    setProductsMeta(null);
-    setSelectedTableRow(null);
-  }, [searchTerm, form.values.brand, form.values.brandPillar, brandOptions]);
 
   const {
     data: existingPricingListData,
@@ -139,11 +104,22 @@ function EditPricingListComponent() {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
     data: initialPricingProductListResult,
-  } = useQuery<Awaited<ReturnType<typeof getPricingProductList>>, Error>({
-    queryKey: ["pricingProductList", pricingProductListParams],
+  } = useQuery<Awaited<ReturnType<typeof getPricingListByPricingId>>, Error>({
+    queryKey: [
+      "pricingListProducts",
+      pricingListId,
+      form.values.type,
+      form.values.brands,
+    ],
     queryFn: () =>
-      getPricingProductList({ ...pricingProductListParams, cursor: undefined }),
-    enabled: !isCsvMode && true,
+      getPricingListByPricingId({
+        pricingId: pricingListId.toString(),
+        brandType: form.values.type,
+        cursor: 1,
+        pageSize: PAGE_SIZE,
+        brandIds: form.values.brands?.map(Number),
+      }),
+    enabled: !isCsvMode && !!pricingListId && !!form.values.type,
   });
 
   useEffect(() => {
@@ -186,51 +162,22 @@ function EditPricingListComponent() {
     }
   }, [brandsData]);
 
-  const selectedBrandIdFromForm = form.values.brand;
-  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
-    ApiPillar[],
-    Error
-  >({
-    queryKey: ["brandPillarsForEditPricingList", selectedBrandIdFromForm],
-    queryFn: async () => {
-      if (!selectedBrandIdFromForm) return [];
-      const response = await getBrandPillars({
-        filter: { brand_id: selectedBrandIdFromForm },
-      });
-      return response.data;
-    },
-    enabled: !!selectedBrandIdFromForm,
-  });
-
-  useEffect(() => {
-    if (brandPillarsData) {
-      setBrandPillarOptions(
-        brandPillarsData.map((pillar: ApiPillar) => ({
-          value: pillar.id.toString(),
-          label: pillar.name,
-        }))
-      );
-    } else if (!selectedBrandIdFromForm) {
-      setBrandPillarOptions([]);
-    }
-  }, [brandPillarsData, selectedBrandIdFromForm]);
-
   useEffect(() => {
     if (existingPricingListData) {
-      form.setValues({
+      form.setValues((currentValues) => ({
+        ...currentValues,
         name: existingPricingListData.name,
         type: existingPricingListData.type,
         description: existingPricingListData.description || "",
-        brand: "",
-        brandPillar: "",
+        brands: currentValues.brands,
         selectedProductsWithPrices:
           existingPricingListData.products?.map((p) => ({
             product_id: String(p.id),
             price: p.price,
           })) || [],
-      });
+      }));
     }
-  }, [existingPricingListData, form]);
+  }, [existingPricingListData, form.setValues]);
 
   const pricingTypes = [
     { value: "luxury", label: "Luxury" },
@@ -280,20 +227,15 @@ function EditPricingListComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      brand: "",
-      brandPillar: "",
+      brands: [],
     });
 
     if (isCsvMode) {
       setIsCsvMode(false);
       setProductsData([]);
       setProductsMeta(null);
-      const initialParams: GetPricingProductListParams = {
-        page_size: PAGE_SIZE,
-      };
-      setPricingProductListParams(initialParams);
       queryClient.invalidateQueries({
-        queryKey: ["pricingProductList", initialParams],
+        queryKey: ["pricingListProducts", pricingListId, form.values.type],
       });
     }
   };
@@ -303,16 +245,19 @@ function EditPricingListComponent() {
       isCsvMode ||
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
-      productsMeta.cursor === null
+      productsMeta.cursor === null ||
+      form.values.brands?.length // Don't fetch more if using brand filter
     )
       return;
 
     setProductsIsLoadingMore(true);
     try {
-      const response = await getPricingProductList({
-        ...pricingProductListParams,
+      const response = await getPricingListByPricingId({
+        pricingId: pricingListId.toString(),
+        brandType: form.values.type,
         cursor: productsMeta.cursor,
-        page_size: PAGE_SIZE,
+        pageSize: PAGE_SIZE,
+        brandIds: form.values.brands?.map(Number),
       });
       setProductsData((prev) => [...prev, ...response.data]);
       setProductsMeta(response.meta);
@@ -326,15 +271,16 @@ function EditPricingListComponent() {
     isCsvMode,
     productsIsLoadingMore,
     productsMeta,
-    pricingProductListParams,
+    pricingListId,
+    form.values.type,
+    form.values.brands,
   ]);
 
   const {
     csvLoading: isDownloadingCsv,
     handleBulkDownload: handleDownloadCsv,
   } = usePricingListProductCsvDownload({
-    brand_id: form.values.brand,
-    brand_pillar_id: form.values.brandPillar,
+    brand_id: form.values.brands.join(","),
   });
 
   const handleCsvUpload = useCallback(
@@ -537,31 +483,17 @@ function EditPricingListComponent() {
               <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <Select
-                  {...form.getInputProps("brand")}
-                  label="Filter by Brand"
-                  placeholder="Select Brand"
+                <MultiSelect
+                  label="Filter by Brands"
+                  placeholder="Select Brands"
                   data={brandOptions}
                   rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
+                  value={form.values.brands}
+                  onChange={(value) => form.setFieldValue("brands", value)}
                   disabled={isLoadingBrands || isCsvMode}
-                />
-                <Select
-                  {...form.getInputProps("brandPillar")}
-                  label="Filter by Brand Pillar"
-                  placeholder="Select Brand Pillar"
-                  data={brandPillarOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                  disabled={
-                    isLoadingBrandPillars ||
-                    !selectedBrandIdFromForm ||
-                    isCsvMode
-                  }
                 />
               </div>
             </div>
