@@ -56,6 +56,8 @@ export interface GetPricingProductListParams {
   page_size?: number;
   brand_ids?: number[];
   sub_brand_ids?: number[];
+  search?: string;
+  do_not_paginate?: number;
 }
 
 export interface GetPricingProductListResponse {
@@ -70,13 +72,20 @@ export async function getPricingProductList({
   page_size = 10,
   brand_ids,
   sub_brand_ids,
+  search,
+  do_not_paginate,
 }: GetPricingProductListParams): Promise<GetPricingProductListResponse> {
-  const apiParams: Record<string, string | number | undefined> = {
+  const apiParams: Record<string, string | number | undefined | boolean> = {
     cursor,
     page_size,
     "filter[brand_id]": brand_ids?.join(","),
     "filter[sub_brand_id]": sub_brand_ids?.join(","),
+    "filter[search]": search,
   };
+
+  if (do_not_paginate !== undefined) {
+    apiParams["do_not_paginate"] = do_not_paginate;
+  }
 
   if (brand_ids && brand_ids.length > 0) {
     apiParams["filter[brand_id]"] = brand_ids.join(",");

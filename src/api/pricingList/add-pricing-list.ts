@@ -21,7 +21,10 @@ interface AddPricingListResponse {
     type: string;
     description: string | null;
     created_at: string;
-    products: [];
+    products: Array<{
+      product_id: string;
+      price: string;
+    }>;
   };
 }
 
@@ -38,7 +41,7 @@ export function useAddPricingList({
         "/pricing-lists",
         data
       );
-      console.log("data", data);
+      console.log("incoming data", data);
       console.log("response", response.data);
       return response.data;
     },

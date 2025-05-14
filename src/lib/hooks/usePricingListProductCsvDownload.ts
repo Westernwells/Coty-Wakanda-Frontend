@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import {
-  getPricingProductList,
-  type Product,
-} from "@/api/pricingList/get-pricing-product-list";
-import type { BillingListFilters } from "@/types/billing-list";
+  getPricingListByPricingId,
+  getPricingListByBrandType,
+} from "@/api/pricingList/get-pricing-list";
+import { type Product } from "@/api/pricingList/get-pricing-product-list";
 
 export interface PricingListCsvProductRow {
   id: number;
@@ -75,7 +75,23 @@ function generateCsvContent(
   return [headerRow, ...dataRows].join("\n");
 }
 
-export function usePricingListProductCsvDownload(filters: BillingListFilters) {
+// Define types for hook options
+interface AddModeOptions {
+  mode: "add";
+  brandType: string;
+  filters?: { brand_id?: string };
+}
+
+interface EditModeOptions {
+  mode: "edit";
+  pricingListId: string;
+  brandType: string;
+  filters?: { brand_id?: string };
+}
+
+type HookOptions = AddModeOptions | EditModeOptions;
+
+export function usePricingListProductCsvDownload(options: HookOptions) {
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvError, setCsvError] = useState<Error | null>(null);
 
@@ -84,33 +100,40 @@ export function usePricingListProductCsvDownload(filters: BillingListFilters) {
     setCsvError(null);
 
     try {
-      let allProducts: Product[] = [];
-      let currentCursor: number | null = 1;
-      let hasMoreData = true;
-      const pageSize = 100;
+      const brandIds = options.filters?.brand_id
+        ? options.filters.brand_id
+            .split(",")
+            .map(Number)
+            .filter((id) => !isNaN(id))
+        : undefined;
 
-      while (hasMoreData && currentCursor !== null) {
-        const productsResponse = await getPricingProductList({
-          cursor: currentCursor,
-          page_size: pageSize,
-          brand_ids: filters.brand_id ? [Number(filters.brand_id)] : undefined,
-          sub_brand_ids: filters.brand_pillar_id
-            ? [Number(filters.brand_pillar_id)]
-            : undefined,
+      let productsResponse;
+
+      if (options.mode === "edit") {
+        productsResponse = await getPricingListByPricingId({
+          pricingId: options.pricingListId,
+          brandType: options.brandType,
+          brandIds: brandIds,
+          cursor: 1,
+          pageSize: 1,
+          forceDoNotPaginate: true,
         });
-
-        if (!productsResponse?.data) {
-          throw new Error("Failed to fetch products data");
-        }
-
-        allProducts = allProducts.concat(productsResponse.data);
-        hasMoreData = productsResponse.meta.has_next;
-        currentCursor = productsResponse.meta.cursor;
-
-        if (!hasMoreData) {
-          break;
-        }
+      } else {
+        // mode === 'add'
+        productsResponse = await getPricingListByBrandType({
+          brandType: options.brandType,
+          brandIds: brandIds,
+          cursor: 1,
+          pageSize: 1,
+          forceDoNotPaginate: true,
+        });
       }
+
+      if (!productsResponse?.data) {
+        throw new Error("Failed to fetch products data");
+      }
+
+      const allProducts = productsResponse.data;
 
       const csvRows = allProducts.map(mapProductToCsvRow);
       const csvContent = generateCsvContent(csvRows, PRICING_LIST_CSV_HEADERS);
@@ -136,7 +159,7 @@ export function usePricingListProductCsvDownload(filters: BillingListFilters) {
     } finally {
       setCsvLoading(false);
     }
-  }, [filters]);
+  }, [options]); // options is now the sole dependency
 
   return {
     csvLoading,

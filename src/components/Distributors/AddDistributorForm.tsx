@@ -374,6 +374,7 @@ const AddDistributorForm = ({
           <form
             onSubmit={form.onSubmit((values) => {
               if (isEdit) {
+                console.log("values", values);
                 updateDistributorMutations.mutate({
                   distributorId: formData?.id as number,
                   data: {
