@@ -303,10 +303,11 @@ function EditBillingListComponent() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
-          queryClient.invalidateQueries({ queryKey: ["billingList"] });
-          queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
           queryClient.invalidateQueries({
             queryKey: ["billingList", billingListId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["billingListProductsById", billingListId],
           });
           navigate({
             to: "/settings",
@@ -362,10 +363,11 @@ function EditBillingListComponent() {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
-            queryClient.invalidateQueries({ queryKey: ["billingList"] });
-            queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
             queryClient.invalidateQueries({
               queryKey: ["billingList", billingListId],
+            });
+            queryClient.invalidateQueries({
+              queryKey: ["billingListProductsById", billingListId],
             });
             navigate({
               to: "/settings",

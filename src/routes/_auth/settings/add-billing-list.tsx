@@ -265,7 +265,6 @@ function AddBillingListComponent() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
-          queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
           queryClient.invalidateQueries({ queryKey: ["billingList"] });
           navigate({
             to: "/settings",
@@ -320,7 +319,6 @@ function AddBillingListComponent() {
         {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
-            queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
             queryClient.invalidateQueries({ queryKey: ["billingList"] });
             navigate({
               to: "/settings",
