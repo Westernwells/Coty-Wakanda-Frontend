@@ -29,7 +29,8 @@ import { useState, useEffect, useCallback } from "react";
 import { twMerge } from "tailwind-merge";
 // Changed component imports
 import AddBillingListProductTable from "@/components/AddBillingList/AddBillingListProductTable";
-import type { BillingListFilters } from "@/types";
+// import type { BillingListFilters } from "@/types"; // Removed as it's unused
+
 // Define BillingListDetail based on get-billing-list-by-id.ts structure
 interface BillingListDetail {
   id: number;
@@ -45,11 +46,13 @@ interface BillingListDetail {
 }
 
 import {
-  getBillingProductList,
+  // getBillingProductList, // This will be removed
   type Product as BillingListApiProduct,
   type Meta as BillingListApiMeta,
-  type GetBillingProductListParams,
+  type GetBillingProductListResponse, // Keep this for typing queryFn fallback
+  // type GetBillingProductListParams, // This will be removed
 } from "@/api/billingList/get-billing-product-list";
+import { getBillingListByBillingId } from "@/api/billingList/get-billing-list";
 import Headline from "@/components/Shared/Headline";
 // Import APIs for brands and brand pillars
 import { getBrands, type Brand as ApiBrand } from "@/api/get-brands"; // Renamed imported Brand to ApiBrand
@@ -110,16 +113,6 @@ function EditBillingListComponent() {
     { value: string; label: string }[]
   >([]);
 
-  const [apiFilters, setApiFilters] = useState<BillingListFilters>({
-    search: "",
-    brand_id: "",
-    brand_pillar_id: "",
-  });
-
-  // Derived state for getBillingProductList parameters
-  const [billingProductListParams, setBillingProductListParams] =
-    useState<GetBillingProductListParams>({});
-
   const form = useForm<BillingListFormValues>({
     initialValues: {
       name: "",
@@ -164,66 +157,46 @@ function EditBillingListComponent() {
     }
   }, [existingBillingListData, form, billingListId, formInitializedForId]);
 
-  useEffect(() => {
-    const params: GetBillingProductListParams = {
-      billing_list_id: billingListId,
-      // cursor will be handled by useQuery and fetchMore
-      page_size: PAGE_SIZE,
-    };
-    if (form.values.brand) {
-      params.brand_ids = [Number(form.values.brand)];
-    }
-    if (form.values.brandPillar) {
-      // Assuming brandPillar maps to sub_brand_ids
-      params.sub_brand_ids = [Number(form.values.brandPillar)];
-    }
-    // searchTerm is not directly part of GetBillingProductListParams
-    // distributor_id from apiFilters is also not part of GetBillingProductListParams
-
-    setBillingProductListParams(params);
-
-    // Also update the generic apiFilters for other potential consumers like CSV download
-    // Note: CSV download might need adjustments if it heavily relied on search/distributor_id from masterData
-    setApiFilters({
-      search: searchTerm,
-      brand_id: form.values.brand || "",
-      brand_pillar_id: form.values.brandPillar || "",
-    });
-
-    if (!isLoadingExistingBillingList) {
-      setProductsData([]);
-      setProductsMeta(null);
-      setSelectedTableRow(null);
-    }
-  }, [
-    searchTerm,
-    form.values.brand,
-    form.values.brandPillar,
-    isLoadingExistingBillingList,
-    billingListId, // Added billingListId
-  ]);
-
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
     data: initialBillingProductsResult,
-  } = useQuery<Awaited<ReturnType<typeof getBillingProductList>>, Error>({
-    queryKey: ["billingListProducts", billingProductListParams],
+  } = useQuery<Awaited<ReturnType<typeof getBillingListByBillingId>>, Error>({
+    queryKey: [
+      "billingListProductsById",
+      billingListId,
+      form.values.type,
+      form.values.brand,
+      form.values.brandPillar,
+    ],
     queryFn: () => {
-      const paramsForApi = { ...billingProductListParams };
-      if (billingProductListParams.cursor !== undefined) {
-        paramsForApi.cursor = billingProductListParams.cursor;
+      if (!form.values.type || !billingListId) {
+        return Promise.resolve({
+          message: "Required parameters missing",
+          data: [],
+          meta: {
+            cursor: null,
+            page_size: PAGE_SIZE,
+            has_previous: false,
+            has_next: false,
+            total: 0,
+          },
+        } as GetBillingProductListResponse);
       }
-      return getBillingProductList(paramsForApi);
+      return getBillingListByBillingId({
+        billingId: billingListId.toString(),
+        brandType: form.values.type,
+        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        cursor: 1,
+        pageSize: PAGE_SIZE,
+      });
     },
-    enabled:
-      !!billingListId && Object.keys(billingProductListParams).length > 0,
+    enabled: !!billingListId && !!form.values.type,
   });
 
   useEffect(() => {
     if (initialBillingProductsResult?.data) {
-      // Use initialBillingProductsResult
-      setProductsData(initialBillingProductsResult.data); // data is Product[]
+      setProductsData(initialBillingProductsResult.data);
       setProductsMeta(initialBillingProductsResult.meta);
       setProductsHasMore(initialBillingProductsResult.meta.has_next);
     } else if (
@@ -419,18 +392,22 @@ function EditBillingListComponent() {
     if (
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
-      productsMeta.cursor === null // Check for null cursor
+      productsMeta.cursor === null ||
+      !form.values.type ||
+      !billingListId
     )
       return;
+
     setProductsIsLoadingMore(true);
     try {
-      const response = await getBillingProductList({
-        // Changed API call
-        ...billingProductListParams, // Use current filters
-        cursor: productsMeta.cursor, // Use current cursor from meta
-        page_size: PAGE_SIZE,
+      const response = await getBillingListByBillingId({
+        billingId: billingListId.toString(),
+        brandType: form.values.type,
+        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        cursor: productsMeta.cursor,
+        pageSize: PAGE_SIZE,
       });
-      setProductsData((prev) => [...prev, ...response.data]); // response.data is Product[]
+      setProductsData((prev) => [...prev, ...response.data]);
       setProductsMeta(response.meta);
       setProductsHasMore(response.meta.has_next);
     } catch (error) {
@@ -438,7 +415,13 @@ function EditBillingListComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, billingProductListParams]); // Added billingProductListParams
+  }, [
+    productsIsLoadingMore,
+    productsMeta,
+    billingListId,
+    form.values.type,
+    form.values.brand,
+  ]);
 
   const isProductListLoading =
     isLoadingInitialProducts || isLoadingExistingBillingList;
@@ -452,7 +435,15 @@ function EditBillingListComponent() {
     csvLoading: isDownloadingCsv,
     csvError: downloadError,
     handleBulkDownload: handleDownloadCsv,
-  } = useBillingListProductCsvDownload(apiFilters);
+  } = useBillingListProductCsvDownload({
+    mode: "edit",
+    billingId: billingListId.toString(),
+    brandType: form.values.type,
+    filters: {
+      brand_id: form.values.brand,
+      brand_pillar_id: form.values.brandPillar,
+    },
+  });
 
   if (isLoadingExistingBillingList) {
     return (

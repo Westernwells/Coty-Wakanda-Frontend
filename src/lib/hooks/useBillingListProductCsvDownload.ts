@@ -1,9 +1,24 @@
 import { useState, useCallback } from "react";
 import {
-  getBillingProductList,
-  type Product,
-} from "@/api/billingList/get-billing-product-list";
-import type { BillingListFilters } from "@/types/billing-list";
+  getBillingListByBrandType,
+  getBillingListByBillingId,
+} from "@/api/billingList/get-billing-list";
+import { type Product } from "@/api/billingList/get-billing-product-list";
+
+interface AddModeOptions {
+  mode: "add";
+  brandType: string;
+  filters?: { brand_id?: string; brand_pillar_id?: string };
+}
+
+interface EditModeOptions {
+  mode: "edit";
+  billingId: string;
+  brandType: string;
+  filters?: { brand_id?: string; brand_pillar_id?: string };
+}
+
+type HookOptions = AddModeOptions | EditModeOptions;
 
 export interface BillingListCsvProductRow {
   id: number;
@@ -75,7 +90,7 @@ function generateCsvContent(
   return [headerRow, ...dataRows].join("\n");
 }
 
-export function useBillingListProductCsvDownload(filters: BillingListFilters) {
+export function useBillingListProductCsvDownload(options: HookOptions) {
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvError, setCsvError] = useState<Error | null>(null);
 
@@ -84,38 +99,42 @@ export function useBillingListProductCsvDownload(filters: BillingListFilters) {
     setCsvError(null);
 
     try {
-      let allProducts: Product[] = [];
-      let currentCursor: number | null = 1;
-      let hasMoreData = true;
-      const pageSize = 100;
+      const brandIds = options.filters?.brand_id
+        ? options.filters.brand_id
+            .split(",")
+            .map(Number)
+            .filter((id) => !isNaN(id) && id !== null)
+        : undefined;
 
-      while (hasMoreData && currentCursor !== null) {
-        const productsResponse = await getBillingProductList({
-          cursor: currentCursor,
-          page_size: pageSize,
-          brand_ids: filters.brand_id ? [Number(filters.brand_id)] : undefined,
-          sub_brand_ids: filters.brand_pillar_id
-            ? [Number(filters.brand_pillar_id)]
-            : undefined,
+      let productsResponse;
+
+      if (options.mode === "edit") {
+        productsResponse = await getBillingListByBillingId({
+          billingId: options.billingId,
+          brandType: options.brandType,
+          brandIds: brandIds,
+          cursor: 1,
+          pageSize: 1,
+          forceDoNotPaginate: true,
         });
-
-        if (!productsResponse?.data) {
-          throw new Error("Failed to fetch products data");
-        }
-
-        allProducts = allProducts.concat(productsResponse.data);
-        hasMoreData = productsResponse.meta.has_next;
-        currentCursor = productsResponse.meta.cursor;
-
-        if (!hasMoreData) {
-          break;
-        }
+      } else {
+        productsResponse = await getBillingListByBrandType({
+          brandType: options.brandType,
+          brandIds: brandIds,
+          cursor: 1,
+          pageSize: 1,
+          forceDoNotPaginate: true,
+        });
       }
 
+      if (!productsResponse?.data) {
+        throw new Error("Failed to fetch products data for CSV download");
+      }
+
+      const allProducts = productsResponse.data;
       const csvRows = allProducts.map(mapProductToCsvRow);
       const csvContent = generateCsvContent(csvRows, BILLING_LIST_CSV_HEADERS);
 
-      // Create and trigger download
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
@@ -129,14 +148,16 @@ export function useBillingListProductCsvDownload(filters: BillingListFilters) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error generating CSV:", error);
+      console.error("Error generating CSV for billing list:", error);
       setCsvError(
-        error instanceof Error ? error : new Error("Failed to generate CSV")
+        error instanceof Error
+          ? error
+          : new Error("Failed to generate CSV for billing list")
       );
     } finally {
       setCsvLoading(false);
     }
-  }, [filters]);
+  }, [options]);
 
   return {
     csvLoading,
