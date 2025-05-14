@@ -12,7 +12,6 @@ import {
   Checkbox,
   Table,
   Text,
-  Badge,
 } from "@mantine/core";
 
 import { useAddDistributor } from "@/api/distributors/add-distributor";
@@ -37,6 +36,7 @@ import PlusIcon from "../Icons/PlusIcon";
 import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import CoefficientsTable from "./CoefficientsTable";
+import ProductsTable from "./ProductsTable";
 
 export type FormValues = updateDistributorInput & {
   coefficients: Array<{
@@ -160,124 +160,6 @@ const AddDistributorForm = ({
     { value: "cb-billing", label: "CB Billing $" },
   ];
 
-  // --- START Dummy Product Data ---
-  const dummyProducts = [
-    {
-      id: 1,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Hidden",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 2,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Hidden",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 3,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Hidden",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 4,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Visible",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 5,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Hidden",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 6,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Visible",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 7,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Visible",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-    {
-      id: 8,
-      name: "Product name",
-      c1Price: "Lorem",
-      cssp: 0.67,
-      status: "Visible",
-      icpEur: "Lorem",
-      icpUsd: "Lorem",
-      frenchEur: "Lorem",
-      frenchUsd: "Lorem",
-      rrsp: 0.67,
-      regionalBillingPrices: 0.67,
-      selected: false,
-    },
-  ];
-
-  // --- END Dummy Product Data ---
-
   // --- END Hardcoded Data for Marketed Brands ---
 
   // --- START Consumer Beauty Marketed Brands Data ---
@@ -345,49 +227,27 @@ const AddDistributorForm = ({
   const [accordionValue, setAccordionValue] = useState<string[]>(
     initialMarketedBrandGroups.map((g) => g.name)
   );
-  // State for dummy products
-  const [dummyProductsState, setDummyProductsState] = useState(dummyProducts);
-  // State for dummy products selection
+
+  // State for products selection
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
 
-  const allProductsSelected =
-    selectedProducts.length === dummyProductsState.length &&
-    dummyProductsState.length > 0;
-  const indeterminate =
-    selectedProducts.length > 0 &&
-    selectedProducts.length < dummyProductsState.length;
-
-  // --- Handler for main checkbox ---
-  const handleSelectAllChange = (checked: boolean) => {
-    setSelectedProducts(
-      checked ? dummyProductsState.map((product) => product.id) : []
-    );
+  // Handler for main checkbox
+  const handleSelectAllChange = (checked: boolean, products: number[]) => {
+    setSelectedProducts(checked ? products : []);
   };
 
-  // --- Handler for individual checkbox ---
+  // Handler for individual checkbox
   const handleRowCheckboxChange = (productId: number, checked: boolean) => {
     setSelectedProducts((prev) =>
       checked ? [...prev, productId] : prev.filter((id) => id !== productId)
     );
   };
 
-  // --- Handler for applying bulk action ---
+  // Handler for applying bulk action
   const handleApplyBulkAction = () => {
-    if (!bulkActionStatus || selectedProducts.length === 0) return;
-
-    const newStatus =
-      bulkActionStatus === "Visible to distributor" ? "Visible" : "Hidden";
-
-    setDummyProductsState((currentProducts) =>
-      currentProducts.map((product) =>
-        selectedProducts.includes(product.id)
-          ? { ...product, status: newStatus }
-          : product
-      )
-    );
     setSelectedProducts([]);
-    setBulkActionStatus(null); // Reset bulk action select
+    setBulkActionStatus(null);
   };
 
   const [
@@ -953,136 +813,17 @@ const AddDistributorForm = ({
             </div>
             {/* END: Marketed COTY Brands Section */}
 
-            {/* START: Dummy Products Table Section */}
-            <div className="bg-white rounded-2xl p-6 mt-6">
-              <Group justify="space-between" mb="md">
-                <Group>
-                  <Select
-                    placeholder="Bulk action"
-                    data={["Visible to distributor", "Hidden from distributor"]} // Example actions
-                    size="sm"
-                    rightSection={<ChevronDownIcon />}
-                    classNames={{
-                      ...selectStyles,
-                      input: "h-10",
-                      root: "w-fit min-w-52 whitespace-nowrap",
-                    }}
-                    value={bulkActionStatus}
-                    onChange={setBulkActionStatus}
-                    clearable
-                  />
-                  <Button
-                    size="sm"
-                    className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                    onClick={handleApplyBulkAction}
-                    disabled={
-                      !bulkActionStatus || selectedProducts.length === 0
-                    }
-                  >
-                    Apply
-                  </Button>
-                </Group>
-                {/* Add other controls here if needed */}
-              </Group>
-              <div className="overflow-x-auto">
-                <Table
-                  verticalSpacing="sm"
-                  borderColor="transparent"
-                  striped="even"
-                  stripedColor="#F2F4F6"
-                >
-                  <Table.Thead className="bg-primary h-14">
-                    <Table.Tr>
-                      <Table.Th style={{ width: 40 }}>
-                        <Checkbox
-                          checked={allProductsSelected}
-                          indeterminate={indeterminate}
-                          onChange={(event) =>
-                            handleSelectAllChange(event.currentTarget.checked)
-                          }
-                          classNames={{ input: "bg-white border-gray-300" }}
-                        />
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        Product name
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        C1 Price
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        CSSP
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        Status
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        ICP EUR
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        ICP USD
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        French EUR
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        French USD
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        RRSP
-                      </Table.Th>
-                      <Table.Th className="text-white text-sm font-medium">
-                        Regional Billing Prices
-                      </Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {dummyProductsState.map((product) => (
-                      <Table.Tr
-                        key={product.id}
-                        className={
-                          selectedProducts.includes(product.id)
-                            ? "bg-blue-50"
-                            : ""
-                        }
-                      >
-                        <Table.Td>
-                          <Checkbox
-                            checked={selectedProducts.includes(product.id)}
-                            onChange={(event) =>
-                              handleRowCheckboxChange(
-                                product.id,
-                                event.currentTarget.checked
-                              )
-                            }
-                            classNames={{ input: "bg-white border-gray-300" }}
-                          />
-                        </Table.Td>
-                        <Table.Td>{product.name}</Table.Td>
-                        <Table.Td>{product.c1Price}</Table.Td>
-                        <Table.Td>{product.cssp}</Table.Td>
-                        <Table.Td>
-                          <Badge
-                            color={product.status === "Hidden" ? "red" : "blue"}
-                            variant="filled"
-                            radius="xl"
-                            className="px-3 py-1 font-normal"
-                          >
-                            {product.status}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td>{product.icpEur}</Table.Td>
-                        <Table.Td>{product.icpUsd}</Table.Td>
-                        <Table.Td>{product.frenchEur}</Table.Td>
-                        <Table.Td>{product.frenchUsd}</Table.Td>
-                        <Table.Td>{product.rrsp}</Table.Td>
-                        <Table.Td>{product.regionalBillingPrices}</Table.Td>
-                      </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </div>
-            </div>
-            {/* END: Dummy Products Table Section */}
+            {formData?.id && (
+              <ProductsTable
+                distributorId={formData.id}
+                selectedProducts={selectedProducts}
+                bulkActionStatus={bulkActionStatus}
+                onBulkActionChange={setBulkActionStatus}
+                onApplyBulkAction={handleApplyBulkAction}
+                onSelectAllChange={handleSelectAllChange}
+                onRowCheckboxChange={handleRowCheckboxChange}
+              />
+            )}
 
             {/* Comment out Pricing rules section */}
             {/*
