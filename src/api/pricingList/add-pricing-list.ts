@@ -5,7 +5,7 @@ interface AddPricingListData {
   name: string;
   type: string;
   description: string;
-  file?: string | File;
+  file?: unknown;
   products?: Array<{ product_id: number; price: number }>;
 }
 
@@ -38,6 +38,8 @@ export function useAddPricingList({
         "/pricing-lists",
         data
       );
+      console.log("data", data);
+      console.log("response", response.data);
       return response.data;
     },
     onSuccess: () => {

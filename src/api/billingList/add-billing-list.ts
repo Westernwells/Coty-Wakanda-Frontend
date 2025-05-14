@@ -5,7 +5,7 @@ interface AddBillingListData {
   name: string;
   type: string;
   description: string;
-  file?: string | File;
+  file?: unknown;
   products?: Array<{ product_id: number; price: number }>;
 }
 
@@ -20,7 +20,6 @@ interface AddBillingListResponse {
     name: string;
     type: string;
     description: string | null;
-    file: File | null;
     created_at: string;
     products: [];
   };

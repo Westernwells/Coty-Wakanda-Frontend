@@ -12,7 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -34,6 +34,7 @@ import {
   type Pillar as ApiPillar,
 } from "@/api/get-brandPillars";
 import { usePricingListProductCsvDownload } from "@/lib/hooks/usePricingListProductCsvDownload";
+import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
 
 export const Route = createFileRoute("/_auth/settings/add-pricing-lists")({
   component: AddPricingListsComponent,
@@ -65,6 +66,7 @@ function AddPricingListsComponent() {
   const [productsMeta, setProductsMeta] = useState<Meta | null>(null);
   const [productsHasMore, setProductsHasMore] = useState(false);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
+  const [isCsvMode, setIsCsvMode] = useState(false);
 
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
@@ -119,15 +121,16 @@ function AddPricingListsComponent() {
     queryKey: ["pricingProductList", pricingProductListParams],
     queryFn: () =>
       getPricingProductList({ ...pricingProductListParams, cursor: undefined }),
-    enabled: true,
+    enabled: !isCsvMode && true,
   });
 
   useEffect(() => {
-    if (initialPricingProductListResult?.data) {
+    if (!isCsvMode && initialPricingProductListResult?.data) {
       setProductsData(initialPricingProductListResult.data);
       setProductsMeta(initialPricingProductListResult.meta);
       setProductsHasMore(initialPricingProductListResult.meta.has_next);
     } else if (
+      !isCsvMode &&
       !isLoadingInitialProducts &&
       initialPricingProductListResult === undefined
     ) {
@@ -135,7 +138,7 @@ function AddPricingListsComponent() {
       setProductsMeta(null);
       setProductsHasMore(false);
     }
-  }, [initialPricingProductListResult, isLoadingInitialProducts]);
+  }, [isCsvMode, initialPricingProductListResult, isLoadingInitialProducts]);
 
   const { data: brandsData, isLoading: isLoadingBrands } = useQuery<
     ApiBrand[],
@@ -263,10 +266,24 @@ function AddPricingListsComponent() {
       brand: "",
       brandPillar: "",
     });
+
+    if (isCsvMode) {
+      setIsCsvMode(false);
+      setProductsData([]);
+      setProductsMeta(null);
+      const initialParams: GetPricingProductListParams = {
+        page_size: PAGE_SIZE,
+      };
+      setPricingProductListParams(initialParams);
+      queryClient.invalidateQueries({
+        queryKey: ["pricingProductList", initialParams],
+      });
+    }
   };
 
   const fetchMoreAddPricingListProducts = useCallback(async () => {
     if (
+      isCsvMode ||
       productsIsLoadingMore ||
       !productsMeta?.has_next ||
       productsMeta.cursor === null
@@ -288,14 +305,22 @@ function AddPricingListsComponent() {
     } finally {
       setProductsIsLoadingMore(false);
     }
-  }, [productsIsLoadingMore, productsMeta, pricingProductListParams]);
+  }, [
+    isCsvMode,
+    productsIsLoadingMore,
+    productsMeta,
+    pricingProductListParams,
+  ]);
 
-  const isProductListLoading = isLoadingInitialProducts;
+  const isProductListLoading = !isCsvMode && isLoadingInitialProducts;
   const noProductsFound =
+    !isCsvMode &&
     !isLoadingInitialProducts &&
     !initialProductsError &&
     productsData.length === 0 &&
     !productsHasMore;
+
+  const noCsvProductsFound = isCsvMode && productsData.length === 0;
 
   const {
     csvLoading: isDownloadingCsv,
@@ -304,6 +329,60 @@ function AddPricingListsComponent() {
     brand_id: form.values.brand,
     brand_pillar_id: form.values.brandPillar,
   });
+
+  const handleCsvUpload = useCallback(
+    (
+      data: Array<{
+        brand_name: string;
+        description: string;
+        brand_pillar: string;
+        article_type: string;
+        price: number;
+        irc: string;
+      }>
+    ) => {
+      // if (!form.values.name || !form.values.type) {
+      //   toast.error("Please fill in the required pricing list details first");
+      //   return;
+      // }
+
+      // Call the API directly with the CSV data
+
+      console.log("CSV data:", {
+        name: form.values.name,
+        type: form.values.type,
+        description: form.values.description,
+        file: data,
+      });
+      addPricingListMutation.mutate(
+        {
+          data: {
+            name: form.values.name,
+            type: form.values.type,
+            description: form.values.description,
+            file: data, // Pass the CSV data directly to the file field
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+            queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+            navigate({
+              to: "/settings",
+              search: { tab: "pricing" },
+              replace: true,
+            });
+          },
+          onError: (error) => {
+            console.error("Error adding pricing list:", error);
+          },
+        }
+      );
+
+      setIsCsvMode(true);
+    },
+    [form.values, addPricingListMutation, queryClient, navigate]
+  );
 
   return (
     <>
@@ -338,7 +417,8 @@ function AddPricingListsComponent() {
               type="submit"
               form={formId}
               loading={
-                addPricingListMutation.isPending || isLoadingInitialProducts
+                addPricingListMutation.isPending ||
+                (!isCsvMode && isLoadingInitialProducts)
               }
               className="border-none w-28 bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
             >
@@ -415,6 +495,7 @@ function AddPricingListsComponent() {
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.currentTarget.value)}
                   classNames={textInputStyles}
+                  disabled={isCsvMode}
                 />
                 <button
                   type="button"
@@ -443,7 +524,7 @@ function AddPricingListsComponent() {
                   classNames={selectStyles}
                   searchable
                   clearable
-                  disabled={isLoadingBrands}
+                  disabled={isLoadingBrands || isCsvMode}
                 />
                 <Select
                   {...form.getInputProps("brandPillar")}
@@ -454,7 +535,11 @@ function AddPricingListsComponent() {
                   classNames={selectStyles}
                   searchable
                   clearable
-                  disabled={isLoadingBrandPillars || !selectedBrandIdFromForm}
+                  disabled={
+                    isLoadingBrandPillars ||
+                    !selectedBrandIdFromForm ||
+                    isCsvMode
+                  }
                 />
               </div>
             </div>
@@ -474,13 +559,7 @@ function AddPricingListsComponent() {
                   >
                     Download list
                   </Button>
-                  <Button
-                    variant="outline"
-                    leftSection={<Upload size={16} />}
-                    className="text-primary border-primary hover:bg-primary/5"
-                  >
-                    Upload list
-                  </Button>
+                  <CsvUpload onUpload={handleCsvUpload} />
                 </Group>
               </div>
 
@@ -502,6 +581,17 @@ function AddPricingListsComponent() {
                     Alternatively, upload a product list.
                   </p>
                 </div>
+              ) : noCsvProductsFound ? (
+                <div className="text-center py-10 text-gray-500">
+                  <p>
+                    No products found in the uploaded CSV, or the file might be
+                    empty/invalid.
+                  </p>
+                  <p className="text-sm mt-1">
+                    Please check the CSV format and content, then try uploading
+                    again.
+                  </p>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-4">
                   <div className="lg:col-span-5 bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
@@ -510,8 +600,8 @@ function AddPricingListsComponent() {
                       selectedRow={selectedTableRow}
                       setSelectedRow={setSelectedTableRow}
                       fetchMoreData={fetchMoreAddPricingListProducts}
-                      hasMore={productsHasMore}
-                      isLoadingMore={productsIsLoadingMore}
+                      hasMore={isCsvMode ? false : productsHasMore}
+                      isLoadingMore={isCsvMode ? false : productsIsLoadingMore}
                     />
                   </div>
                 </div>

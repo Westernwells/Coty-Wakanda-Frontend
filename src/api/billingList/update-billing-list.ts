@@ -6,7 +6,8 @@ interface UpdateBillingListData {
   name: string;
   type: string;
   description: string | null;
-  products: Array<{ product_id: string; price: number }>;
+  file?: unknown;
+  products?: Array<{ product_id: string; price: number }>;
 }
 
 interface UpdateBillingListRequest {
@@ -21,7 +22,7 @@ interface UpdateBillingListResponse {
     type: string;
     description: string | null;
     created_at: string;
-    products: Array<{ product_id: string; price: number }>;
+    products?: Array<{ product_id: string; price: number }>;
   };
 }
 

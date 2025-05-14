@@ -17,7 +17,7 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -58,6 +58,7 @@ import {
   type Pillar as ApiPillar,
 } from "@/api/get-brandPillars";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
+import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
 
 // Changed route and param name
 export const Route = createFileRoute("/_auth/settings/edit-billing-list/$id")({
@@ -309,13 +310,11 @@ function EditBillingListComponent() {
   const handleSubmit = (values: BillingListFormValues) => {
     const { name, type, description, selectedProductsWithPrices } = values;
 
-    // Map form values to the structure expected by updateBillingList API
     const productsPayload = (selectedProductsWithPrices || [])
       .map((p) => ({
-        product_id: p.product_id, // Keep as string, matches UpdateBillingListData
-        price: Number(p.price), // Ensure price is a number
+        product_id: p.product_id,
+        price: Number(p.price),
       }))
-      // Ensure product_id is present (it's a string) and price is valid
       .filter((p) => p.product_id && p.price !== undefined && !isNaN(p.price));
 
     updateBillingListMutation.mutate(
@@ -330,11 +329,9 @@ function EditBillingListComponent() {
       },
       {
         onSuccess: () => {
-          // Invalidate all billing list related queries
           queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
           queryClient.invalidateQueries({ queryKey: ["billingList"] });
           queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
-          // Also invalidate the specific billing list being edited
           queryClient.invalidateQueries({
             queryKey: ["billingList", billingListId],
           });
@@ -354,7 +351,7 @@ function EditBillingListComponent() {
   const handleCancel = () => {
     navigate({
       to: "/settings",
-      search: { tab: "billing" }, // Changed tab
+      search: { tab: "billing" },
       replace: true,
     });
   };
@@ -367,6 +364,56 @@ function EditBillingListComponent() {
       brandPillar: "",
     });
   };
+
+  const handleCsvUpload = useCallback(
+    (
+      data: Array<{
+        brand_name: string;
+        description: string;
+        brand_pillar: string;
+        article_type: string;
+        price: number;
+        irc: string;
+      }>
+    ) => {
+      updateBillingListMutation.mutate(
+        {
+          data: {
+            id: billingListId,
+            name: form.values.name,
+            type: form.values.type,
+            description: form.values.description,
+            file: data,
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
+            queryClient.invalidateQueries({ queryKey: ["billingList"] });
+            queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
+            queryClient.invalidateQueries({
+              queryKey: ["billingList", billingListId],
+            });
+            navigate({
+              to: "/settings",
+              search: { tab: "billing" },
+              replace: true,
+            });
+          },
+          onError: (error) => {
+            console.error("Error updating billing list:", error);
+          },
+        }
+      );
+    },
+    [
+      form.values,
+      billingListId,
+      updateBillingListMutation,
+      queryClient,
+      navigate,
+    ]
+  );
 
   const fetchMoreEditBillingListProducts = useCallback(async () => {
     if (
@@ -588,13 +635,7 @@ function EditBillingListComponent() {
                   >
                     Download list
                   </Button>
-                  <Button
-                    variant="outline"
-                    leftSection={<Upload size={16} />}
-                    className="text-primary border-primary hover:bg-primary/5"
-                  >
-                    Upload list
-                  </Button>
+                  <CsvUpload onUpload={handleCsvUpload} />
                 </Group>
               </div>
 

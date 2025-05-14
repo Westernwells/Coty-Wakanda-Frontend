@@ -12,7 +12,7 @@ import {
 import { useForm } from "@mantine/form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
 import SearchIcon from "@/components/Icons/SearchIcon";
@@ -35,6 +35,7 @@ import {
   type Pillar as ApiPillar,
 } from "@/api/get-brandPillars";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
+import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
 
 export const Route = createFileRoute("/_auth/settings/add-billing-list")({
   component: AddBillingListComponent,
@@ -289,6 +290,46 @@ function AddBillingListComponent() {
     });
   };
 
+  const handleCsvUpload = useCallback(
+    (
+      data: Array<{
+        brand_name: string;
+        description: string;
+        brand_pillar: string;
+        article_type: string;
+        price: number;
+        irc: string;
+      }>
+    ) => {
+      addBillingListMutation.mutate(
+        {
+          data: {
+            name: form.values.name,
+            type: form.values.type,
+            description: form.values.description,
+            file: data,
+          },
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
+            queryClient.invalidateQueries({ queryKey: ["billingProductList"] });
+            queryClient.invalidateQueries({ queryKey: ["billingList"] });
+            navigate({
+              to: "/settings",
+              search: { tab: "billing" },
+              replace: true,
+            });
+          },
+          onError: (error) => {
+            console.error("Error adding billing list:", error);
+          },
+        }
+      );
+    },
+    [form.values, addBillingListMutation, queryClient, navigate]
+  );
+
   const fetchMoreAddBillingListProducts = useCallback(async () => {
     if (
       productsIsLoadingMore ||
@@ -490,13 +531,7 @@ function AddBillingListComponent() {
                   >
                     Download list
                   </Button>
-                  <Button
-                    variant="outline"
-                    leftSection={<Upload size={16} />}
-                    className="text-primary border-primary hover:bg-primary/5"
-                  >
-                    Upload list
-                  </Button>
+                  <CsvUpload onUpload={handleCsvUpload} />
                 </Group>
               </div>
 
