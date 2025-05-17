@@ -25,7 +25,7 @@ import { getCategories } from "@/api/listManagement/coreCategories/get-categorie
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { Distributor } from "@/types";
 import { useForm, zodResolver } from "@mantine/form";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { CheckIcon, Save, XIcon } from "lucide-react";
 import { useLayoutEffect, useState, useEffect } from "react";
@@ -34,6 +34,11 @@ import ExitIcon from "../Icons/ExitIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import ProductsTable from "./ProductsTable";
 import CoefficientsTable from "./CoefficientsTable";
+import { getDistributorBrands } from "@/api/distributors/get-brands";
+import type { Brand } from "@/api/distributors/get-brands";
+import { getBillingProductList } from "@/api/billingList/get-billing-product-list";
+import { getPricingProductList } from "@/api/pricingList/get-pricing-product-list";
+import { BrandProofUpload } from "./BrandProofUpload";
 
 export type FormValues = UpdateDistributorInput & {
   coefficients: Array<{
@@ -52,18 +57,37 @@ const accountTypeCategories = [
   { value: "consumer beauty", label: "Consumer Beauty" },
 ];
 
+const coefficientOptions = [
+  { value: "co-efficient", label: "Co-efficient" },
+  { value: "billing", label: "Billing" },
+];
+
+const consumerBeautyCategoryDisplayNames: Record<string, string> = {
+  colour_cosmetics: "Colour cosmetics",
+  mass_fragrance: "Mass fragrance",
+};
+
+const luxuryGroupDisplayNames: Record<string, string> = {
+  group_1: "Group 1",
+  group_2: "Group 2",
+  group_3: "Group 3",
+};
+
 const AddDistributorForm = ({
   isEdit = false,
   formData,
+  distributorId,
 }: {
   isEdit?: boolean;
   formData?: Distributor;
+  distributorId: string;
 }) => {
   const form = useForm<FormValues>({
     validate: zodResolver(updateDistributorInputSchema),
   });
   const navigate = useNavigate();
   const [hasChanges, setHasChanges] = useState(false);
+  const queryClient = useQueryClient();
 
   const resetForm = () => {
     if (formData) {
@@ -117,155 +141,79 @@ const AddDistributorForm = ({
     }
   }, [form.values, formData, isEdit]);
 
-  // --- START Hardcoded Data for Marketed Brands ---
-  const initialMarketedBrandGroups = [
-    {
-      name: "Group 1",
-      brands: [
-        {
-          id: "calvin-klein",
-          name: "Calvin Klein",
-          approved: true,
-          proofs: ["Proof email.pdf", "Proof document 2.jpeg"],
-          coefficientType: "co-efficient",
-          billingType: "lux-french-rrsp",
-        },
-        {
-          id: "hugo-boss",
-          name: "Hugo Boss",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-billing",
-        },
-      ],
-    },
-    {
-      name: "Group 2",
-      brands: [
-        {
-          id: "davidoff-1",
-          name: "Davidoff",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-billing",
-        },
-        {
-          id: "chloe",
-          name: "Chloe",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-billing",
-        },
-        {
-          id: "escada",
-          name: "Escada",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-billing",
-        },
-      ],
-    },
-    {
-      name: "Group 3",
-      brands: [
-        {
-          id: "davidoff-2",
-          name: "Davidoff",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-billing",
-        },
-      ],
-    },
-  ];
+  // Helper to group brands by account type
+  interface GroupedBrand extends Brand {
+    approved: boolean;
+    proofs: string[];
+    coefficientType: string;
+    billingType: string;
+  }
 
-  const coefficientOptions = [
-    { value: "co-efficient", label: "Co-efficient" },
-    { value: "billing", label: "Billing" },
-  ];
+  function normalizeAccountType(type: string | undefined | null): string {
+    return (type || "").replace(/\s+/g, "_").toLowerCase();
+  }
 
-  const billingOptions = [
-    { value: "lux-french-rrsp", label: "Lux French RRSP $" },
-    { value: "lux-billing", label: "Lux Billing $" },
-    { value: "cb-french-rrsp", label: "CB French RRSP $" },
-    { value: "cb-billing", label: "CB Billing $" },
-  ];
-
-  // --- END Hardcoded Data for Marketed Brands ---
-
-  // --- START Consumer Beauty Marketed Brands Data ---
-  const consumerBeautyMarketedBrandGroupsData = [
-    {
-      name: "Colour cosmetics",
-      brands: [
-        {
-          id: "bourjois",
-          name: "Bourjois",
-          approved: true,
-          proofs: ["Proof email.pdf", "Proof document 2.jpeg"],
-          coefficientType: "co-efficient",
-          billingType: "cb-french-rrsp",
-        },
-        {
-          id: "kyle",
-          name: "Kyle",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "cb-billing",
-        },
-      ],
-    },
-    {
-      name: "Mass fragrance",
-      brands: [
-        {
-          id: "adidas",
-          name: "Adidas",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-french-rrsp",
-        },
-        {
-          id: "beckham",
-          name: "Beckham",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-french-rrsp",
-        },
-        {
-          id: "another-name",
-          name: "Another name",
-          approved: true,
-          proofs: ["Proof email.pdf"],
-          coefficientType: "billing",
-          billingType: "lux-french-rrsp",
-        },
-      ],
-    },
-  ];
-  // --- END Consumer Beauty Marketed Brands Data ---
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function groupBrandsByAccountType(
+    brands: Brand[] = [],
+    accountType: string
+  ): { name: string; brands: GroupedBrand[] }[] {
+    const normalizedType = normalizeAccountType(accountType);
+    if (normalizedType === "consumer_beauty") {
+      const groups: Record<string, GroupedBrand[]> = {};
+      brands.forEach((brand: Brand) => {
+        const category = brand.category || "Other";
+        if (!groups[category]) groups[category] = [];
+        groups[category].push({
+          ...brand,
+          approved: brand.approved ?? false,
+          proofs: Array.isArray(brand.proof)
+            ? brand.proof.map((p: { name: string }) => p.name)
+            : [],
+          coefficientType: "",
+          billingType: "",
+        });
+      });
+      return Object.entries(groups).map(([category, brands]) => ({
+        name: consumerBeautyCategoryDisplayNames[category] || "Other",
+        brands,
+      }));
+    } else {
+      // Group by category for luxury
+      const groups: Record<string, GroupedBrand[]> = {};
+      brands.forEach((brand: Brand) => {
+        const category = brand.category || "other";
+        if (!groups[category]) groups[category] = [];
+        groups[category].push({
+          ...brand,
+          approved: brand.approved ?? false,
+          proofs: Array.isArray(brand.proof)
+            ? brand.proof.map((p: { name: string }) => p.name)
+            : [],
+          coefficientType: "",
+          billingType: "",
+        });
+      });
+      return Object.entries(groups).map(([category, brands]) => ({
+        name: luxuryGroupDisplayNames[category] || "Other",
+        brands,
+      }));
+    }
+  }
 
   // State for marketed brands
-  const [marketedBrandGroups, setMarketedBrandGroups] = useState(
-    initialMarketedBrandGroups
-  );
-  const [accordionValue, setAccordionValue] = useState<string[]>(
-    initialMarketedBrandGroups.map((g) => g.name)
-  );
+  const [marketedBrandGroups, setMarketedBrandGroups] = useState<
+    { name: string; brands: GroupedBrand[] }[]
+  >([]);
+  const [accordionValue, setAccordionValue] = useState<string[]>([]);
 
   // State for products selection
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
+
+  // Add after marketedBrandGroups state
+  const [brandProductSelections, setBrandProductSelections] = useState<
+    Record<number, string>
+  >({});
 
   // Handler for main checkbox
   const handleSelectAllChange = (checked: boolean, products: number[]) => {
@@ -313,6 +261,13 @@ const AddDistributorForm = ({
     ],
   });
 
+  const { data: brandsData } = useQuery({
+    queryKey: ["brands", distributorId],
+    queryFn: () => getDistributorBrands(Number(distributorId)),
+  });
+
+  console.log("brandsData", brandsData);
+
   useLayoutEffect(() => {
     if (formData && isEdit) {
       form.setValues({
@@ -337,21 +292,20 @@ const AddDistributorForm = ({
     }
   }, [formData, isEdit]);
 
-  // Effect to switch marketed brands based on account type
+  // Update marketedBrandGroups when brandsData or account_type changes
   useEffect(() => {
-    if (form.values.type === "consumer_beauty") {
-      const currentConsumerBeautyGroups = consumerBeautyMarketedBrandGroupsData;
-      setMarketedBrandGroups(currentConsumerBeautyGroups);
-      setAccordionValue(currentConsumerBeautyGroups.map((group) => group.name));
+    if (brandsData?.data) {
+      const groups = groupBrandsByAccountType(
+        brandsData.data,
+        String(form.values.account_type || "luxury")
+      );
+      setMarketedBrandGroups(groups);
+      setAccordionValue(groups.map((g) => g.name).filter(Boolean));
     } else {
-      // Default to luxury or handle other types if needed
-      const currentInitialGroups = initialMarketedBrandGroups;
-      setMarketedBrandGroups(currentInitialGroups);
-      setAccordionValue(currentInitialGroups.map((group) => group.name));
+      setMarketedBrandGroups([]);
+      setAccordionValue([]);
     }
-    // Resetting accordion state when type changes might be needed depending on Accordion implementation
-    // Resetting selection state or other related states might also be needed
-  }, [form.values.type]);
+  }, [brandsData, form.values.account_type]);
 
   const updateDistributorMutations = useUpdateDistributor({
     mutationConfig: {
@@ -363,6 +317,10 @@ const AddDistributorForm = ({
       onSuccess: () => navigate({ to: "/distributors" }),
     },
   });
+
+  function handleBrandProofUploaded() {
+    queryClient.invalidateQueries({ queryKey: ["brands", distributorId] });
+  }
 
   return (
     <>
@@ -458,7 +416,7 @@ const AddDistributorForm = ({
                       leftSection={<Save className="size-4" />}
                       type="submit"
                       variant="outline"
-                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     >
                       Save Changes
                     </Button>
@@ -706,26 +664,30 @@ const AddDistributorForm = ({
                                       <CheckIcon {...others} />
                                     )}
                                     onChange={(event) => {
-                                      const newGroups = marketedBrandGroups.map(
-                                        (g) => {
-                                          if (g.name === group.name) {
-                                            return {
-                                              ...g,
-                                              brands: g.brands.map((b) =>
-                                                b.id === brand.id
-                                                  ? {
-                                                      ...b,
-                                                      approved:
-                                                        event.currentTarget
-                                                          .checked,
-                                                    }
-                                                  : b
-                                              ),
-                                            };
+                                      const newGroups: typeof marketedBrandGroups =
+                                        marketedBrandGroups.map(
+                                          (
+                                            g
+                                          ): (typeof marketedBrandGroups)[number] => {
+                                            if (g.name === group.name) {
+                                              return {
+                                                ...g,
+                                                brands: g.brands.map(
+                                                  (b): GroupedBrand =>
+                                                    b.id === brand.id
+                                                      ? {
+                                                          ...b,
+                                                          approved:
+                                                            event.currentTarget
+                                                              .checked,
+                                                        }
+                                                      : b
+                                                ),
+                                              };
+                                            }
+                                            return g;
                                           }
-                                          return g;
-                                        }
-                                      );
+                                        );
                                       setMarketedBrandGroups(newGroups);
                                     }}
                                   />
@@ -734,9 +696,31 @@ const AddDistributorForm = ({
                                 {/* Upload Proof Button */}
                                 <Table.Td className="w-[15%]">
                                   <Group gap="xs" align="center">
-                                    <button className="bg-primary rounded-md text-white p-1 text-sm">
-                                      Upload proof
-                                    </button>
+                                    <BrandProofUpload
+                                      distributorId={distributorId}
+                                      brand={{
+                                        category: brand.category,
+                                        brand_id: brand.id,
+                                        approved: brand.approved,
+                                        proof: Array.isArray(brand.proof)
+                                          ? brand.proof.map((p) => ({
+                                              name: p.name,
+                                              url: p.url,
+                                            }))
+                                          : (brand.proofs || []).map(
+                                              (p: string) => ({
+                                                name: p,
+                                                url: "",
+                                              })
+                                            ),
+                                        type:
+                                          brand.type ||
+                                          brand.coefficientType ||
+                                          "",
+                                        pricing_id: brand.pricing?.id ?? null,
+                                      }}
+                                      onSuccess={handleBrandProofUploaded}
+                                    />
                                   </Group>
                                 </Table.Td>
 
@@ -752,7 +736,9 @@ const AddDistributorForm = ({
                                           <Text
                                             component="a"
                                             href="#"
-                                            onClick={(e) => e.preventDefault()}
+                                            onClick={(
+                                              e: React.MouseEvent<HTMLAnchorElement>
+                                            ) => e.preventDefault()}
                                             className="underline text-blue-600 hover:text-blue-800 cursor-pointer"
                                           >
                                             {proof}
@@ -762,29 +748,36 @@ const AddDistributorForm = ({
                                             color="gray"
                                             variant="transparent"
                                             onClick={() => {
-                                              const newGroups =
-                                                marketedBrandGroups.map((g) => {
-                                                  if (g.name === group.name) {
-                                                    return {
-                                                      ...g,
-                                                      brands: g.brands.map(
-                                                        (b) =>
-                                                          b.id === brand.id
-                                                            ? {
-                                                                ...b,
-                                                                proofs:
-                                                                  b.proofs.filter(
-                                                                    (_, i) =>
-                                                                      i !==
-                                                                      index
-                                                                  ),
-                                                              }
-                                                            : b
-                                                      ),
-                                                    };
+                                              const newGroups: typeof marketedBrandGroups =
+                                                marketedBrandGroups.map(
+                                                  (
+                                                    g
+                                                  ): (typeof marketedBrandGroups)[number] => {
+                                                    if (g.name === group.name) {
+                                                      return {
+                                                        ...g,
+                                                        brands: g.brands.map(
+                                                          (b): GroupedBrand =>
+                                                            b.id === brand.id
+                                                              ? {
+                                                                  ...b,
+                                                                  proofs:
+                                                                    b.proofs.filter(
+                                                                      (
+                                                                        _,
+                                                                        i: number
+                                                                      ) =>
+                                                                        i !==
+                                                                        index
+                                                                    ),
+                                                                }
+                                                              : b
+                                                        ),
+                                                      };
+                                                    }
+                                                    return g;
                                                   }
-                                                  return g;
-                                                });
+                                                );
                                               setMarketedBrandGroups(newGroups);
                                             }}
                                           >
@@ -802,41 +795,99 @@ const AddDistributorForm = ({
                                 {/* Coefficient Select */}
                                 <Table.Td className="w-1/6">
                                   <Select
-                                    value={brand.coefficientType as string}
+                                    value={
+                                      brand.type
+                                        ? brand.type
+                                        : brand.coefficientType || undefined
+                                    }
                                     data={coefficientOptions}
+                                    placeholder="Select type"
                                     rightSection={<ChevronDownIcon />}
                                     classNames={{
                                       ...selectStyles,
                                       input: `${selectStyles.input} text-sm`,
                                     }}
                                     size="sm"
-                                    onChange={(value) => {
-                                      const newGroups = marketedBrandGroups.map(
-                                        (g) => {
-                                          if (g.name === group.name) {
-                                            return {
-                                              ...g,
-                                              brands: g.brands.map((b) =>
-                                                b.id === brand.id
-                                                  ? {
-                                                      ...b,
-                                                      coefficientType:
-                                                        value || "",
-                                                    }
-                                                  : b
-                                              ),
-                                            };
+                                    onChange={
+                                      brand.type
+                                        ? undefined
+                                        : (value: string | null) => {
+                                            const newGroups: typeof marketedBrandGroups =
+                                              marketedBrandGroups.map(
+                                                (
+                                                  g
+                                                ): (typeof marketedBrandGroups)[number] => {
+                                                  if (g.name === group.name) {
+                                                    return {
+                                                      ...g,
+                                                      brands: g.brands.map(
+                                                        (b): GroupedBrand =>
+                                                          b.id === brand.id
+                                                            ? {
+                                                                ...b,
+                                                                coefficientType:
+                                                                  value || "",
+                                                              }
+                                                            : b
+                                                      ),
+                                                    };
+                                                  }
+                                                  return g;
+                                                }
+                                              );
+                                            setMarketedBrandGroups(newGroups);
+                                            setBrandProductSelections(
+                                              (prev) => ({
+                                                ...prev,
+                                                [brand.id]: "",
+                                              })
+                                            );
                                           }
-                                          return g;
-                                        }
-                                      );
-                                      setMarketedBrandGroups(newGroups);
-                                    }}
+                                    }
+                                    disabled={!!brand.type}
                                   />
                                 </Table.Td>
 
-                                {/* Billing Select */}
+                                {/* Dynamic Product Select */}
                                 <Table.Td className="w-1/6">
+                                  {(brand.type === "billing" ||
+                                    (!brand.type &&
+                                      brand.coefficientType === "billing")) && (
+                                    <BillingProductSelect
+                                      brandId={brand.id}
+                                      value={
+                                        brandProductSelections[brand.id] || ""
+                                      }
+                                      onChange={(value) => {
+                                        if (value)
+                                          setBrandProductSelections((prev) => ({
+                                            ...prev,
+                                            [brand.id]: value,
+                                          }));
+                                      }}
+                                    />
+                                  )}
+                                  {(brand.type === "co-efficient" ||
+                                    (!brand.type &&
+                                      brand.coefficientType ===
+                                        "co-efficient")) && (
+                                    <PricingProductSelect
+                                      brandId={brand.id}
+                                      value={
+                                        brandProductSelections[brand.id] || ""
+                                      }
+                                      onChange={(value) => {
+                                        if (value)
+                                          setBrandProductSelections((prev) => ({
+                                            ...prev,
+                                            [brand.id]: value,
+                                          }));
+                                      }}
+                                    />
+                                  )}
+                                </Table.Td>
+
+                                {/* <Table.Td className="w-1/6">
                                   <Select
                                     value={brand.billingType as string}
                                     data={billingOptions}
@@ -846,7 +897,7 @@ const AddDistributorForm = ({
                                       input: `${selectStyles.input} text-sm`,
                                     }}
                                     size="sm"
-                                    onChange={(value) => {
+                                    onChange={(value: string | null) => {
                                       const newGroups = marketedBrandGroups.map(
                                         (g) => {
                                           if (g.name === group.name) {
@@ -868,7 +919,7 @@ const AddDistributorForm = ({
                                       setMarketedBrandGroups(newGroups);
                                     }}
                                   />
-                                </Table.Td>
+                                </Table.Td> */}
 
                                 {/* Delete Row Action */}
                                 <Table.Td className="w-[5%] text-right">
@@ -876,19 +927,22 @@ const AddDistributorForm = ({
                                     variant="subtle"
                                     color="gray"
                                     onClick={() => {
-                                      const newGroups = marketedBrandGroups.map(
-                                        (g) => {
-                                          if (g.name === group.name) {
-                                            return {
-                                              ...g,
-                                              brands: g.brands.filter(
-                                                (b) => b.id !== brand.id
-                                              ),
-                                            };
+                                      const newGroups: typeof marketedBrandGroups =
+                                        marketedBrandGroups.map(
+                                          (
+                                            g
+                                          ): (typeof marketedBrandGroups)[number] => {
+                                            if (g.name === group.name) {
+                                              return {
+                                                ...g,
+                                                brands: g.brands.filter(
+                                                  (b) => b.id !== brand.id
+                                                ),
+                                              };
+                                            }
+                                            return g;
                                           }
-                                          return g;
-                                        }
-                                      );
+                                        );
                                       setMarketedBrandGroups(newGroups);
                                     }}
                                   >
@@ -924,5 +978,81 @@ const AddDistributorForm = ({
     </>
   );
 };
+
+interface ProductSelectProps {
+  brandId: number;
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function BillingProductSelect({
+  brandId,
+  value,
+  onChange,
+}: ProductSelectProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["billing-products", brandId],
+    queryFn: () =>
+      getBillingProductList({ brand_ids: [brandId], page_size: 50 }),
+    enabled: !!brandId,
+  });
+  const options = (data?.data || []).map((p) => ({
+    value: p.id.toString(),
+    label: p.material_description,
+  }));
+  return (
+    <Select
+      value={value}
+      data={options}
+      onChange={(val) => {
+        if (val) onChange(val);
+      }}
+      placeholder={isLoading ? "Loading..." : "Select product"}
+      classNames={{
+        ...selectStyles,
+        input: `${selectStyles.input} text-sm min-w-[180px] max-w-[320px]`,
+      }}
+      searchable
+      clearable
+      rightSection={<ChevronDownIcon />}
+      className="w-full"
+    />
+  );
+}
+
+function PricingProductSelect({
+  brandId,
+  value,
+  onChange,
+}: ProductSelectProps) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["pricing-products", brandId],
+    queryFn: () =>
+      getPricingProductList({ brand_ids: [brandId], page_size: 50 }),
+    enabled: !!brandId,
+  });
+  const options = (data?.data || []).map((p) => ({
+    value: p.id.toString(),
+    label: p.material_description,
+  }));
+  return (
+    <Select
+      value={value}
+      data={options}
+      onChange={(val) => {
+        if (val) onChange(val);
+      }}
+      placeholder={isLoading ? "Loading..." : "Select product"}
+      classNames={{
+        ...selectStyles,
+        input: `${selectStyles.input} text-sm min-w-[180px] max-w-[320px]`,
+      }}
+      searchable
+      clearable
+      rightSection={<ChevronDownIcon />}
+      className="w-full"
+    />
+  );
+}
 
 export default AddDistributorForm;
