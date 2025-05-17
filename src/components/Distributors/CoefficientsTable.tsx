@@ -7,6 +7,7 @@ import { getDistributorCoefficients } from "@/api/coefficients/get-coeff";
 import { useQuery } from "@tanstack/react-query";
 import { Coefficient } from "@/types";
 import { useState } from "react";
+import PencilIcon from "../Icons/PencilIcon";
 
 function CoefficientsTable({ distributorId }: { distributorId: number }) {
   const [openedDelete, { open: openDelete, close: closeDelete }] =
@@ -14,6 +15,8 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const deleteCoefficientMutations = useDeleteCoefficient({});
   const [addOpened, { open: openAdd, close: closeAdd }] = useDisclosure(false);
+  const [editOpened, setEditOpened] = useState(false);
+  const [editData, setEditData] = useState<Coefficient | null>(null);
 
   // Fetch coefficients using useQuery directly
   const {
@@ -50,6 +53,11 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
     }
   }
 
+  function handleEditClick(coeff: Coefficient) {
+    setEditData(coeff);
+    setEditOpened(true);
+  }
+
   return (
     <div>
       {deleteCoefficientMutations.isPending || isLoading ? (
@@ -69,7 +77,8 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
                 <Table.Th className="rounded-ss-xl">Type</Table.Th>
                 <Table.Th>Pref value</Table.Th>
                 <Table.Th>Non-pref value</Table.Th>
-                <Table.Th className="rounded-se-xl">Delete</Table.Th>
+                <Table.Th />
+                <Table.Th className="rounded-se-xl" />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -85,12 +94,17 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
                         ? element.non_pref_value
                         : "-"}
                     </Table.Td>
-
+                    <Table.Td
+                      className="w-5 text-center !pr-2 cursor-pointer"
+                      onClick={() => handleEditClick(element)}
+                    >
+                      <PencilIcon />
+                    </Table.Td>
                     <Table.Td
                       className="last:rounded-ee-xl w-5 text-center !pr-2 cursor-pointer"
                       onClick={() => handleDeleteClick(element.id)}
                     >
-                      <TrashIcon />
+                      <TrashIcon className="size-5" />
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -103,6 +117,19 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
         close={closeAdd}
         data={null}
         distributorId={distributorId}
+      />
+      <CoefficientsForm
+        opened={editOpened}
+        close={() => {
+          setEditOpened(false);
+          setEditData(null);
+        }}
+        data={editData}
+        distributorId={distributorId}
+        onSuccess={() => {
+          setEditOpened(false);
+          setEditData(null);
+        }}
       />
       <div className="flex justify-start mb-4 pt-8">
         <Button

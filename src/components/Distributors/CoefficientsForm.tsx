@@ -1,14 +1,11 @@
-import {
-  addCoefficientInput,
-  useAddCoefficient,
-} from "@/api/coefficients/create-coeff";
+import { useAddCoefficient } from "@/api/coefficients/create-coeff";
+import { useUpdateCoefficient } from "@/api/coefficients/update-coeff";
 import { Coefficient } from "@/types";
 import { Button, Group, Modal, Select, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -27,11 +24,16 @@ export function CoefficientsForm({
   data,
   onSuccess,
 }: CoefficientsFormProps) {
-  const coeffForm = useForm<addCoefficientInput>({
+  const isEdit = !!data;
+  const coeffForm = useForm<{
+    type: "regular" | "giftset" | "tester";
+    pref_value: string;
+    non_pref_value: string;
+  }>({
     initialValues: {
-      type: "regular",
-      pref_value: "",
-      non_pref_value: "",
+      type: data?.type || "regular",
+      pref_value: data?.pref_value || "",
+      non_pref_value: data?.non_pref_value || "",
     },
   });
 
@@ -42,12 +44,18 @@ export function CoefficientsForm({
         pref_value: data.pref_value,
         non_pref_value: data.non_pref_value,
       });
+    } else {
+      coeffForm.setValues({
+        type: "regular",
+        pref_value: "",
+        non_pref_value: "",
+      });
     }
   }, [data]);
 
   const queryClient = useQueryClient();
 
-  const { mutate, isPending } = useAddCoefficient({
+  const { mutate: addMutate, isPending: isAddPending } = useAddCoefficient({
     mutationConfig: {
       onSuccess: () => {
         queryClient.invalidateQueries({
@@ -59,9 +67,40 @@ export function CoefficientsForm({
     },
   });
 
-  function handleSubmit(values: addCoefficientInput) {
-    console.log({ values });
-    mutate({ data: values, distributorId });
+  const { mutate: updateMutate, isPending: isUpdatePending } =
+    useUpdateCoefficient({
+      mutationConfig: {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["coefficients", distributorId],
+          });
+          close();
+          onSuccess?.();
+        },
+      },
+    });
+
+  function handleSubmit(values: {
+    type: "regular" | "giftset" | "tester";
+    pref_value: string;
+    non_pref_value: string;
+  }) {
+    if (isEdit && data) {
+      updateMutate({
+        data: {
+          type: values.type,
+          pref_value: values.pref_value,
+          non_pref_value: values.non_pref_value,
+          brand_id: String(data.brand.id),
+          category_id: String(data.category.id),
+          description: data.description || "",
+        },
+        distributorId,
+        coeffId: data.id,
+      });
+    } else {
+      addMutate({ data: values, distributorId });
+    }
   }
 
   return (
@@ -80,7 +119,7 @@ export function CoefficientsForm({
         <Modal.Body>
           <div className="bg-white rounded-2xl p-6 mt-6">
             <h2 className="text-xl font-semibold mb-6 text-primary">
-              Add Co-efficient
+              {isEdit ? "Edit Co-efficient" : "Add Co-efficient"}
             </h2>
             <div className="space-y-6">
               <Select
@@ -119,18 +158,17 @@ export function CoefficientsForm({
                   className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
                   leftSection={<ExitIcon />}
                   onClick={close}
-                  disabled={isPending}
+                  disabled={isAddPending || isUpdatePending}
                 >
                   Cancel
                 </Button>
                 <Button
-                  leftSection={<RefreshIcon />}
                   variant="outline"
                   className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px]   hover:bg-primary/90 transition-all ease-in-out duration-300"
-                  loading={isPending}
+                  loading={isAddPending || isUpdatePending}
                   onClick={() => handleSubmit(coeffForm.getValues())}
                 >
-                  Add
+                  {isEdit ? "Update" : "Add"}
                 </Button>
               </Group>
             </div>
