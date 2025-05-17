@@ -422,6 +422,24 @@ function EditBillingListComponent() {
     form.values.brand,
   ]);
 
+  const handlePriceChange = useCallback(
+    (irc: string, newPrice: number) => {
+      setProductsData((currentProducts) =>
+        currentProducts.map((p) =>
+          p.irc === irc ? { ...p, price: String(newPrice) } : p
+        )
+      );
+      // Also update the form's selectedProductsWithPrices if needed
+      form.setFieldValue(
+        "selectedProductsWithPrices",
+        form.values.selectedProductsWithPrices.map((sp) =>
+          sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+        )
+      );
+    },
+    [form.values.selectedProductsWithPrices] // Ensure form is a dependency if its state is used
+  );
+
   const isProductListLoading =
     isLoadingInitialProducts || isLoadingExistingBillingList;
   const noProductsFound =
@@ -646,6 +664,7 @@ function EditBillingListComponent() {
                       fetchMoreData={fetchMoreEditBillingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
+                      onPriceChange={handlePriceChange}
                     />
                   </div>
                 </div>

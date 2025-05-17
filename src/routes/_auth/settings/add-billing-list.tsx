@@ -75,6 +75,15 @@ function AddBillingListComponent() {
     validate: {
       name: (value) => (value.trim().length > 0 ? null : "Name is required"),
       type: (value) => (value ? null : "Type is required"),
+      selectedProductsWithPrices: (value) =>
+        value.every(
+          (p) =>
+            typeof p.price === "number" &&
+            p.price >= 0 &&
+            p.product_id.trim().length > 0
+        )
+          ? null
+          : "All selected products must have a valid non-negative price.",
     },
   });
 
@@ -93,11 +102,16 @@ function AddBillingListComponent() {
     },
   });
 
+  const typeDependency = form.values.type;
+  const brandCsv = Array.isArray(form.values.brand)
+    ? form.values.brand.join(",")
+    : "";
+
   useEffect(() => {
     setProductsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [searchTerm, form.values.brand, form.values.type]);
+  }, [searchTerm, brandCsv, typeDependency]);
 
   const {
     isLoading: isLoadingInitialProducts,
@@ -106,12 +120,12 @@ function AddBillingListComponent() {
   } = useQuery<Awaited<ReturnType<typeof getBillingListByBrandType>>, Error>({
     queryKey: [
       "billingProductsByBrandType",
-      form.values.type,
-      form.values.brand,
+      typeDependency,
+      brandCsv,
       searchTerm,
     ],
     queryFn: () => {
-      if (!form.values.type) {
+      if (!typeDependency) {
         return Promise.resolve({
           message: "Brand type not selected",
           data: [],
@@ -125,7 +139,7 @@ function AddBillingListComponent() {
         } as GetBillingProductListResponse);
       }
       return getBillingListByBrandType({
-        brandType: form.values.type,
+        brandType: typeDependency,
         brandIds:
           Array.isArray(form.values.brand) && form.values.brand.length > 0
             ? form.values.brand.map(Number)
@@ -134,7 +148,7 @@ function AddBillingListComponent() {
         pageSize: PAGE_SIZE,
       });
     },
-    enabled: !!form.values.type,
+    enabled: !!typeDependency,
   });
 
   console.log(initialBillingProductListResult);
@@ -196,22 +210,12 @@ function AddBillingListComponent() {
   const handleSubmit = (values: BillingListFormValues) => {
     const { name, type, description } = values;
 
-    const productsPayload = (initialBillingProductListResult?.data || []).map(
-      (p) => {
-        let priceValue = 0; // Default price to 0
-        if (p.price !== null && p.price !== undefined) {
-          const numPrice = Number(p.price);
-          // Ensure that if p.price was a string, it converted to a valid number
-          if (!isNaN(numPrice)) {
-            priceValue = numPrice;
-          }
-        }
-        return {
-          product_id: Number(p.id), // p.id is already number, Number() is for safety.
-          price: priceValue,
-        };
-      }
-    );
+    const productsPayload = productsData.map((p) => {
+      return {
+        product_id: Number(p.id),
+        price: Number(p.price),
+      };
+    });
 
     console.log(
       "Form submitted for Billing List. Name:",
@@ -347,6 +351,23 @@ function AddBillingListComponent() {
     productsData.length === 0 &&
     !productsHasMore;
 
+  const handlePriceChange = useCallback(
+    (irc: string, newPrice: number) => {
+      setProductsData((currentProducts) =>
+        currentProducts.map((p) =>
+          p.irc === irc ? { ...p, price: String(newPrice) } : p
+        )
+      );
+      form.setFieldValue(
+        "selectedProductsWithPrices",
+        form.values.selectedProductsWithPrices.map((sp) =>
+          sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+        )
+      );
+    },
+    [form.values.selectedProductsWithPrices]
+  );
+
   return (
     <>
       <Headline title="Settings" />
@@ -449,30 +470,6 @@ function AddBillingListComponent() {
                 </Button>
               </Group>
 
-              {/* <div className="flex items-center gap-x-5 mt-6">
-                <TextInput
-                  placeholder="Search for..."
-                  leftSection={<SearchIcon />}
-                  className="flex-grow"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                  classNames={textInputStyles}
-                />
-                <button
-                  type="button"
-                  className={twMerge(
-                    "flex items-center gap-x-2 cursor-pointer group",
-                    !searchTerm.length && "invisible"
-                  )}
-                  onClick={() => setSearchTerm("")}
-                >
-                  <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
-                  <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
-                    Clear
-                  </span>
-                </button>
-              </div> */}
-
               <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
@@ -486,17 +483,6 @@ function AddBillingListComponent() {
                   clearable
                   disabled={isLoadingBrands}
                 />
-                {/* <Select
-                  {...form.getInputProps("brandPillar")}
-                  label="Filter by Brand Pillar"
-                  placeholder="Select Brand Pillar"
-                  data={brandPillarOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                  disabled={isLoadingBrandPillars || !selectedBrandIdFromForm}
-                /> */}
               </div>
             </div>
           </section>
@@ -553,6 +539,7 @@ function AddBillingListComponent() {
                       fetchMoreData={fetchMoreAddBillingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
+                      onPriceChange={handlePriceChange}
                     />
                   </div>
                 </div>

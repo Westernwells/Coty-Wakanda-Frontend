@@ -11,6 +11,7 @@ interface AddBillingListProductTableProps {
   fetchMoreData: () => Promise<void>;
   hasMore: boolean;
   isLoadingMore: boolean;
+  onPriceChange: (irc: string, newPrice: number) => void;
 }
 
 const TableLoader = () => (
@@ -26,8 +27,28 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
   fetchMoreData,
   hasMore,
   isLoadingMore,
+  onPriceChange,
 }) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
+
+  const handlePriceInputChange = (
+    irc: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newPrice = event.target.value;
+    // Allow empty string for temporary input state, or convert to number
+    if (newPrice === "" || isNaN(Number(newPrice))) {
+      // Potentially handle invalid input, or rely on parent to validate/convert
+      // For now, if it's not a valid number, we might not call onPriceChange
+      // or call it with a specific signal for invalid input.
+      // Let's assume for now we only call onPriceChange with valid numbers.
+      if (newPrice === "") {
+        onPriceChange(irc, 0); // Or some other placeholder like NaN, null
+      }
+    } else {
+      onPriceChange(irc, Number(newPrice));
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -117,11 +138,28 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
                     {product.article_type}
                   </td>
                   <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {typeof product.price === "number" ||
-                    (typeof product.price === "string" &&
-                      product.price.trim() !== "")
-                      ? `$${Number(product.price).toFixed(2)}`
-                      : "-"}
+                    <input
+                      type="number"
+                      value={
+                        product.price === null || product.price === undefined
+                          ? ""
+                          : String(product.price)
+                      }
+                      onChange={(e) => handlePriceInputChange(product.irc, e)}
+                      onFocus={() => setSelectedRow(product.irc)}
+                      className={cn(
+                        "w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-1",
+                        selectedRow === product.irc
+                          ? "bg-white"
+                          : "bg-transparent border-none pointer-events-none"
+                      )}
+                      // Disable if not the selected row to prevent accidental edits,
+                      // or simply style to appear non-interactive.
+                      // The pointer-events-none on bg-transparent helps achieve this.
+                      // For a more robust read-only look, you might need more conditional styling or a disabled attribute.
+                      readOnly={selectedRow !== product.irc}
+                      onClick={(e) => e.stopPropagation()} // Prevent row click event when clicking input
+                    />
                   </td>
                 </tr>
               ))}
