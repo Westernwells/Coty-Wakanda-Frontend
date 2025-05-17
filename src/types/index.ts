@@ -93,12 +93,14 @@ export type BrandPillar = {
 
 export type Coefficient = {
   id: number;
-  value: string;
+  type: "regular" | "giftset" | "tester";
+  pref_value: string;
+  non_pref_value: string;
   brand: Brand;
   category: Category;
-  pref: Pref;
   description?: string;
 };
+
 export type ProductBinding = {
   pricing: ProductBindingPricing;
   material_description: string;
@@ -388,7 +390,7 @@ export interface ProductDistributor {
   name: string;
   type: string;
   registered: string;
-  coefficients: Pick<Coefficient, "id" | "value" | "pref">[];
+  coefficients: Pick<Coefficient, "id" | "pref_value" | "non_pref_value">[];
   mirrors: Omit<ProductDistributor, "registered">[];
 }
 
