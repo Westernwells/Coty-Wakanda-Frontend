@@ -47,8 +47,14 @@ export function useUpdatePricingList({
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-      queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+      queryClient.invalidateQueries({
+        queryKey: ["pricing-lists"],
+        type: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pricingProductList"],
+        type: "all",
+      });
     },
     ...mutationConfig,
   });
