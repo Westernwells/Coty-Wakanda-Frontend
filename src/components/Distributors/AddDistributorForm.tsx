@@ -458,7 +458,7 @@ const AddDistributorForm = ({
                       leftSection={<Save className="size-4" />}
                       type="submit"
                       variant="outline"
-                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                      className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     >
                       Save Changes
                     </Button>
