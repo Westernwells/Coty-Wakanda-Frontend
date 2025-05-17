@@ -46,7 +46,11 @@ function RouteComponent() {
           Back to Distributors
         </Button>
       </section>
-      <AddDistributorForm formData={data?.data} isEdit />
+      <AddDistributorForm
+        formData={data?.data}
+        isEdit
+        distributorId={distributorId}
+      />
       <DistributorHistorySummary distributorId={distributorId} />
     </div>
   );
