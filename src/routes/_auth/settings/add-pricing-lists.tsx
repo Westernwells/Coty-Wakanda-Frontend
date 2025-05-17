@@ -4,8 +4,6 @@ import {
   MultiSelect,
   TextInput,
   Title,
-  Divider,
-  CloseButton,
   Loader,
   Textarea,
   Select,
@@ -16,11 +14,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
-import SearchIcon from "@/components/Icons/SearchIcon";
 import { selectStyles, textInputStyles } from "@/components/Shared/Styles";
 import { useAddPricingList } from "@/api/pricingList/add-pricing-list";
 import { useState, useEffect, useCallback } from "react";
-import { twMerge } from "tailwind-merge";
 import AddPricingListProductTable from "@/components/AddPricingList/AddPricingListProductTable";
 import type {
   Product,
@@ -59,9 +55,23 @@ const pricingTypes = [
 function AddPricingListsComponent() {
   const navigate = useNavigate({ from: Route.fullPath });
   const queryClient = useQueryClient();
-  const addPricingListMutation = useAddPricingList();
+  const addPricingListMutation = useAddPricingList({
+    mutationConfig: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+        queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+        navigate({
+          to: "/settings",
+          search: { tab: "pricing" },
+          replace: true,
+        });
+      },
+      onError: (error) => {
+        console.error("Error adding pricing list:", error);
+      },
+    },
+  });
   const formId = "add-pricing-list-form";
-  const [searchTerm, setSearchTerm] = useState("");
 
   const [productsData, setProductsData] = useState<Product[]>([]);
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
@@ -93,29 +103,24 @@ function AddPricingListsComponent() {
 
   useEffect(() => {
     const selectedBrandIds = form.values.brands || [];
-
     const params: GetPricingProductListParams = {
       page_size: PAGE_SIZE,
     };
     if (selectedBrandIds.length > 0) {
       params.brand_ids = selectedBrandIds.map(Number);
     }
-    if (searchTerm) {
-      params.search = searchTerm;
-    }
     setPricingProductListParams(params);
-
     setProductsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [searchTerm, form.values.brands]);
+  }, [form.values.brands]);
 
   const {
     isLoading: isLoadingInitialProducts,
     error: initialProductsError,
     data: initialPricingProductListResult,
   } = useQuery<Awaited<ReturnType<typeof getPricingProductList>>, Error>({
-    queryKey: ["pricingProductList", pricingProductListParams, searchTerm],
+    queryKey: ["pricingProductList", pricingProductListParams],
     queryFn: () =>
       getPricingProductList({ ...pricingProductListParams, cursor: undefined }),
     enabled: !isCsvMode && !form.values.type,
@@ -221,17 +226,20 @@ function AddPricingListsComponent() {
   });
 
   const handleSubmit = (values: PricingListFormValues) => {
-    const { name, type, description } = values;
+    const { name, type, description, selectedProductsWithPrices } = values;
 
-    // Transform productsData directly to the required format
-    const productsPayload = productsData.map((product) => ({
-      product_id: Number(product.id),
-      price: Number(product.price || 0),
-    }));
-    // .filter((p) => p.product_id && !isNaN(p.product_id) && p.price > 0);
+    const productsPayload = productsData.map((product) => {
+      // Find updated price from selectedProductsWithPrices
+      const selected = selectedProductsWithPrices.find(
+        (sp) => sp.product_id === product.irc
+      );
+      return {
+        product_id: Number(product.id),
+        price: Number(selected ? selected.price : product.price || 0),
+      };
+    });
 
-    // Validate if we have any valid products
-    if (productsPayload.length === 0) {
+    if (!isCsvMode && productsPayload.length === 0) {
       console.error("No valid products found for submission");
       return;
     }
@@ -244,30 +252,14 @@ function AddPricingListsComponent() {
       totalProducts: productsPayload.length,
     });
 
-    addPricingListMutation.mutate(
-      {
-        data: {
-          name,
-          type,
-          description,
-          products: productsPayload,
-        },
+    addPricingListMutation.mutate({
+      data: {
+        name,
+        type,
+        description,
+        products: productsPayload,
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-          queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
-          navigate({
-            to: "/settings",
-            search: { tab: "pricing" },
-            replace: true,
-          });
-        },
-        onError: (error) => {
-          console.error("Error adding pricing list:", error);
-        },
-      }
-    );
+    });
   };
 
   const handleCancel = () => {
@@ -279,12 +271,10 @@ function AddPricingListsComponent() {
   };
 
   const handleClearAllFilters = () => {
-    setSearchTerm("");
     form.setValues({
       ...form.values,
       brands: [],
     });
-
     if (isCsvMode) {
       setIsCsvMode(false);
       setProductsData([]);
@@ -326,7 +316,7 @@ function AddPricingListsComponent() {
           ...pricingProductListParams,
           cursor: productsMeta.cursor,
           page_size: PAGE_SIZE,
-          search: searchTerm,
+          search: "",
           brand_ids: form.values.brands?.map(Number),
         });
         setProductsData((prev) => [...prev, ...response.data]);
@@ -345,7 +335,6 @@ function AddPricingListsComponent() {
     pricingProductListParams,
     form.values.type,
     form.values.brands,
-    searchTerm,
   ]);
 
   const isProductListLoading = !isCsvMode && isLoadingInitialProducts;
@@ -360,7 +349,7 @@ function AddPricingListsComponent() {
 
   const handleCsvUpload = useCallback(
     (
-      data: Array<{
+      csvData: Array<{
         brand_name: string;
         description: string;
         brand_pillar: string;
@@ -369,48 +358,68 @@ function AddPricingListsComponent() {
         irc: string;
       }>
     ) => {
-      // if (!form.values.name || !form.values.type) {
-      //   toast.error("Please fill in the required pricing list details first");
-      //   return;
-      // }
-
-      // Call the API directly with the CSV data
-
-      console.log("CSV data:", {
+      console.log("CSV data for submission:", {
         name: form.values.name,
         type: form.values.type,
         description: form.values.description,
-        file: data,
+        file: csvData,
       });
-      addPricingListMutation.mutate(
-        {
-          data: {
-            name: form.values.name,
-            type: form.values.type,
-            description: form.values.description,
-            file: data, // Pass the CSV data directly to the file field
-          },
+      addPricingListMutation.mutate({
+        data: {
+          name: form.values.name,
+          type: form.values.type,
+          description: form.values.description,
+          file: csvData,
         },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-            queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
-            navigate({
-              to: "/settings",
-              search: { tab: "pricing" },
-              replace: true,
-            });
-          },
-          onError: (error) => {
-            console.error("Error adding pricing list:", error);
-          },
-        }
-      );
-
-      setIsCsvMode(true);
+      });
     },
-    [form.values, addPricingListMutation, queryClient, navigate]
+    [form.values, addPricingListMutation]
   );
+
+  // Add price change handler (like billing list)
+  const handlePriceChange = useCallback(
+    (irc: string, newPrice: number) => {
+      setProductsData((currentProducts) =>
+        currentProducts.map((p) =>
+          p.irc === irc ? { ...p, price: String(newPrice) } : p
+        )
+      );
+      // Update or add the product in selectedProductsWithPrices
+      const exists = form.values.selectedProductsWithPrices.some(
+        (sp) => sp.product_id === irc
+      );
+      if (exists) {
+        form.setFieldValue(
+          "selectedProductsWithPrices",
+          form.values.selectedProductsWithPrices.map((sp) =>
+            sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+          )
+        );
+      } else {
+        form.setFieldValue("selectedProductsWithPrices", [
+          ...form.values.selectedProductsWithPrices,
+          { product_id: irc, price: String(newPrice) },
+        ]);
+      }
+    },
+    [form.values.selectedProductsWithPrices]
+  );
+
+  // Ensure selectedProductsWithPrices is initialized from productsData on load (first load only)
+  useEffect(() => {
+    if (
+      productsData.length > 0 &&
+      form.values.selectedProductsWithPrices.length === 0
+    ) {
+      form.setFieldValue(
+        "selectedProductsWithPrices",
+        productsData.map((p) => ({
+          product_id: p.irc,
+          price: p.price ?? "",
+        }))
+      );
+    }
+  }, [productsData]);
 
   return (
     <>
@@ -501,48 +510,7 @@ function AddPricingListsComponent() {
 
           <section className="mb-8">
             <div className="bg-white shadow-md rounded-lg p-6">
-              <Group justify="space-between" align="center">
-                <Title order={2} className="text-primary font-semibold text-xl">
-                  Refine your results
-                </Title>
-                <Button
-                  rightSection={<ExitIcon />}
-                  onClick={handleClearAllFilters}
-                  variant="outline"
-                  className="border-primary border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                >
-                  Clear all
-                </Button>
-              </Group>
-
-              <div className="flex items-center gap-x-5 mt-6">
-                <TextInput
-                  placeholder="Search for..."
-                  leftSection={<SearchIcon />}
-                  className="flex-grow"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                  classNames={textInputStyles}
-                  disabled={isCsvMode}
-                />
-                <button
-                  type="button"
-                  className={twMerge(
-                    "flex items-center gap-x-2 cursor-pointer group",
-                    !searchTerm.length && "invisible"
-                  )}
-                  onClick={() => setSearchTerm("")}
-                >
-                  <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
-                  <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
-                    Clear
-                  </span>
-                </button>
-              </div>
-
-              <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 items-end">
                 <MultiSelect
                   label="Filter by Brands"
                   placeholder="Select Brands"
@@ -555,12 +523,15 @@ function AddPricingListsComponent() {
                   onChange={(value) => form.setFieldValue("brands", value)}
                   disabled={isLoadingBrands || isCsvMode}
                 />
+                <Button
+                  rightSection={<ExitIcon />}
+                  onClick={handleClearAllFilters}
+                  variant="outline"
+                  className="border-primary w-fit border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                >
+                  Clear all filters
+                </Button>
               </div>
-            </div>
-          </section>
-
-          <section className="mb-8">
-            <div className="bg-white shadow-md rounded-lg p-6">
               <div className="flex justify-end items-center mb-6">
                 <Group gap="sm">
                   <Button
@@ -576,7 +547,6 @@ function AddPricingListsComponent() {
                   <CsvUpload onUpload={handleCsvUpload} />
                 </Group>
               </div>
-
               {initialProductsError || brandTypeProductsError ? (
                 <div className="text-center py-10 text-red-500">
                   <p>
@@ -590,10 +560,7 @@ function AddPricingListsComponent() {
                 </div>
               ) : noProductsFound ? (
                 <div className="text-center py-10 text-gray-500">
-                  <p>
-                    No products found. Try adjusting brand filter or search
-                    term.
-                  </p>
+                  <p>No products found. Try adjusting brand filter.</p>
                   <p className="text-sm mt-1">
                     Alternatively, upload a product list.
                   </p>
@@ -619,6 +586,10 @@ function AddPricingListsComponent() {
                       fetchMoreData={fetchMoreAddPricingListProducts}
                       hasMore={isCsvMode ? false : productsHasMore}
                       isLoadingMore={isCsvMode ? false : productsIsLoadingMore}
+                      onPriceChange={handlePriceChange}
+                      selectedProductsWithPrices={
+                        form.values.selectedProductsWithPrices
+                      }
                     />
                   </div>
                 </div>

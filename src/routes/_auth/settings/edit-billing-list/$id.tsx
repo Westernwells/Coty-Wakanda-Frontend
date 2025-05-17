@@ -4,8 +4,6 @@ import {
   Select,
   TextInput,
   Title,
-  Divider,
-  CloseButton,
   Loader,
   Textarea,
   MultiSelect,
@@ -21,13 +19,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
-import SearchIcon from "@/components/Icons/SearchIcon";
 import { selectStyles, textInputStyles } from "@/components/Shared/Styles";
 // Changed API imports
 import { useUpdateBillingList } from "@/api/billingList/update-billing-list";
 import { getBillingListById } from "@/api/billingList/get-billing-list-by-id";
 import { useState, useEffect, useCallback } from "react";
-import { twMerge } from "tailwind-merge";
 // Changed component imports
 import AddBillingListProductTable from "@/components/AddBillingList/AddBillingListProductTable";
 // import type { BillingListFilters } from "@/types"; // Removed as it's unused
@@ -89,7 +85,6 @@ function EditBillingListComponent() {
   const queryClient = useQueryClient();
   const updateBillingListMutation = useUpdateBillingList(); // Changed hook
   const formId = "edit-billing-list-form"; // Changed form ID
-  const [searchTerm, setSearchTerm] = useState("");
 
   const [productsData, setProductsData] = useState<BillingListApiProduct[]>([]);
   const [selectedTableRow, setSelectedTableRow] = useState<string | null>(null);
@@ -315,7 +310,6 @@ function EditBillingListComponent() {
   };
 
   const handleClearAllFilters = () => {
-    setSearchTerm("");
     form.setValues({
       ...form.values,
       brand: [],
@@ -558,63 +552,27 @@ function EditBillingListComponent() {
 
           <section className="mb-8">
             <div className="bg-white shadow-md rounded-lg p-6">
-              <Group justify="space-between" align="center">
-                <Title order={2} className="text-primary font-semibold text-xl">
-                  Refine your results
-                </Title>
-                <Button
-                  rightSection={<ExitIcon />}
-                  onClick={handleClearAllFilters}
-                  variant="outline"
-                  className="border-primary border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                >
-                  Clear all
-                </Button>
-              </Group>
-
-              <div className="flex items-center gap-x-5 mt-6">
-                <TextInput
-                  placeholder="Search for..."
-                  leftSection={<SearchIcon />}
-                  className="flex-grow"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                  classNames={textInputStyles}
-                />
-                <button
-                  type="button"
-                  className={twMerge(
-                    "flex items-center gap-x-2 cursor-pointer group",
-                    !searchTerm.length && "invisible"
-                  )}
-                  onClick={() => setSearchTerm("")}
-                >
-                  <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
-                  <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
-                    Clear
-                  </span>
-                </button>
-              </div>
-
-              <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 items-end">
                 <MultiSelect
                   {...form.getInputProps("brand")}
-                  label="Filter brand"
-                  placeholder="Filter brand(s)"
+                  label="Filter by Brand"
+                  placeholder="Select Brands"
                   data={brandOptions}
                   classNames={selectStyles}
                   searchable
                   clearable
                   disabled={isLoadingBrands}
                 />
+                <Button
+                  rightSection={<ExitIcon />}
+                  onClick={handleClearAllFilters}
+                  variant="outline"
+                  className="border-primary w-fit border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                >
+                  Clear all filters
+                </Button>
               </div>
-            </div>
-          </section>
 
-          <section className="mb-8">
-            <div className="bg-white shadow-md rounded-lg p-6">
               <div className="flex justify-end items-center mb-6">
                 <Group gap="sm">
                   <Button

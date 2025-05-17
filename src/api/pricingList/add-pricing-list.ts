@@ -1,4 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type UseMutationOptions,
+} from "@tanstack/react-query";
 import { axios } from "@/lib/axios";
 
 interface AddPricingListData {
@@ -28,12 +32,22 @@ interface AddPricingListResponse {
   };
 }
 
+// Type for mutationConfig, excluding mutationFn as it's defined by the hook
+type CustomMutationConfig = Omit<
+  UseMutationOptions<AddPricingListResponse, Error, AddPricingListRequest>,
+  "mutationFn"
+>;
+
 export function useAddPricingList({
-  mutationConfig = {},
+  mutationConfig = {} as CustomMutationConfig, // Provide a default typed empty object
 }: {
-  mutationConfig?: Record<string, unknown>;
-} = {}) {
+  mutationConfig?: CustomMutationConfig;
+}) {
   const queryClient = useQueryClient();
+
+  // Extract component's onSuccess from mutationConfig
+  const { onSuccess: componentOnSuccessCallback, ...restMutationConfig } =
+    mutationConfig;
 
   return useMutation<AddPricingListResponse, Error, AddPricingListRequest>({
     mutationFn: async ({ data }) => {
@@ -45,9 +59,17 @@ export function useAddPricingList({
       console.log("response", response.data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (responseData, variables, context) => {
+      // Invalidate all relevant pricing list queries
       queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+
+      // Then, if component provided an onSuccess, call it
+      if (componentOnSuccessCallback) {
+        componentOnSuccessCallback(responseData, variables, context);
+      }
     },
-    ...mutationConfig,
+    // Spread the rest of the config (e.g., onError, onSettled from component)
+    ...restMutationConfig,
   });
 }

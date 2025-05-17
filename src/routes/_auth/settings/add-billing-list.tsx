@@ -2,12 +2,11 @@ import {
   Button,
   Group,
   Select,
-  MultiSelect,
   TextInput,
   Title,
-  Divider,
   Loader,
   Textarea,
+  MultiSelect,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -294,6 +293,14 @@ function AddBillingListComponent() {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
             queryClient.invalidateQueries({ queryKey: ["billingList"] });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "billingProductsByBrandType",
+                typeDependency,
+                brandCsv,
+                searchTerm,
+              ],
+            });
             navigate({
               to: "/settings",
               search: { tab: "billing" },
@@ -306,7 +313,15 @@ function AddBillingListComponent() {
         }
       );
     },
-    [form.values, addBillingListMutation, queryClient, navigate]
+    [
+      form.values,
+      addBillingListMutation,
+      queryClient,
+      navigate,
+      typeDependency,
+      brandCsv,
+      searchTerm,
+    ]
   );
 
   const fetchMoreAddBillingListProducts = useCallback(async () => {
@@ -456,23 +471,7 @@ function AddBillingListComponent() {
 
           <section className="mb-8">
             <div className="bg-white shadow-md rounded-lg p-6">
-              <Group justify="space-between" align="center">
-                <Title order={2} className="text-primary font-semibold text-xl">
-                  Refine your results
-                </Title>
-                <Button
-                  rightSection={<ExitIcon />}
-                  onClick={handleClearAllFilters}
-                  variant="outline"
-                  className="border-primary border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                >
-                  Clear all
-                </Button>
-              </Group>
-
-              <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 items-end">
                 <MultiSelect
                   {...form.getInputProps("brand")}
                   label="Filter by Brand"
@@ -483,12 +482,16 @@ function AddBillingListComponent() {
                   clearable
                   disabled={isLoadingBrands}
                 />
+                <Button
+                  rightSection={<ExitIcon />}
+                  onClick={handleClearAllFilters}
+                  variant="outline"
+                  className="border-primary w-fit border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                >
+                  Clear all filters
+                </Button>
               </div>
-            </div>
-          </section>
 
-          <section className="mb-8">
-            <div className="bg-white shadow-md rounded-lg p-6">
               <div className="flex justify-end items-center mb-6">
                 <Group gap="sm">
                   <Button
