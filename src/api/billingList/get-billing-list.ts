@@ -97,5 +97,6 @@ export async function getBillingListByBillingId({
   const response = await axios.get<GetBillingProductListResponse>(
     `/billing-list-products/${billingId}?${params.toString()}`
   );
+  console.log({ response });
   return response.data;
 }

@@ -2,10 +2,10 @@ import {
   Button,
   Group,
   Select,
+  MultiSelect,
   TextInput,
   Title,
   Divider,
-  CloseButton,
   Loader,
   Textarea,
 } from "@mantine/core";
@@ -15,11 +15,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
-import SearchIcon from "@/components/Icons/SearchIcon";
 import { selectStyles, textInputStyles } from "@/components/Shared/Styles";
 import { useAddBillingList } from "@/api/billingList/add-billing-list";
 import { useState, useEffect, useCallback } from "react";
-import { twMerge } from "tailwind-merge";
 import AddBillingListProductTable from "@/components/AddBillingList/AddBillingListProductTable";
 import type {
   Product,
@@ -28,10 +26,6 @@ import type {
 } from "@/api/billingList/get-billing-product-list";
 import Headline from "@/components/Shared/Headline";
 import { getBrands, type Brand as ApiBrand } from "@/api/get-brands";
-import {
-  getBrandPillars,
-  type Pillar as ApiPillar,
-} from "@/api/get-brandPillars";
 import { getBillingListByBrandType } from "@/api/billingList/get-billing-list";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
 import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
@@ -44,8 +38,7 @@ interface BillingListFormValues {
   name: string;
   type: string;
   description: string;
-  brand: string;
-  brandPillar: string;
+  brand: string[];
   selectedProductsWithPrices: Array<{
     product_id: string;
     price: string | number;
@@ -70,17 +63,13 @@ function AddBillingListComponent() {
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [brandPillarOptions, setBrandPillarOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
 
   const form = useForm<BillingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      brand: "",
-      brandPillar: "",
+      brand: [],
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -97,8 +86,10 @@ function AddBillingListComponent() {
     mode: "add",
     brandType: form.values.type,
     filters: {
-      brand_id: form.values.brand,
-      brand_pillar_id: form.values.brandPillar,
+      brand_id:
+        Array.isArray(form.values.brand) && form.values.brand.length > 0
+          ? form.values.brand.join(",")
+          : undefined,
     },
   });
 
@@ -106,12 +97,7 @@ function AddBillingListComponent() {
     setProductsData([]);
     setProductsMeta(null);
     setSelectedTableRow(null);
-  }, [
-    searchTerm,
-    form.values.brand,
-    form.values.brandPillar,
-    form.values.type,
-  ]);
+  }, [searchTerm, form.values.brand, form.values.type]);
 
   const {
     isLoading: isLoadingInitialProducts,
@@ -122,7 +108,6 @@ function AddBillingListComponent() {
       "billingProductsByBrandType",
       form.values.type,
       form.values.brand,
-      form.values.brandPillar,
       searchTerm,
     ],
     queryFn: () => {
@@ -141,7 +126,10 @@ function AddBillingListComponent() {
       }
       return getBillingListByBrandType({
         brandType: form.values.type,
-        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        brandIds:
+          Array.isArray(form.values.brand) && form.values.brand.length > 0
+            ? form.values.brand.map(Number)
+            : undefined,
         cursor: 1,
         pageSize: PAGE_SIZE,
       });
@@ -152,10 +140,20 @@ function AddBillingListComponent() {
   console.log(initialBillingProductListResult);
 
   useEffect(() => {
-    if (initialBillingProductListResult?.data) {
-      setProductsData(initialBillingProductListResult.data);
-      setProductsMeta(initialBillingProductListResult.meta);
-      setProductsHasMore(initialBillingProductListResult.meta.has_next);
+    if (initialBillingProductListResult) {
+      const data = initialBillingProductListResult.data || [];
+      // Provide a default for meta if it's undefined or null in the response
+      const metaOrDefault = initialBillingProductListResult.meta || {
+        cursor: null,
+        page_size: PAGE_SIZE,
+        has_previous: false,
+        has_next: false,
+        total: data.length, // Default total based on current data if meta is missing
+      };
+
+      setProductsData(data);
+      setProductsMeta(metaOrDefault as Meta); // Assert type as Meta because we're providing a full default
+      setProductsHasMore(metaOrDefault.has_next);
     } else if (
       !isLoadingInitialProducts &&
       initialBillingProductListResult === undefined
@@ -190,57 +188,30 @@ function AddBillingListComponent() {
     }
   }, [brandsData]);
 
-  const selectedBrandIdFromForm = form.values.brand;
-  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
-    ApiPillar[],
-    Error
-  >({
-    queryKey: ["brandPillarsForAddBillingList", selectedBrandIdFromForm],
-    queryFn: async () => {
-      if (!selectedBrandIdFromForm) return [];
-      const response = await getBrandPillars({
-        filter: { brand_id: selectedBrandIdFromForm },
-      });
-      return response.data;
-    },
-    enabled: !!selectedBrandIdFromForm,
-  });
-
-  console.log({ brandPillarsData });
-
-  useEffect(() => {
-    if (brandPillarsData) {
-      setBrandPillarOptions(
-        brandPillarsData.map((pillar: ApiPillar) => ({
-          value: pillar.id.toString(),
-          label: pillar.name,
-        }))
-      );
-    } else if (!selectedBrandIdFromForm) {
-      setBrandPillarOptions([]);
-    }
-  }, [brandPillarsData, selectedBrandIdFromForm]);
-
   const billingTypes = [
     { value: "luxury", label: "Luxury" },
     { value: "consumer beauty", label: "Consumer Beauty" },
   ];
 
   const handleSubmit = (values: BillingListFormValues) => {
-    const { name, type, description, selectedProductsWithPrices } = values;
+    const { name, type, description } = values;
 
-    const productsPayload = (selectedProductsWithPrices || [])
-      .map((p) => ({
-        product_id: Number(p.product_id),
-        price: Number(p.price),
-      }))
-      .filter(
-        (p) =>
-          p.product_id &&
-          !isNaN(p.product_id) &&
-          p.price !== undefined &&
-          !isNaN(p.price)
-      );
+    const productsPayload = (initialBillingProductListResult?.data || []).map(
+      (p) => {
+        let priceValue = 0; // Default price to 0
+        if (p.price !== null && p.price !== undefined) {
+          const numPrice = Number(p.price);
+          // Ensure that if p.price was a string, it converted to a valid number
+          if (!isNaN(numPrice)) {
+            priceValue = numPrice;
+          }
+        }
+        return {
+          product_id: Number(p.id), // p.id is already number, Number() is for safety.
+          price: priceValue,
+        };
+      }
+    );
 
     console.log(
       "Form submitted for Billing List. Name:",
@@ -291,8 +262,7 @@ function AddBillingListComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      brand: "",
-      brandPillar: "",
+      brand: [],
     });
   };
 
@@ -348,7 +318,10 @@ function AddBillingListComponent() {
     try {
       const response = await getBillingListByBrandType({
         brandType: form.values.type,
-        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        brandIds:
+          Array.isArray(form.values.brand) && form.values.brand.length > 0
+            ? form.values.brand.map(Number)
+            : undefined,
         cursor: productsMeta.cursor,
         pageSize: PAGE_SIZE,
       });
@@ -476,7 +449,7 @@ function AddBillingListComponent() {
                 </Button>
               </Group>
 
-              <div className="flex items-center gap-x-5 mt-6">
+              {/* <div className="flex items-center gap-x-5 mt-6">
                 <TextInput
                   placeholder="Search for..."
                   leftSection={<SearchIcon />}
@@ -498,23 +471,22 @@ function AddBillingListComponent() {
                     Clear
                   </span>
                 </button>
-              </div>
+              </div> */}
 
               <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <Select
+                <MultiSelect
                   {...form.getInputProps("brand")}
                   label="Filter by Brand"
-                  placeholder="Select Brand"
+                  placeholder="Select Brands"
                   data={brandOptions}
-                  rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
                   disabled={isLoadingBrands}
                 />
-                <Select
+                {/* <Select
                   {...form.getInputProps("brandPillar")}
                   label="Filter by Brand Pillar"
                   placeholder="Select Brand Pillar"
@@ -524,7 +496,7 @@ function AddBillingListComponent() {
                   searchable
                   clearable
                   disabled={isLoadingBrandPillars || !selectedBrandIdFromForm}
-                />
+                /> */}
               </div>
             </div>
           </section>
