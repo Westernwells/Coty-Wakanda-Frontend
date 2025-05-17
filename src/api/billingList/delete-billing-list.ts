@@ -12,7 +12,7 @@ interface DeleteBillingListResponse {
 
 export const deleteBillingList = async (id: number) => {
   const response = await axios.delete<DeleteBillingListResponse>(
-    `/billing-list/${id}`
+    `/billing-lists/${id}`
   );
   return response.data;
 };

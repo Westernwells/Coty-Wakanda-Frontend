@@ -8,6 +8,7 @@ import {
   CloseButton,
   Loader,
   Textarea,
+  MultiSelect,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import {
@@ -56,10 +57,6 @@ import { getBillingListByBillingId } from "@/api/billingList/get-billing-list";
 import Headline from "@/components/Shared/Headline";
 // Import APIs for brands and brand pillars
 import { getBrands, type Brand as ApiBrand } from "@/api/get-brands"; // Renamed imported Brand to ApiBrand
-import {
-  getBrandPillars,
-  type Pillar as ApiPillar,
-} from "@/api/get-brandPillars";
 import { useBillingListProductCsvDownload } from "@/lib/hooks/useBillingListProductCsvDownload";
 import { CsvUpload } from "@/components/AddPricingList/CsvUpload";
 
@@ -73,11 +70,10 @@ interface BillingListFormValues {
   name: string;
   type: string;
   description: string;
-  brand: string; // Keep brand for filtering master data
-  brandPillar: string; // Changed from house to brandPillar
+  brand: string[];
   selectedProductsWithPrices: Array<{
-    product_id: string; // IRC or ID from MasterProduct
-    price: string | number; // The billing value/price for this product
+    product_id: string;
+    price: string | number;
   }>;
 }
 
@@ -109,17 +105,13 @@ function EditBillingListComponent() {
   const [brandOptions, setBrandOptions] = useState<
     { value: string; label: string }[]
   >([]);
-  const [brandPillarOptions, setBrandPillarOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
 
   const form = useForm<BillingListFormValues>({
     initialValues: {
       name: "",
       type: "",
       description: "",
-      brand: "",
-      brandPillar: "",
+      brand: [],
       selectedProductsWithPrices: [],
     },
     validate: {
@@ -137,6 +129,8 @@ function EditBillingListComponent() {
     enabled: !!billingListId,
   });
 
+  console.log({ existingBillingListData });
+
   useEffect(() => {
     if (existingBillingListData) {
       if (formInitializedForId !== billingListId) {
@@ -144,18 +138,24 @@ function EditBillingListComponent() {
           name: existingBillingListData.name,
           type: existingBillingListData.type,
           description: existingBillingListData.description || "",
-          brand: "",
-          brandPillar: "",
+          brand: [],
           selectedProductsWithPrices:
-            existingBillingListData.products?.map((p) => ({
-              product_id: p.product_id.toString(), // Use product_id from fetched data
-              price: p.price,
-            })) || [],
+            existingBillingListData.products
+              ?.filter((p) => p && typeof p.product_id === "number")
+              .map((p) => ({
+                product_id: p.product_id.toString(),
+                price: p.price,
+              })) || [],
         });
         setFormInitializedForId(billingListId);
       }
     }
-  }, [existingBillingListData, form, billingListId, formInitializedForId]);
+  }, [
+    existingBillingListData,
+    billingListId,
+    formInitializedForId,
+    form.setValues,
+  ]);
 
   const {
     isLoading: isLoadingInitialProducts,
@@ -167,7 +167,6 @@ function EditBillingListComponent() {
       billingListId,
       form.values.type,
       form.values.brand,
-      form.values.brandPillar,
     ],
     queryFn: () => {
       if (!form.values.type || !billingListId) {
@@ -186,7 +185,10 @@ function EditBillingListComponent() {
       return getBillingListByBillingId({
         billingId: billingListId.toString(),
         brandType: form.values.type,
-        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        brandIds:
+          form.values.brand.length > 0
+            ? form.values.brand.map(Number)
+            : undefined,
         cursor: 1,
         pageSize: PAGE_SIZE,
       });
@@ -195,10 +197,20 @@ function EditBillingListComponent() {
   });
 
   useEffect(() => {
-    if (initialBillingProductsResult?.data) {
-      setProductsData(initialBillingProductsResult.data);
-      setProductsMeta(initialBillingProductsResult.meta);
-      setProductsHasMore(initialBillingProductsResult.meta.has_next);
+    if (initialBillingProductsResult) {
+      const data = initialBillingProductsResult.data || [];
+      // Provide a default for meta if it's undefined or null in the response
+      const metaOrDefault = initialBillingProductsResult.meta || {
+        cursor: null,
+        page_size: PAGE_SIZE,
+        has_previous: false,
+        has_next: false,
+        total: data.length, // Default total based on current data if meta is missing
+      };
+
+      setProductsData(data);
+      setProductsMeta(metaOrDefault as BillingListApiMeta); // Assert type as Meta because we're providing a full default
+      setProductsHasMore(metaOrDefault.has_next);
     } else if (
       !isLoadingInitialProducts &&
       initialBillingProductsResult === undefined
@@ -235,45 +247,6 @@ function EditBillingListComponent() {
     }
   }, [brandsData]);
 
-  // Fetch Brand Pillars, dependent on selected brand
-  const selectedBrandId = form.values.brand;
-  const { data: brandPillarsData, isLoading: isLoadingBrandPillars } = useQuery<
-    ApiPillar[],
-    Error
-  >({
-    queryKey: ["brandPillarsForBillingList", selectedBrandId],
-    queryFn: async () => {
-      if (!selectedBrandId) return [];
-      const response = await getBrandPillars({
-        filter: { brand_id: selectedBrandId },
-      });
-      return response.data;
-    },
-    enabled: !!selectedBrandId,
-  });
-
-  // Effect to update brandPillarOptions when brandPillarsData changes
-  useEffect(() => {
-    if (brandPillarsData) {
-      setBrandPillarOptions(
-        brandPillarsData.map((pillar: ApiPillar) => ({
-          value: pillar.id.toString(),
-          label: pillar.name,
-        }))
-      );
-    } else if (!selectedBrandId) {
-      setBrandPillarOptions([]);
-    }
-  }, [brandPillarsData, selectedBrandId]);
-
-  // Clear brand pillar options and field value if brand changes and no new brand is selected
-  useEffect(() => {
-    if (!selectedBrandId) {
-      setBrandPillarOptions([]);
-      form.setFieldValue("brandPillar", "");
-    }
-  }, [selectedBrandId, form]);
-
   // Re-add billingTypes constant
   const billingTypes = [
     { value: "luxury", label: "Luxury" },
@@ -281,14 +254,25 @@ function EditBillingListComponent() {
   ];
 
   const handleSubmit = (values: BillingListFormValues) => {
-    const { name, type, description, selectedProductsWithPrices } = values;
+    const { name, type, description } = values;
 
-    const productsPayload = (selectedProductsWithPrices || [])
-      .map((p) => ({
-        product_id: p.product_id,
-        price: Number(p.price),
-      }))
-      .filter((p) => p.product_id && p.price !== undefined && !isNaN(p.price));
+    const productsPayload = (initialBillingProductsResult?.data || []).map(
+      (p) => {
+        let priceValue = 0; // Default price to 0
+        if (p.price !== null && p.price !== undefined) {
+          const numPrice = Number(p.price);
+          // Ensure that if p.price was a string, it converted to a valid number
+          if (!isNaN(numPrice)) {
+            priceValue = numPrice;
+          }
+        }
+        return {
+          product_id: p.id.toString(), // p.id is already number, Number() is for safety.
+          price: priceValue,
+        };
+      }
+    );
+    console.log({ productsPayload });
 
     updateBillingListMutation.mutate(
       {
@@ -334,8 +318,7 @@ function EditBillingListComponent() {
     setSearchTerm("");
     form.setValues({
       ...form.values,
-      brand: "",
-      brandPillar: "",
+      brand: [],
     });
   };
 
@@ -393,7 +376,8 @@ function EditBillingListComponent() {
   const fetchMoreEditBillingListProducts = useCallback(async () => {
     if (
       productsIsLoadingMore ||
-      !productsMeta?.has_next ||
+      !productsMeta ||
+      !productsMeta.has_next ||
       productsMeta.cursor === null ||
       !form.values.type ||
       !billingListId
@@ -402,18 +386,31 @@ function EditBillingListComponent() {
 
     setProductsIsLoadingMore(true);
     try {
-      const response = await getBillingListByBillingId({
+      const apiResponse = await getBillingListByBillingId({
         billingId: billingListId.toString(),
         brandType: form.values.type,
-        brandIds: form.values.brand ? [Number(form.values.brand)] : undefined,
+        brandIds:
+          form.values.brand.length > 0
+            ? form.values.brand.map(Number)
+            : undefined,
         cursor: productsMeta.cursor,
         pageSize: PAGE_SIZE,
       });
-      setProductsData((prev) => [...prev, ...response.data]);
-      setProductsMeta(response.meta);
-      setProductsHasMore(response.meta.has_next);
+
+      if (apiResponse && apiResponse.meta) {
+        setProductsData((prev) => [...prev, ...(apiResponse.data || [])]);
+        setProductsMeta(apiResponse.meta);
+        setProductsHasMore(apiResponse.meta.has_next);
+      } else {
+        console.warn(
+          "fetchMoreEditBillingListProducts: API response was missing or did not contain meta property.",
+          apiResponse
+        );
+        setProductsHasMore(false);
+      }
     } catch (error) {
       console.error("Error fetching more product data:", error);
+      setProductsHasMore(false);
     } finally {
       setProductsIsLoadingMore(false);
     }
@@ -424,6 +421,24 @@ function EditBillingListComponent() {
     form.values.type,
     form.values.brand,
   ]);
+
+  const handlePriceChange = useCallback(
+    (irc: string, newPrice: number) => {
+      setProductsData((currentProducts) =>
+        currentProducts.map((p) =>
+          p.irc === irc ? { ...p, price: String(newPrice) } : p
+        )
+      );
+      // Also update the form's selectedProductsWithPrices if needed
+      form.setFieldValue(
+        "selectedProductsWithPrices",
+        form.values.selectedProductsWithPrices.map((sp) =>
+          sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+        )
+      );
+    },
+    [form.values.selectedProductsWithPrices] // Ensure form is a dependency if its state is used
+  );
 
   const isProductListLoading =
     isLoadingInitialProducts || isLoadingExistingBillingList;
@@ -442,8 +457,8 @@ function EditBillingListComponent() {
     billingId: billingListId.toString(),
     brandType: form.values.type,
     filters: {
-      brand_id: form.values.brand,
-      brand_pillar_id: form.values.brandPillar,
+      brand_id:
+        form.values.brand.length > 0 ? form.values.brand.join(",") : undefined,
     },
   });
 
@@ -584,31 +599,15 @@ function EditBillingListComponent() {
               <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <Select
+                <MultiSelect
                   {...form.getInputProps("brand")}
                   label="Filter brand"
-                  placeholder="Filter brand"
+                  placeholder="Filter brand(s)"
                   data={brandOptions}
-                  rightSection={<ChevronDownIcon />}
                   classNames={selectStyles}
                   searchable
                   clearable
                   disabled={isLoadingBrands}
-                />
-                <Select
-                  {...form.getInputProps("brandPillar")}
-                  label="Filter brand pillar"
-                  placeholder={
-                    isLoadingBrandPillars
-                      ? "Loading pillars..."
-                      : "Filter brand pillar"
-                  }
-                  data={brandPillarOptions}
-                  rightSection={<ChevronDownIcon />}
-                  classNames={selectStyles}
-                  searchable
-                  clearable
-                  disabled={isLoadingBrandPillars || !selectedBrandId}
                 />
               </div>
             </div>
@@ -665,6 +664,7 @@ function EditBillingListComponent() {
                       fetchMoreData={fetchMoreEditBillingListProducts}
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
+                      onPriceChange={handlePriceChange}
                     />
                   </div>
                 </div>

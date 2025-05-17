@@ -40,6 +40,7 @@ export function useUpdateBillingList({
   >({
     mutationFn: async ({ data }) => {
       const { id, ...updateData } = data;
+      console.log({ updateData });
       const response = await axios.put<UpdateBillingListResponse>(
         `/billing-lists/${id}`,
         updateData

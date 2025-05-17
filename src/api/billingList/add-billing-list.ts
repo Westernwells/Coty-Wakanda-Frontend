@@ -34,6 +34,7 @@ export function useAddBillingList({
 
   return useMutation<AddBillingListResponse, Error, AddBillingListRequest>({
     mutationFn: async ({ data }) => {
+      console.log({ "sending data": data });
       const response = await axios.post<AddBillingListResponse>(
         "/billing-lists",
         data
