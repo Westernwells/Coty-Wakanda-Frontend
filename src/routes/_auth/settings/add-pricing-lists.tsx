@@ -59,7 +59,21 @@ const pricingTypes = [
 function AddPricingListsComponent() {
   const navigate = useNavigate({ from: Route.fullPath });
   const queryClient = useQueryClient();
-  const addPricingListMutation = useAddPricingList();
+  const addPricingListMutation = useAddPricingList({
+    mutationConfig: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+        navigate({
+          to: "/settings",
+          search: { tab: "pricing" },
+          replace: true,
+        });
+      },
+      onError: (error) => {
+        console.error("Error adding pricing list:", error);
+      },
+    },
+  });
   const formId = "add-pricing-list-form";
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -223,15 +237,12 @@ function AddPricingListsComponent() {
   const handleSubmit = (values: PricingListFormValues) => {
     const { name, type, description } = values;
 
-    // Transform productsData directly to the required format
     const productsPayload = productsData.map((product) => ({
       product_id: Number(product.id),
       price: Number(product.price || 0),
     }));
-    // .filter((p) => p.product_id && !isNaN(p.product_id) && p.price > 0);
 
-    // Validate if we have any valid products
-    if (productsPayload.length === 0) {
+    if (!isCsvMode && productsPayload.length === 0) {
       console.error("No valid products found for submission");
       return;
     }
@@ -244,30 +255,14 @@ function AddPricingListsComponent() {
       totalProducts: productsPayload.length,
     });
 
-    addPricingListMutation.mutate(
-      {
-        data: {
-          name,
-          type,
-          description,
-          products: productsPayload,
-        },
+    addPricingListMutation.mutate({
+      data: {
+        name,
+        type,
+        description,
+        products: productsPayload,
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-          queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
-          navigate({
-            to: "/settings",
-            search: { tab: "pricing" },
-            replace: true,
-          });
-        },
-        onError: (error) => {
-          console.error("Error adding pricing list:", error);
-        },
-      }
-    );
+    });
   };
 
   const handleCancel = () => {
@@ -360,7 +355,7 @@ function AddPricingListsComponent() {
 
   const handleCsvUpload = useCallback(
     (
-      data: Array<{
+      csvData: Array<{
         brand_name: string;
         description: string;
         brand_pillar: string;
@@ -369,47 +364,22 @@ function AddPricingListsComponent() {
         irc: string;
       }>
     ) => {
-      // if (!form.values.name || !form.values.type) {
-      //   toast.error("Please fill in the required pricing list details first");
-      //   return;
-      // }
-
-      // Call the API directly with the CSV data
-
-      console.log("CSV data:", {
+      console.log("CSV data for submission:", {
         name: form.values.name,
         type: form.values.type,
         description: form.values.description,
-        file: data,
+        file: csvData,
       });
-      addPricingListMutation.mutate(
-        {
-          data: {
-            name: form.values.name,
-            type: form.values.type,
-            description: form.values.description,
-            file: data, // Pass the CSV data directly to the file field
-          },
+      addPricingListMutation.mutate({
+        data: {
+          name: form.values.name,
+          type: form.values.type,
+          description: form.values.description,
+          file: csvData,
         },
-        {
-          onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-            queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
-            navigate({
-              to: "/settings",
-              search: { tab: "pricing" },
-              replace: true,
-            });
-          },
-          onError: (error) => {
-            console.error("Error adding pricing list:", error);
-          },
-        }
-      );
-
-      setIsCsvMode(true);
+      });
     },
-    [form.values, addPricingListMutation, queryClient, navigate]
+    [form.values, addPricingListMutation]
   );
 
   return (

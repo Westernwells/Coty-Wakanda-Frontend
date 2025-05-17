@@ -36,14 +36,9 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const newPrice = event.target.value;
-    // Allow empty string for temporary input state, or convert to number
     if (newPrice === "" || isNaN(Number(newPrice))) {
-      // Potentially handle invalid input, or rely on parent to validate/convert
-      // For now, if it's not a valid number, we might not call onPriceChange
-      // or call it with a specific signal for invalid input.
-      // Let's assume for now we only call onPriceChange with valid numbers.
       if (newPrice === "") {
-        onPriceChange(irc, 0); // Or some other placeholder like NaN, null
+        onPriceChange(irc, 0);
       }
     } else {
       onPriceChange(irc, Number(newPrice));
@@ -58,7 +53,7 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
       <div
         id="addBillingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-8rem)]"
       >
         <InfiniteScroll
           dataLength={products.length}
@@ -153,12 +148,8 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
                           ? "bg-white"
                           : "bg-transparent border-none pointer-events-none"
                       )}
-                      // Disable if not the selected row to prevent accidental edits,
-                      // or simply style to appear non-interactive.
-                      // The pointer-events-none on bg-transparent helps achieve this.
-                      // For a more robust read-only look, you might need more conditional styling or a disabled attribute.
                       readOnly={selectedRow !== product.irc}
-                      onClick={(e) => e.stopPropagation()} // Prevent row click event when clicking input
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </td>
                 </tr>
