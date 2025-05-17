@@ -293,6 +293,14 @@ function AddBillingListComponent() {
           onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["billing-lists"] });
             queryClient.invalidateQueries({ queryKey: ["billingList"] });
+            queryClient.invalidateQueries({
+              queryKey: [
+                "billingProductsByBrandType",
+                typeDependency,
+                brandCsv,
+                searchTerm,
+              ],
+            });
             navigate({
               to: "/settings",
               search: { tab: "billing" },
@@ -305,7 +313,15 @@ function AddBillingListComponent() {
         }
       );
     },
-    [form.values, addBillingListMutation, queryClient, navigate]
+    [
+      form.values,
+      addBillingListMutation,
+      queryClient,
+      navigate,
+      typeDependency,
+      brandCsv,
+      searchTerm,
+    ]
   );
 
   const fetchMoreAddBillingListProducts = useCallback(async () => {

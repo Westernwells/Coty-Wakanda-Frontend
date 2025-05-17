@@ -11,6 +11,11 @@ interface AddPricingListProductTableProps {
   fetchMoreData: () => Promise<void>;
   hasMore: boolean;
   isLoadingMore: boolean;
+  onPriceChange: (irc: string, newPrice: number) => void;
+  selectedProductsWithPrices: Array<{
+    product_id: string;
+    price: string | number;
+  }>;
 }
 
 const TableLoader = () => (
@@ -26,8 +31,24 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
   fetchMoreData,
   hasMore,
   isLoadingMore,
+  onPriceChange,
+  selectedProductsWithPrices,
 }) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
+
+  const handlePriceInputChange = (
+    irc: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newPrice = event.target.value;
+    if (newPrice === "" || isNaN(Number(newPrice))) {
+      if (newPrice === "") {
+        onPriceChange(irc, 0);
+      }
+    } else {
+      onPriceChange(irc, Number(newPrice));
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -37,7 +58,7 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
       <div
         id="addPricingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        className="flex-grow overflow-y-auto max-h-[1400px]"
       >
         <InfiniteScroll
           dataLength={products.length}
@@ -48,14 +69,14 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
               <TableLoader />
             ) : (
               <tr style={{ height: "50px" }}>
-                <td colSpan={6} />
+                <td colSpan={7} />
               </tr>
             )
           }
           scrollableTarget="addPricingListProductTableScrollable"
           endMessage={
             <tr className="w-full">
-              <td colSpan={6} className="text-center text-gray-500 py-4">
+              <td colSpan={7} className="text-center text-gray-500 py-4">
                 {products.length > 0 ? "No more products to load." : ""}
               </td>
             </tr>
@@ -89,42 +110,62 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr
-                  key={product.irc}
-                  onClick={() => setSelectedRow(product.irc)}
-                  className={cn(
-                    "cursor-pointer hover:bg-primary/10",
-                    selectedRow === product.irc && "bg-primary/30"
-                  )}
-                >
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.brand?.name || "-"}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.material_description || "-"}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.brand_pillar?.name || "-"}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.article_type || "-"}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.irc || "-"}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {product.article_type}
-                  </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
-                    {typeof product.price === "number" ||
-                    (typeof product.price === "string" &&
-                      product.price.trim() !== "")
-                      ? `$${Number(product.price).toFixed(2)}`
-                      : "-"}
-                  </td>
-                </tr>
-              ))}
+              {products.map((product) => {
+                const selectedProduct = selectedProductsWithPrices.find(
+                  (sp) => sp.product_id === product.irc
+                );
+                const priceValue = selectedProduct
+                  ? selectedProduct.price
+                  : product.price;
+                return (
+                  <tr
+                    key={product.irc}
+                    onClick={() => setSelectedRow(product.irc)}
+                    className={cn(
+                      "cursor-pointer hover:bg-primary/10",
+                      selectedRow === product.irc && "bg-primary/30"
+                    )}
+                  >
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.brand?.name || "-"}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.material_description || "-"}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.brand_pillar?.name || "-"}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.article_type || "-"}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.irc || "-"}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      {product.article_type}
+                    </td>
+                    <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                      <input
+                        type="number"
+                        value={
+                          priceValue === null || priceValue === undefined
+                            ? ""
+                            : String(priceValue)
+                        }
+                        onChange={(e) => handlePriceInputChange(product.irc, e)}
+                        onFocus={() => setSelectedRow(product.irc)}
+                        className={cn(
+                          "w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-1",
+                          selectedRow === product.irc
+                            ? "bg-white"
+                            : "bg-gray-100"
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </InfiniteScroll>

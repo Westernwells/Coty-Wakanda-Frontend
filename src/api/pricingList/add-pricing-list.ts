@@ -60,8 +60,9 @@ export function useAddPricingList({
       return response.data;
     },
     onSuccess: (responseData, variables, context) => {
-      // Hook's primary responsibility: invalidate ["pricing-lists"]
+      // Invalidate all relevant pricing list queries
       queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
+      queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
 
       // Then, if component provided an onSuccess, call it
       if (componentOnSuccessCallback) {

@@ -5,8 +5,6 @@ import {
   Select,
   TextInput,
   Title,
-  Divider,
-  CloseButton,
   Loader,
   Textarea,
 } from "@mantine/core";
@@ -21,12 +19,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import ExitIcon from "@/components/Icons/ExitIcon";
-import SearchIcon from "@/components/Icons/SearchIcon";
 import { selectStyles, textInputStyles } from "@/components/Shared/Styles";
 import { useUpdatePricingList } from "@/api/pricingList/update-pricing-list";
 import { getPricingListById } from "@/api/pricingList/get-pricing-list-by-id";
 import { useState, useEffect, useCallback } from "react";
-import { twMerge } from "tailwind-merge";
 import AddPricingListProductTable from "@/components/AddPricingList/AddPricingListProductTable";
 import type { Product, Meta } from "@/api/pricingList/get-pricing-product-list";
 import { getPricingListByPricingId } from "@/api/pricingList/get-pricing-list";
@@ -64,7 +60,6 @@ function EditPricingListComponent() {
   const queryClient = useQueryClient();
   const updatePricingListMutation = useUpdatePricingList();
   const formId = "edit-pricing-list-form";
-  const [searchTerm, setSearchTerm] = useState("");
   const [isCsvMode, setIsCsvMode] = useState(false);
 
   const [productsData, setProductsData] = useState<Product[]>([]);
@@ -224,7 +219,6 @@ function EditPricingListComponent() {
   };
 
   const handleClearAllFilters = () => {
-    setSearchTerm("");
     form.setValues({
       ...form.values,
       brands: [],
@@ -346,6 +340,34 @@ function EditPricingListComponent() {
 
   const noCsvProductsFound = isCsvMode && productsData.length === 0;
 
+  // Add price change handler for table
+  const handlePriceChange = useCallback(
+    (irc: string, newPrice: number) => {
+      setProductsData((currentProducts) =>
+        currentProducts.map((p) =>
+          p.irc === irc ? { ...p, price: String(newPrice) } : p
+        )
+      );
+      const exists = form.values.selectedProductsWithPrices.some(
+        (sp) => sp.product_id === irc
+      );
+      if (exists) {
+        form.setFieldValue(
+          "selectedProductsWithPrices",
+          form.values.selectedProductsWithPrices.map((sp) =>
+            sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+          )
+        );
+      } else {
+        form.setFieldValue("selectedProductsWithPrices", [
+          ...form.values.selectedProductsWithPrices,
+          { product_id: irc, price: String(newPrice) },
+        ]);
+      }
+    },
+    [form.values.selectedProductsWithPrices]
+  );
+
   if (isLoadingExistingPricingList) {
     return (
       <div className="w-full py-4 md:py-6 flex justify-center items-center">
@@ -444,48 +466,7 @@ function EditPricingListComponent() {
 
           <section className="mb-8">
             <div className="bg-white shadow-md rounded-lg p-6">
-              <Group justify="space-between" align="center">
-                <Title order={2} className="text-primary font-semibold text-xl">
-                  Refine your results
-                </Title>
-                <Button
-                  rightSection={<ExitIcon />}
-                  onClick={handleClearAllFilters}
-                  variant="outline"
-                  className="border-primary border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-                >
-                  Clear all
-                </Button>
-              </Group>
-
-              <div className="flex items-center gap-x-5 mt-6">
-                <TextInput
-                  placeholder="Search for..."
-                  leftSection={<SearchIcon />}
-                  className="flex-grow"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.currentTarget.value)}
-                  classNames={textInputStyles}
-                  disabled={isCsvMode}
-                />
-                <button
-                  type="button"
-                  className={twMerge(
-                    "flex items-center gap-x-2 cursor-pointer group",
-                    !searchTerm.length && "invisible"
-                  )}
-                  onClick={() => setSearchTerm("")}
-                >
-                  <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
-                  <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
-                    Clear
-                  </span>
-                </button>
-              </div>
-
-              <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 items-end">
                 <MultiSelect
                   label="Filter by Brands"
                   placeholder="Select Brands"
@@ -498,12 +479,15 @@ function EditPricingListComponent() {
                   onChange={(value) => form.setFieldValue("brands", value)}
                   disabled={isLoadingBrands || isCsvMode}
                 />
+                <Button
+                  rightSection={<ExitIcon />}
+                  onClick={handleClearAllFilters}
+                  variant="outline"
+                  className="border-primary w-fit border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+                >
+                  Clear all filters
+                </Button>
               </div>
-            </div>
-          </section>
-
-          <section className="mb-8">
-            <div className="bg-white shadow-md rounded-lg p-6">
               <div className="flex justify-end items-center mb-6">
                 <Group gap="sm">
                   <Button
@@ -519,7 +503,6 @@ function EditPricingListComponent() {
                   <CsvUpload onUpload={handleCsvUpload} />
                 </Group>
               </div>
-
               {initialProductsError ? (
                 <div className="text-center py-10 text-red-500">
                   <p>Error loading products: {initialProductsError.message}</p>
@@ -530,10 +513,7 @@ function EditPricingListComponent() {
                 </div>
               ) : noProductsFound ? (
                 <div className="text-center py-10 text-gray-500">
-                  <p>
-                    No products found. Try adjusting brand filter or search
-                    term.
-                  </p>
+                  <p>No products found. Try adjusting brand filter.</p>
                   <p className="text-sm mt-1">
                     Alternatively, upload a product list.
                   </p>
@@ -559,6 +539,10 @@ function EditPricingListComponent() {
                       fetchMoreData={fetchMoreAddPricingListProducts}
                       hasMore={isCsvMode ? false : productsHasMore}
                       isLoadingMore={isCsvMode ? false : productsIsLoadingMore}
+                      onPriceChange={handlePriceChange}
+                      selectedProductsWithPrices={
+                        form.values.selectedProductsWithPrices
+                      }
                     />
                   </div>
                 </div>
