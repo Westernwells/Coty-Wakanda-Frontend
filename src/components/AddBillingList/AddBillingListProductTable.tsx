@@ -53,7 +53,7 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
       <div
         id="addBillingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-8rem)]"
+        className="flex-grow overflow-y-auto max-h-[1400px]"
       >
         <InfiniteScroll
           dataLength={products.length}
