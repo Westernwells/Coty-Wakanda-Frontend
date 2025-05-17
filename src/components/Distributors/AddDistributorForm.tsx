@@ -23,7 +23,7 @@ import {
 import { getRegions } from "@/api/get-regions";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
-import { Distributor, Pref } from "@/types";
+import { Distributor } from "@/types";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
@@ -32,23 +32,20 @@ import { useLayoutEffect, useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import CoefficientsTable from "./CoefficientsTable";
 import ProductsTable from "./ProductsTable";
+import CoefficientsTable from "./CoefficientsTable";
 
 export type FormValues = UpdateDistributorInput & {
   coefficients: Array<{
-    value: string;
+    type: "regular" | "giftset" | "tester";
+    pref_value: string;
+    non_pref_value?: string;
     brand_id: number;
     category_id: number;
-    pref: Pref;
+    description?: string;
   }>;
   brands: string[];
 };
-
-const accountTypes = [
-  { value: "hybrid", label: "Hybrid" },
-  { value: "formal", label: "Formal" },
-];
 
 const accountTypeCategories = [
   { value: "luxury", label: "Luxury" },
@@ -85,10 +82,12 @@ const AddDistributorForm = ({
         markets: formData.markets.map((market) => market.id.toString()),
         brands: formData.brands.map((brand) => brand.id.toString()),
         coefficients: formData.coefficients.map((coefficient) => ({
-          value: coefficient.value,
+          type: coefficient.type,
+          pref_value: coefficient.pref_value,
+          non_pref_value: coefficient.non_pref_value,
           brand_id: coefficient.brand.id,
           category_id: coefficient.category.id,
-          pref: coefficient.pref,
+          description: coefficient.description,
         })),
       };
       form.setValues(formValues);
@@ -324,13 +323,16 @@ const AddDistributorForm = ({
         ),
         markets: formData.markets.map((market) => market.id.toString()),
         brands: formData.brands.map((brand) => brand.id.toString()),
-
-        coefficients: formData.coefficients.map((coefficient) => ({
-          value: coefficient.value,
-          brand_id: coefficient.brand.id,
-          category_id: coefficient.category.id,
-          pref: coefficient.pref,
-        })),
+        coefficients: (formData.coefficients || [])
+          .filter((coefficient) => coefficient.brand && coefficient.category)
+          .map((coefficient) => ({
+            type: coefficient.type,
+            pref_value: coefficient.pref_value,
+            non_pref_value: coefficient.non_pref_value,
+            brand_id: coefficient.brand?.id ?? 0,
+            category_id: coefficient.category?.id ?? 0,
+            description: coefficient.description,
+          })),
       });
     }
   }, [formData, isEdit]);
@@ -374,7 +376,7 @@ const AddDistributorForm = ({
           <form
             onSubmit={form.onSubmit((values) => {
               if (isEdit) {
-                console.log("values", values);
+                // For update, pass coefficients as-is (form structure)
                 updateDistributorMutations.mutate({
                   distributorId: formData?.id as number,
                   data: {
@@ -391,9 +393,32 @@ const AddDistributorForm = ({
                     contact_email: values.contact_email,
                     categories: values.categories,
                     currency: values.currency,
+                    coefficients: values.coefficients,
                   },
                 });
               } else {
+                // Defensive: transform coefficients for API (add only)
+                const apiCoefficients = (values.coefficients || []).flatMap(
+                  (c) => {
+                    const arr = [
+                      {
+                        value: c.pref_value,
+                        brand_id: c.brand_id,
+                        category_id: c.category_id,
+                        pref: "pref" as "pref" | "non-pref",
+                      },
+                    ];
+                    if (c.non_pref_value) {
+                      arr.push({
+                        value: c.non_pref_value,
+                        brand_id: c.brand_id,
+                        category_id: c.category_id,
+                        pref: "non-pref" as "pref" | "non-pref",
+                      });
+                    }
+                    return arr;
+                  }
+                );
                 addDistributorMutations.mutate({
                   data: {
                     type: values.type,
@@ -407,7 +432,7 @@ const AddDistributorForm = ({
                     categories: values.categories || [],
                     brands: values.brands || [],
                     currency: values.currency,
-                    coefficients: values.coefficients || [],
+                    coefficients: apiCoefficients,
                   },
                 });
               }
@@ -442,21 +467,6 @@ const AddDistributorForm = ({
               </div>
               <div className="space-y-6">
                 <Grid gutter={24}>
-                  <Grid.Col span={{ sm: 6, base: 12 }}>
-                    <span className="text-primary font-medium text-sm mb-2 block">
-                      Account type
-                    </span>
-                    <Select
-                      {...form.getInputProps("type")}
-                      placeholder="Select type"
-                      data={accountTypes}
-                      rightSection={<ChevronDownIcon />}
-                      classNames={selectStyles}
-                      clearable
-                      searchable
-                      className="w-full"
-                    />
-                  </Grid.Col>
                   <Grid.Col span={{ sm: 6, base: 12 }}>
                     <span className="text-primary font-medium text-sm mb-2 block">
                       Account category
@@ -627,13 +637,8 @@ const AddDistributorForm = ({
 
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-lg font-semibold mb-6">Co-efficients</h2>
-              {Array.isArray(formData?.coefficients) &&
-                formData?.coefficients.length > 0 && (
-                  <CoefficientsTable
-                    data={formData?.coefficients}
-                    distributorId={formData.id}
-                  />
-                )}
+
+              <CoefficientsTable distributorId={formData?.id || 0} />
 
               {form.errors.coefficients && (
                 <p className="text-xs text-[#fa5252]">
@@ -672,9 +677,7 @@ const AddDistributorForm = ({
                     <Accordion.Item value={group.name}>
                       <Accordion.Control className="h-16 bg-gray-100">
                         <div className="flex items-center w-full">
-                          <button className="text-primary ">
-                            Select brands
-                          </button>
+                          <span className="text-primary ">Select brands</span>
                         </div>
                       </Accordion.Control>
                       <Accordion.Panel>

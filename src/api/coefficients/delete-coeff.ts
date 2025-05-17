@@ -1,33 +1,56 @@
 import { axios } from "@/lib/axios";
-import { MutationConfig } from "@/lib/react-query";
-import { queryClient } from "@/main";
-import { useMutation } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 
-export const deleteCoefficient = ({
+interface DeleteCoefficientResponse {
+  message: string;
+}
+
+export const deleteCoefficient = async ({
   distributorId,
-  coeffId
+  coefficientId,
 }: {
   distributorId: number;
-  coeffId: number; 
-}): Promise<Comment> => {
-  return axios.delete(`/distributors/${distributorId}/coefficients/${coeffId}`);
+  coefficientId: number;
+}) => {
+  const response = await axios.delete<DeleteCoefficientResponse>(
+    `/distributors/${distributorId}/coefficients/${coefficientId}`
+  );
+  return response.data;
 };
 
-type UseDeleteCoefficientOptions = {
-  mutationConfig?: MutationConfig<typeof deleteCoefficient>;
-};
+interface UseDeleteCoefficientOptions {
+  mutationConfig?: UseMutationOptions<
+    DeleteCoefficientResponse,
+    Error,
+    { distributorId: number; coefficientId: number },
+    unknown
+  >;
+}
 
-export const useDeleteCoefficient = ({
+export function useDeleteCoefficient({
   mutationConfig,
-}: UseDeleteCoefficientOptions) => {
+}: UseDeleteCoefficientOptions = {}) {
+  const queryClient = useQueryClient();
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
-  return useMutation({
-    onSuccess: (...args) => {
-      queryClient.invalidateQueries({queryKey: ['distributors']})
-      onSuccess?.(...args);
+  return useMutation<
+    DeleteCoefficientResponse,
+    Error,
+    { distributorId: number; coefficientId: number }
+  >({
+    mutationFn: deleteCoefficient,
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({
+        queryKey: ["coefficients", variables.distributorId],
+      });
+      if (onSuccess) {
+        onSuccess(data, variables, context);
+      }
     },
     ...restConfig,
-    mutationFn: deleteCoefficient,
   });
-};
+}

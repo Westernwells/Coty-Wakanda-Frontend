@@ -61,8 +61,14 @@ export function useAddPricingList({
     },
     onSuccess: (responseData, variables, context) => {
       // Invalidate all relevant pricing list queries
-      queryClient.invalidateQueries({ queryKey: ["pricing-lists"] });
-      queryClient.invalidateQueries({ queryKey: ["pricingProductList"] });
+      queryClient.invalidateQueries({
+        queryKey: ["pricing-lists"],
+        type: "all",
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pricingProductList"],
+        type: "all",
+      });
 
       // Then, if component provided an onSuccess, call it
       if (componentOnSuccessCallback) {

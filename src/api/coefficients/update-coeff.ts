@@ -5,11 +5,12 @@ import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 export const updateCoeffecientInputSchema = z.object({
-  value: z.string().min(1, "Required"),
-  pref: z.enum(["pref", "non-pref"]),
+  type: z.enum(["regular", "giftset", "tester"]),
+  pref_value: z.string().min(1, "Required"),
+  non_pref_value: z.string().optional(),
   brand_id: z.string().min(1, "Required"),
   category_id: z.string().min(1, "Required"),
-  description: z.string().min(1, "Required"),
+  description: z.string().optional(),
 });
 
 export type updateCoefficientInput = z.infer<

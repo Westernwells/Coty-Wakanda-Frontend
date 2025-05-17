@@ -5,11 +5,9 @@ import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 export const addCoeffecientInputSchema = z.object({
-  value: z.string().min(1, "Required"),
-  pref: z.enum(["pref", "non-pref"]),
-  brand_id: z.string().min(1, "Required"),
-  category_id: z.string().min(1, "Required"),
-  description: z.string().min(1, "Required"),
+  type: z.enum(["regular", "giftset", "tester"]),
+  pref_value: z.string().min(1, "Required"),
+  non_pref_value: z.string().optional(),
 });
 
 export type addCoefficientInput = z.infer<typeof addCoeffecientInputSchema>;
@@ -21,6 +19,7 @@ export const addCoefficient = ({
   data: addCoefficientInput;
   distributorId: number;
 }): Promise<Comment> => {
+  console.log("Distributor ID", distributorId);
   return axios.post(`/distributors/${distributorId}/coefficients`, data);
 };
 
