@@ -41,6 +41,7 @@ import { getPricingList } from "@/api/pricingList/get-pricing-list";
 import { BrandProofUpload } from "./BrandProofUpload";
 import { AddBrandForm } from "./AddBrandForm";
 import { useDeleteBrandDistributor } from "@/api/distributors/delete-brands";
+import { useAddBrandDistributors } from "@/api/distributors/add-brand-distributors";
 
 export type FormValues = UpdateDistributorInput & {
   coefficients: Array<{
@@ -78,7 +79,7 @@ const luxuryGroupDisplayNames: Record<string, string> = {
 // Helper to group brands by account type
 interface GroupedBrand extends Brand {
   approved: boolean;
-  proofs: string[];
+  proofs: { name: string; url: string }[];
   coefficientType: string;
   billingType: string;
 }
@@ -169,7 +170,10 @@ const AddDistributorForm = ({
           ...brand,
           approved: brand.approved ?? false,
           proofs: Array.isArray(brand.proof)
-            ? brand.proof.map((p: { name: string }) => p.name)
+            ? brand.proof.map((p: { name: string; url: string }) => ({
+                name: p.name,
+                url: p.url,
+              }))
             : [],
           coefficientType: "",
           billingType: "",
@@ -189,7 +193,10 @@ const AddDistributorForm = ({
           ...brand,
           approved: brand.approved ?? false,
           proofs: Array.isArray(brand.proof)
-            ? brand.proof.map((p: { name: string }) => p.name)
+            ? brand.proof.map((p: { name: string; url: string }) => ({
+                name: p.name,
+                url: p.url,
+              }))
             : [],
           coefficientType: "",
           billingType: "",
@@ -341,6 +348,8 @@ const AddDistributorForm = ({
       .replace(/\s+/g, "_")
       .toLowerCase();
   }
+
+  const addBrandDistributors = useAddBrandDistributors({});
 
   return (
     <>
@@ -706,9 +715,12 @@ const AddDistributorForm = ({
                                           url: p.url,
                                         }))
                                       : (brand.proofs || []).map(
-                                          (p: string) => ({
-                                            name: p,
-                                            url: "",
+                                          (p: {
+                                            name: string;
+                                            url: string;
+                                          }) => ({
+                                            name: p.name,
+                                            url: p.url,
                                           })
                                         ),
                                     type:
@@ -723,36 +735,45 @@ const AddDistributorForm = ({
                             <Table.Td className="w-1/4 whitespace-nowrap max-w-[220px] truncate">
                               <div className="flex flex-col items-start gap-1">
                                 {brand.proofs.map(
-                                  (proof: string, index: number) => (
+                                  (
+                                    proof: { name: string; url: string },
+                                    proofIndex: number
+                                  ) => (
                                     <div
-                                      key={index}
-                                      className="flex items-center gap-2"
+                                      key={proofIndex}
+                                      className="flex items-center gap-2 w-full max-w-[380px]"
                                     >
                                       <Text
                                         component="a"
-                                        href="#"
+                                        href={proof.url || "#"}
                                         onClick={(
                                           e: React.MouseEvent<HTMLAnchorElement>
-                                        ) => e.preventDefault()}
-                                        className="underline text-blue-600 hover:text-blue-800 cursor-pointer"
+                                        ) => {
+                                          if (!proof.url) e.preventDefault();
+                                        }}
+                                        className="underline text-blue-600 hover:text-blue-800 cursor-pointer truncate max-w-[200px] inline-block"
+                                        title={proof.name}
                                       >
-                                        {proof}
+                                        {proof.name}
                                       </Text>
                                       <ActionIcon
                                         size="sm"
                                         color="gray"
                                         variant="transparent"
-                                        onClick={() => {
-                                          const newGroups: typeof marketedBrandGroups =
+                                        onClick={async () => {
+                                          // Remove proof from local state
+                                          const newGroups =
                                             marketedBrandGroups.map(
                                               (
-                                                g
+                                                g: (typeof marketedBrandGroups)[number]
                                               ): (typeof marketedBrandGroups)[number] => {
                                                 if (g.name === group.name) {
                                                   return {
                                                     ...g,
                                                     brands: g.brands.map(
-                                                      (b): GroupedBrand =>
+                                                      (
+                                                        b: GroupedBrand
+                                                      ): GroupedBrand =>
                                                         b.id === brand.id
                                                           ? {
                                                               ...b,
@@ -762,7 +783,8 @@ const AddDistributorForm = ({
                                                                     _,
                                                                     i: number
                                                                   ) =>
-                                                                    i !== index
+                                                                    i !==
+                                                                    proofIndex
                                                                 ),
                                                             }
                                                           : b
@@ -773,6 +795,40 @@ const AddDistributorForm = ({
                                               }
                                             );
                                           setMarketedBrandGroups(newGroups);
+
+                                          // Find the updated brand from the newGroups state
+                                          const updatedGroup = newGroups.find(
+                                            (g) => g.name === group.name
+                                          );
+                                          const updatedBrand =
+                                            updatedGroup?.brands.find(
+                                              (b) => b.id === brand.id
+                                            );
+                                          if (!updatedBrand) return;
+
+                                          // Send POST request with the updated brand (all fields, updated proofs)
+                                          addBrandDistributors.mutate({
+                                            distributorId,
+                                            data: {
+                                              brands: [
+                                                {
+                                                  category:
+                                                    updatedBrand.category,
+                                                  brand_id: updatedBrand.id,
+                                                  approved:
+                                                    updatedBrand.approved,
+                                                  proof: updatedBrand.proofs, // send full objects
+                                                  type:
+                                                    updatedBrand.type ||
+                                                    updatedBrand.coefficientType ||
+                                                    "",
+                                                  pricing_id:
+                                                    updatedBrand.pricing?.id ??
+                                                    null,
+                                                },
+                                              ],
+                                            },
+                                          });
                                         }}
                                       >
                                         <XIcon size={14} strokeWidth={1.5} />
