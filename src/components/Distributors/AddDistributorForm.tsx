@@ -27,7 +27,7 @@ import { Distributor } from "@/types";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { CheckIcon, Save, XIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { Save, XIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { useLayoutEffect, useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
@@ -219,9 +219,7 @@ const AddDistributorForm = ({
   const [bulkActionStatus, setBulkActionStatus] = useState<string | null>(null);
 
   // Add after marketedBrandGroups state
-  const [brandProductSelections, setBrandProductSelections] = useState<
-    Record<number, string>
-  >({});
+  const [brandProductSelections] = useState<Record<number, string>>({});
 
   // Handler for main checkbox
   const handleSelectAllChange = (checked: boolean, products: number[]) => {
@@ -661,42 +659,16 @@ const AddDistributorForm = ({
                             <Table.Td className="w-[15%] whitespace-nowrap">
                               <Checkbox
                                 checked={brand.approved}
-                                label="Brand approval"
+                                disabled
+                                label={
+                                  brand.approved
+                                    ? "Brand approved"
+                                    : "Brand not approved"
+                                }
                                 classNames={{
                                   root: "flex items-center",
                                   input: "border-gray-300 bg-gray-200 h-5 w-5",
                                   label: "text-sm ml-2",
-                                  icon: "text-blue-500 ",
-                                }}
-                                icon={({ ...others }) => (
-                                  <CheckIcon {...others} />
-                                )}
-                                onChange={(event) => {
-                                  const newGroups: typeof marketedBrandGroups =
-                                    marketedBrandGroups.map(
-                                      (
-                                        g
-                                      ): (typeof marketedBrandGroups)[number] => {
-                                        if (g.name === group.name) {
-                                          return {
-                                            ...g,
-                                            brands: g.brands.map(
-                                              (b): GroupedBrand =>
-                                                b.id === brand.id
-                                                  ? {
-                                                      ...b,
-                                                      approved:
-                                                        event.currentTarget
-                                                          .checked,
-                                                    }
-                                                  : b
-                                            ),
-                                          };
-                                        }
-                                        return g;
-                                      }
-                                    );
-                                  setMarketedBrandGroups(newGroups);
                                 }}
                               />
                             </Table.Td>
@@ -840,103 +812,34 @@ const AddDistributorForm = ({
                             </Table.Td>
                             {/* Coefficient Select */}
                             <Table.Td className="w-1/6 whitespace-nowrap max-w-[160px] truncate">
-                              <Select
-                                value={
-                                  brand.type
-                                    ? brand.type
-                                    : brand.coefficientType || undefined
-                                }
-                                data={coefficientOptions}
-                                placeholder="Select type"
-                                rightSection={<ChevronDownIcon />}
-                                classNames={{
-                                  ...selectStyles,
-                                  input: `${selectStyles.input} text-sm`,
-                                }}
-                                size="sm"
-                                onChange={
-                                  brand.type
-                                    ? undefined
-                                    : (value: string | null) => {
-                                        const updatedGroups =
-                                          marketedBrandGroups.map((g) => {
-                                            if (g.name === group.name) {
-                                              return {
-                                                ...g,
-                                                brands: g.brands.map((b) =>
-                                                  b.id === brand.id
-                                                    ? {
-                                                        ...b,
-                                                        coefficientType:
-                                                          value || "",
-                                                      }
-                                                    : b
-                                                ),
-                                              };
-                                            } else {
-                                              return g;
-                                            }
-                                          });
-                                        setMarketedBrandGroups(updatedGroups);
-                                        setBrandProductSelections((prev) => ({
-                                          ...prev,
-                                          [brand.id]: "",
-                                        }));
-                                      }
-                                }
-                                disabled={!!brand.type}
-                              />
+                              <Text size="sm" className="truncate">
+                                {brand.type
+                                  ? coefficientOptions.find(
+                                      (opt) => opt.value === brand.type
+                                    )?.label || brand.type
+                                  : coefficientOptions.find(
+                                      (opt) =>
+                                        opt.value === brand.coefficientType
+                                    )?.label ||
+                                    brand.coefficientType ||
+                                    "-"}
+                              </Text>
                             </Table.Td>
                             {/* Dynamic Product Select */}
                             <Table.Td className="w-1/6 whitespace-nowrap max-w-[220px] truncate">
-                              {brand.pricing ? (
-                                <Select
-                                  value={brand.pricing.id.toString()}
-                                  data={[
-                                    {
-                                      value: brand.pricing.id.toString(),
-                                      label: brand.pricing.name,
-                                    },
-                                  ]}
-                                  disabled
-                                  classNames={{
-                                    ...selectStyles,
-                                    input: `${selectStyles.input} text-sm min-w-[180px] max-w-[320px]`,
-                                  }}
-                                  className="w-full"
-                                />
-                              ) : brand.type === "billing" ||
-                                (!brand.type &&
-                                  brand.coefficientType === "billing") ? (
-                                <BillingProductSelect
-                                  brandId={brand.id}
-                                  value={brandProductSelections[brand.id] || ""}
-                                  onChange={(value) => {
-                                    if (value)
-                                      setBrandProductSelections((prev) => ({
-                                        ...prev,
-                                        [brand.id]: value,
-                                      }));
-                                  }}
-                                />
-                              ) : brand.type === "co-efficient" ||
-                                (!brand.type &&
-                                  brand.coefficientType === "co-efficient") ? (
-                                <PricingProductSelect
-                                  brandId={brand.id}
-                                  value={brandProductSelections[brand.id] || ""}
-                                  onChange={(value) => {
-                                    if (value)
-                                      setBrandProductSelections((prev) => ({
-                                        ...prev,
-                                        [brand.id]: value,
-                                      }));
-                                  }}
-                                />
-                              ) : null}
+                              <Text size="sm" className="truncate">
+                                {brand.pricing?.name
+                                  ? brand.pricing.name
+                                  : brandProductSelections[brand.id] || "-"}
+                              </Text>
                             </Table.Td>
                             {/* Edit Action */}
-                            <Table.Td className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap">
+                            <Table.Td
+                              className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap"
+                              onClick={() =>
+                                setEditBrand({ brand, groupName: group.name })
+                              }
+                            >
                               <PencilIcon className="size-5" />
                             </Table.Td>
                             {/* Delete Action */}
@@ -983,6 +886,31 @@ const AddDistributorForm = ({
                 return g;
               });
               setMarketedBrandGroups(updatedGroups);
+
+              // Find the updated brand from the newGroups state
+              const updatedGroup = updatedGroups.find(
+                (g) => g.name === editBrand.groupName
+              );
+              const updatedBrand = updatedGroup?.brands.find(
+                (b) => b.id === editBrand.brand.id
+              );
+              if (!updatedBrand) return;
+              addBrandDistributors.mutate({
+                distributorId,
+                data: {
+                  brands: [
+                    {
+                      category: updatedBrand.category,
+                      brand_id: updatedBrand.id,
+                      approved: updatedBrand.approved,
+                      proof: updatedBrand.proofs, // send full objects
+                      type:
+                        updatedBrand.type || updatedBrand.coefficientType || "",
+                      pricing_id: updatedBrand.pricing?.id ?? null,
+                    },
+                  ],
+                },
+              });
             }}
           />
           <DeleteBrandModal
@@ -1004,98 +932,6 @@ const AddDistributorForm = ({
     </>
   );
 };
-
-interface ProductSelectProps {
-  brandId: number;
-  value: string;
-  onChange: (val: string) => void;
-}
-
-function BillingProductSelect({
-  brandId,
-  value,
-  onChange,
-}: ProductSelectProps) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["billing-products", brandId],
-    queryFn: async () => {
-      if (!brandId) return [];
-      const res = await getBillingList({
-        page_size: 50,
-      });
-      return res.data.map((b) => ({
-        id: b.id,
-        material_description: b.name,
-      }));
-    },
-    enabled: !!brandId,
-  });
-  const options = (data || []).map((p) => ({
-    value: p.id.toString(),
-    label: p.material_description,
-  }));
-  return (
-    <Select
-      value={value}
-      data={options}
-      onChange={(val) => {
-        if (val) onChange(val);
-      }}
-      placeholder={isLoading ? "Loading..." : "Select product"}
-      classNames={{
-        ...selectStyles,
-        input: `${selectStyles.input} text-sm min-w-[180px] max-w-[320px]`,
-      }}
-      searchable
-      clearable
-      rightSection={<ChevronDownIcon />}
-      className="w-full"
-    />
-  );
-}
-
-function PricingProductSelect({
-  brandId,
-  value,
-  onChange,
-}: ProductSelectProps) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["pricing-products", brandId],
-    queryFn: async () => {
-      if (!brandId) return [];
-      const res = await getPricingList({
-        page_size: 50,
-      });
-      return res.data.map((p) => ({
-        id: p.id,
-        material_description: p.name,
-      }));
-    },
-    enabled: !!brandId,
-  });
-  const options = (data || []).map((p) => ({
-    value: p.id.toString(),
-    label: p.material_description,
-  }));
-  return (
-    <Select
-      value={value}
-      data={options}
-      onChange={(val) => {
-        if (val) onChange(val);
-      }}
-      placeholder={isLoading ? "Loading..." : "Select product"}
-      classNames={{
-        ...selectStyles,
-        input: `${selectStyles.input} text-sm min-w-[180px] max-w-[320px]`,
-      }}
-      searchable
-      clearable
-      rightSection={<ChevronDownIcon />}
-      className="w-full"
-    />
-  );
-}
 
 function EditBrandForm({
   opened,
