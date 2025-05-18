@@ -16,37 +16,53 @@ function RouteComponent() {
   const [offeringOpen, setOfferingOpen] = useState(false);
   const [offeringIndex, setOfferingIndex] = useState(-1);
   const schema = z.object({
-    brand_id: z.string({
-      message: "Brand Is required",
-    }).min(1, "Brand Is required"),
-    launch_name: z.string({
-      message: "Brand Is required",
-    }).min(1, "Launch Name is required"),
-    other_name: z.string({
-      message: "Brand Is required",
-    }).min(1, "Launch Name is required"),
-    format: z.string({
-      message: "Format is required",
-    }).min(1, "Launch Name is required"),
-    sub_brand_id: z.string({
-      message: "Sub Brand Is required",
-    }).min(1, "sub brand is required"),
+    brand_id: z
+      .string({
+        message: "Brand Is required",
+      })
+      .min(1, "Brand Is required"),
+    launch_name: z
+      .string({
+        message: "Brand Is required",
+      })
+      .min(1, "Launch Name is required"),
+    other_name: z
+      .string({
+        message: "Brand Is required",
+      })
+      .min(1, "Launch Name is required"),
+    format: z
+      .string({
+        message: "Format is required",
+      })
+      .min(1, "Launch Name is required"),
+    sub_brand_id: z
+      .string({
+        message: "Sub Brand Is required",
+      })
+      .min(1, "sub brand is required"),
     year: z.date({
       message: "Brand Is required",
     }),
-    offerings: z.array(z.object({
-      number: z.string({
-        message: "Offering Number is required"
-      }).min(1, "offering number is required"),
-      icw: z.date({
-        message: "Global ICW is required"
-      }),
-      ocd: z.date({
-        message: "Global OCD is required"
-      }),
-      type: z.string().min(1, "Type is required"),
-    })).optional()
-  })
+    offerings: z
+      .array(
+        z.object({
+          number: z
+            .string({
+              message: "Offering Number is required",
+            })
+            .min(1, "offering number is required"),
+          icw: z.date({
+            message: "Global ICW is required",
+          }),
+          ocd: z.date({
+            message: "Global OCD is required",
+          }),
+          type: z.string().min(1, "Type is required"),
+        })
+      )
+      .optional(),
+  });
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -81,9 +97,13 @@ function RouteComponent() {
         </Button>
       </section>
       {!offeringOpen ? (
-        <AddInnovationForm setOfferingOpen={setOfferingOpen} setOfferingIndex={setOfferingIndex} form={form} />
+        <AddInnovationForm setOfferingOpen={setOfferingOpen} form={form} />
       ) : (
-        <AddOfferingForm setOfferingOpen={setOfferingOpen} offeringIndex={offeringIndex} form={form} />
+        <AddOfferingForm
+          setOfferingOpen={setOfferingOpen}
+          offeringIndex={offeringIndex}
+          form={form}
+        />
       )}
     </div>
   );

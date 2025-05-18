@@ -59,11 +59,17 @@ export function BrandProofUpload({
             }
           );
         },
+        onError: () => {
+          // Optionally handle error here
+        },
       }
     );
+    // Always reset input so user can re-upload the same file
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   const isLoading = uploadFile.isPending || addBrandDistributors.isPending;
+  const error = uploadFile.error || addBrandDistributors.error;
 
   return (
     <div className="flex items-center gap-2">
@@ -83,6 +89,11 @@ export function BrandProofUpload({
       >
         {isLoading ? <Loader size="xs" color="white" /> : "Upload proof"}
       </button>
+      {error && (
+        <span className="text-xs text-red-500 ml-2">
+          {typeof error === "string" ? error : "Upload failed"}
+        </span>
+      )}
     </div>
   );
 }

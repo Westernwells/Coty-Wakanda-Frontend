@@ -1,30 +1,30 @@
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { useAddInnovation } from "@/api/innovations/add-innovation";
-import { dateToLocalString } from "@/lib/utils";
 import { queryClient } from "@/main";
 import { Product } from "@/types";
-import { Button, Grid, Group, Select, Table, TextInput } from "@mantine/core";
+import { Button, Grid, Group, Select, TextInput } from "@mantine/core";
 import { DateInput, YearPickerInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import DateIcon from "../Icons/DateIcon";
-import PencilIcon from "../Icons/PencilIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import { InnovationProductsTable } from "./InnovationProductsTable";
+import { getProducts } from "@/api/products/get-products";
+import { useInnovationBulkEdit } from "./useInnovationBulkEdit";
+import { useState, useRef } from "react";
+import { PriceBenchmarkModal } from "../AddProduct/PriceBenchmarkModal";
 
 const AddInnovationForm = ({
   setOfferingOpen,
   form,
-  setOfferingIndex,
 }: {
   setOfferingOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setOfferingIndex: React.Dispatch<React.SetStateAction<number>>;
   form: UseFormReturnType<{
     brand_id: string;
     sub_brand_id: string;
@@ -63,6 +63,42 @@ const AddInnovationForm = ({
   const navigate = useNavigate();
 
   const addInnovationMutation = useAddInnovation({ mutationConfig: {} });
+
+  // Fetch products from API
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["products", {}],
+    queryFn: () =>
+      getProducts({
+        cursor: 1,
+        page_size: 20,
+        filter: {
+          search: "",
+          region_id: "",
+          market_id: "",
+          brand_id: "",
+          sub_brand_id: "",
+          distributor_id: "",
+          division: "",
+        },
+      }),
+  });
+
+  const [isEdit, setIsEdit] = useState(false);
+  const tableRef = useRef<{
+    getChangedProducts: () => { products: Partial<Product>[] };
+  }>(null);
+
+  const {
+    mutate: bulkEdit,
+    isPending: isBulkEditing,
+    isSuccess: isBulkEditSuccess,
+    isError: isBulkEditError,
+  } = useInnovationBulkEdit({
+    onSuccess: () => setIsEdit(false),
+  });
+
+  const [isBenchmarkModalOpen, setBenchmarkModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   form.watch("brand_id", () => {
     queryClient.invalidateQueries({
@@ -108,7 +144,6 @@ const AddInnovationForm = ({
         label="Forecast deadline"
         valueFormat="YYYY MMM DD"
         placeholder="Select date"
-        rightSection={<DateIcon />}
         className="sm:max-w-[50%]"
         classNames={textInputStyles}
       />
@@ -261,62 +296,48 @@ const AddInnovationForm = ({
               classNames={textInputStyles}
             />
           </Grid.Col>
-        </Grid>
-      </FormSection>
-      <FormSection title="Custom Details">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          {form.getValues().offerings && (
-            <Grid.Col span={12}>
-              <div className="relative border border-primary rounded-xl border-t-0">
-                <Table.ScrollContainer minWidth={768}>
-                  <Table
-                    verticalSpacing="sm"
-                    borderColor="transparent"
-                    striped="even"
-                    stripedColor="#F2F4F6"
-                  >
-                    <Table.Thead>
-                      <Table.Tr className="bg-primary text-white">
-                        <Table.Th className="rounded-ss-xl">
-                          Offering Number
-                        </Table.Th>
-                        <Table.Th>Deadline for forecast</Table.Th>
-                        <Table.Th>Global ICW</Table.Th>
-                        <Table.Th>Type</Table.Th>
-                        <Table.Th className="rounded-se-xl"></Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {form.getValues().offerings?.map((offering, index) => (
-                        <Table.Tr key={offering.number}>
-                          <Table.Td className="rounded-ss-xl">
-                            {offering.number}
-                          </Table.Td>
-                          <Table.Td>{dateToLocalString(offering.icw)}</Table.Td>
-                          <Table.Td>{dateToLocalString(offering.icw)}</Table.Td>
-                          <Table.Td>{offering.type}</Table.Td>
-                          <Table.Td
-                            className="rounded-se-xl cursor-pointer"
-                            onClick={() => {
-                              setOfferingIndex(index);
-                              setOfferingOpen(true);
-                            }}
-                          >
-                            <PencilIcon />
-                          </Table.Td>
-                        </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </Table.ScrollContainer>
+          <Grid.Col span={12}>
+            {isLoading ? (
+              <div className="p-6 bg-white rounded-lg flex justify-center">
+                <span>Loading products...</span>
               </div>
-            </Grid.Col>
-          )}
+            ) : error ? (
+              <div className="p-6 bg-white rounded-lg text-red-500">
+                Error loading products. Please try again later.
+              </div>
+            ) : (
+              <>
+                <InnovationProductsTable
+                  ref={tableRef}
+                  products={data?.data ?? []}
+                  isEdit={isEdit}
+                  setIsEdit={setIsEdit}
+                  onBulkSave={(changed) => {
+                    bulkEdit({ data: changed });
+                  }}
+                  onOpenBenchmarkModal={(product: Product) => {
+                    setSelectedProduct(product);
+                    setBenchmarkModalOpen(true);
+                  }}
+                />
+                {isBulkEditing && (
+                  <div className="text-blue-600 text-sm mt-2">
+                    Saving changes...
+                  </div>
+                )}
+                {isBulkEditError && (
+                  <div className="text-red-500 text-sm mt-2">
+                    {"Failed to update products."}
+                  </div>
+                )}
+                {isBulkEditSuccess && (
+                  <div className="text-green-600 text-sm mt-2">
+                    Products updated successfully!
+                  </div>
+                )}
+              </>
+            )}
+          </Grid.Col>
           <Grid.Col
             span={{
               lg: 6,
@@ -377,6 +398,29 @@ const AddInnovationForm = ({
       <Group justify="flex-end" mt="md">
         <Button type="submit">Submit</Button>
       </Group>
+      {selectedProduct && (
+        <PriceBenchmarkModal
+          opened={isBenchmarkModalOpen}
+          onClose={() => setBenchmarkModalOpen(false)}
+          onSave={() => setBenchmarkModalOpen(false)}
+          form={{}}
+          brandsData={
+            (brandsData?.data ?? []).map((brand) => ({
+              id: brand.id,
+              brand_type_id: brand.brand_type_id ?? 0,
+              name: brand.name,
+              active: brand.active ?? true,
+              type: "Mass",
+              created_at: brand.created_at ?? "",
+              updated_at: brand.updated_at ?? "",
+              deleted_at: brand.deleted_at ?? null,
+              pivot: { distributor_id: 0, brand_id: brand.id },
+            })) as import("@/types").Brand[]
+          }
+          productsListData={data?.data ?? []}
+          categoriesData={[]}
+        />
+      )}
     </form>
   );
 };
