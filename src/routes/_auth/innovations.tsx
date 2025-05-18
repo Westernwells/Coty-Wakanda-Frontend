@@ -10,7 +10,6 @@ export const Route = createFileRoute("/_auth/innovations")({
 });
 
 function RouteComponent() {
-
   return (
     <div className="w-full">
       <Headline title="Innovations" />
