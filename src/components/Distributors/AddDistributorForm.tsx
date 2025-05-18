@@ -936,7 +936,12 @@ const AddDistributorForm = ({
                               ) : null}
                             </Table.Td>
                             {/* Edit Action */}
-                            <Table.Td className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap">
+                            <Table.Td
+                              className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap"
+                              onClick={() =>
+                                setEditBrand({ brand, groupName: group.name })
+                              }
+                            >
                               <PencilIcon className="size-5" />
                             </Table.Td>
                             {/* Delete Action */}
@@ -983,6 +988,31 @@ const AddDistributorForm = ({
                 return g;
               });
               setMarketedBrandGroups(updatedGroups);
+
+              // Find the updated brand from the newGroups state
+              const updatedGroup = updatedGroups.find(
+                (g) => g.name === editBrand.groupName
+              );
+              const updatedBrand = updatedGroup?.brands.find(
+                (b) => b.id === editBrand.brand.id
+              );
+              if (!updatedBrand) return;
+              addBrandDistributors.mutate({
+                distributorId,
+                data: {
+                  brands: [
+                    {
+                      category: updatedBrand.category,
+                      brand_id: updatedBrand.id,
+                      approved: updatedBrand.approved,
+                      proof: updatedBrand.proofs, // send full objects
+                      type:
+                        updatedBrand.type || updatedBrand.coefficientType || "",
+                      pricing_id: updatedBrand.pricing?.id ?? null,
+                    },
+                  ],
+                },
+              });
             }}
           />
           <DeleteBrandModal
