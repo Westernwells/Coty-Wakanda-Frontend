@@ -56,3 +56,34 @@ export function useAddBrandDistributors({
     ...mutationConfig,
   });
 }
+
+// Delete a brand from a distributor
+export async function deleteBrandDistributor({
+  distributorId,
+  brandId,
+}: {
+  distributorId: number | string;
+  brandId: number | string;
+}): Promise<{ message: string }> {
+  return axios.delete(`/distributors/${distributorId}/brands/${brandId}`);
+}
+
+export function useDeleteBrandDistributor({
+  mutationConfig,
+}: {
+  mutationConfig?: MutationConfig<typeof deleteBrandDistributor>;
+} = {}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteBrandDistributor,
+    onSuccess: (data, variables, context) => {
+      if (variables?.distributorId) {
+        queryClient.invalidateQueries({
+          queryKey: ["brands", variables.distributorId],
+        });
+      }
+      mutationConfig?.onSuccess?.(data, variables, context);
+    },
+    ...mutationConfig,
+  });
+}
