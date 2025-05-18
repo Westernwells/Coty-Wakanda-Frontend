@@ -1,12 +1,12 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button } from '@mantine/core'
-import ChevronDownIcon from '@/components/Icons/ChevronDownIcon'
-import Headline from '@/components/Shared/Headline'
-import AddDistributorForm from '@/components/Distributors/AddDistributorForm'
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@mantine/core";
+import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
+import Headline from "@/components/Shared/Headline";
+import AddDistributorForm from "@/components/Distributors/AddDistributorForm";
 
-export const Route = createFileRoute('/_auth/add-distributor')({
+export const Route = createFileRoute("/_auth/add-distributor")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
   return (
@@ -27,7 +27,7 @@ function RouteComponent() {
           Back to Distributors
         </Button>
       </section>
-      <AddDistributorForm />
+      <AddDistributorForm isEdit={true} distributorId={""} />
     </div>
-  )
+  );
 }
