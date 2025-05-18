@@ -24,6 +24,9 @@ import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import { InnovationProductsTable } from "./InnovationProductsTable";
+import { getProducts } from "@/api/products/get-products";
+import { useQuery } from "@tanstack/react-query";
 
 const AddOfferingForm = ({
   setOfferingOpen,
@@ -58,6 +61,7 @@ const AddOfferingForm = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [productOpen, setProductOpen] = useState(-1);
+  const [isEdit, setIsEdit] = useState(false);
 
   const idx =
     offeringIndex !== -1
@@ -65,6 +69,24 @@ const AddOfferingForm = ({
       : (form?.getValues()?.offerings?.length ?? 1) - 1;
   const productIdx =
     (form?.getValues()?.offerings?.[idx].products.length ?? 1) - 1;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["products", {}],
+    queryFn: () =>
+      getProducts({
+        cursor: 1,
+        page_size: 20,
+        filter: {
+          search: "",
+          region_id: "",
+          market_id: "",
+          brand_id: "",
+          sub_brand_id: "",
+          distributor_id: "",
+          division: "",
+        },
+      }),
+  });
 
   if (productOpen >= 0) {
     return (
@@ -217,74 +239,16 @@ const AddOfferingForm = ({
         </Grid>
       </FormSection>
       <Grid justify="flex-start" mt="md">
-        {!!form.getValues().offerings?.[idx]?.products?.length && (
+        {
           <Grid.Col span={12}>
-            <div className="relative border border-primary rounded-xl border-t-0">
-              <Table.ScrollContainer minWidth={768}>
-                <Table
-                  verticalSpacing="sm"
-                  borderColor="transparent"
-                  striped="even"
-                  stripedColor="#F2F4F6"
-                >
-                  <Table.Thead>
-                    <Table.Tr className="bg-primary text-white">
-                      <Table.Th className="rounded-ss-xl">IRC Number</Table.Th>
-                      <Table.Th>ICP Cost</Table.Th>
-                      <Table.Th>Cost</Table.Th>
-                      <Table.Th>EAN/UPC</Table.Th>
-                      <Table.Th>Line</Table.Th>
-                      <Table.Th>Size & Dimension</Table.Th>
-                      <Table.Th>Division</Table.Th>
-                      <Table.Th>Core Category</Table.Th>
-                      <Table.Th>Article Type</Table.Th>
-                      <Table.Th></Table.Th>
-                      <Table.Th className="rounded-se-xl"></Table.Th>
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {form
-                      .getValues()
-                      .offerings?.[idx]?.products.map((product, index) => (
-                        <Table.Tr key={product.irc}>
-                          <Table.Td className="rounded-ss-xl">
-                            {product.irc}
-                          </Table.Td>
-                          <Table.Td>{product.price}</Table.Td>
-                          <Table.Td>{product.currency}</Table.Td>
-                          <Table.Td>{product.ean_upc}</Table.Td>
-                          <Table.Td>{product.line}</Table.Td>
-                          <Table.Td>{product.size}</Table.Td>
-                          <Table.Td>{product.division}</Table.Td>
-                          <Table.Td>{product.category?.name}</Table.Td>
-                          <Table.Td>{product.article_type}</Table.Td>
-                          <Table.Td
-                            onClick={() => {
-                              form.removeListItem(
-                                `offerings.${idx}.products`,
-                                index
-                              );
-                            }}
-                          >
-                            <TrashIcon />
-                          </Table.Td>
-                          <Table.Td
-                            className="rounded-se-xl cursor-pointer"
-                            onClick={() => {
-                              setProductOpen(index);
-                              console.log(index);
-                            }}
-                          >
-                            <PencilIcon />
-                          </Table.Td>
-                        </Table.Tr>
-                      ))}
-                  </Table.Tbody>
-                </Table>
-              </Table.ScrollContainer>
-            </div>
+            <InnovationProductsTable
+              products={data?.data ?? []}
+              isEdit={isEdit}
+              setIsEdit={setIsEdit}
+              onBulkSave={() => {}}
+            />
           </Grid.Col>
-        )}
+        }
         <Grid.Col
           span={{
             lg: 6,
