@@ -97,7 +97,11 @@ function RouteComponent() {
         </Button>
       </section>
       {!offeringOpen ? (
-        <AddInnovationForm setOfferingOpen={setOfferingOpen} form={form} />
+        <AddInnovationForm
+          setOfferingOpen={setOfferingOpen}
+          setOfferingIndex={setOfferingIndex}
+          form={form}
+        />
       ) : (
         <AddOfferingForm
           setOfferingOpen={setOfferingOpen}
