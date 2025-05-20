@@ -1644,7 +1644,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           </Grid.Col>
         </Grid>
       </FormSection> */}
-      <FormSection title="Price benchmark">
+      {/*<FormSection title="Price benchmark">
         <Grid
           gutter={{
             sm: 32,
@@ -1747,7 +1747,7 @@ const AddProductForm = forwardRef(function AddProductForm(
         >
           Set price benchmark
         </Button>
-      </FormSection>
+      </FormSection>*/}
 
       {/* <FormSection title="Distributors Pricing">
         {productDistributorsData?.data.map((item, item_idx) => (
