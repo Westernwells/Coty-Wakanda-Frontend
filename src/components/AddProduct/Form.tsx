@@ -535,7 +535,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               {...form.getInputProps("discontinue_date")}
               variant="filled"
               valueFormat="YYYY MMM DD"
-              label="Discount date"
+              label="Discontinued date"
               placeholder="Select date"
               rightSection={<DateIcon />}
             />
@@ -1743,7 +1743,7 @@ const AddProductForm = forwardRef(function AddProductForm(
         </Button>
       </FormSection>
 
-      <FormSection title="Distributors Pricing">
+      {/* <FormSection title="Distributors Pricing">
         {productDistributorsData?.data.map((item, item_idx) => (
           <Grid
             gutter={{
@@ -1805,7 +1805,7 @@ const AddProductForm = forwardRef(function AddProductForm(
             </Grid.Col>
           </Grid>
         ))}
-      </FormSection>
+      </FormSection> */}
 
       <FormSection title="Upload documents">
         <FileUploadSection

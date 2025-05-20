@@ -27,7 +27,7 @@ function RouteComponent() {
           Back to Distributors
         </Button>
       </section>
-      <AddDistributorForm isEdit={true} distributorId={""} />
+      <AddDistributorForm isEdit={false} />
     </div>
   );
 }
