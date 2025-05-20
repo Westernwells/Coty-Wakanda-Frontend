@@ -175,7 +175,7 @@ export function AddBrandForm({
                 value={productId}
                 onChange={(val) => setProductId(val || "")}
                 data={productOptions}
-                label="Product"
+                label={type === "billing" ? "Billing list" : "Select price"}
                 placeholder={
                   isLoadingProducts ? "Loading..." : "Select product"
                 }

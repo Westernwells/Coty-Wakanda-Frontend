@@ -345,6 +345,7 @@ export interface ProductInput {
   gmm_subcategory_id: string;
   gmm_market_id: string;
   gmm_segment_id: string;
+  brand_type?: string;
 }
 
 export interface ForecastData {

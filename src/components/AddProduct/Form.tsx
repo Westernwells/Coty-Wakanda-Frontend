@@ -99,14 +99,14 @@ const AddProductForm = forwardRef(function AddProductForm(
     };
   }
 
-  const initialBrandType = useRef<string | undefined>(
+  const initialDivision = useRef<string | undefined>(
     isEdit
-      ? (productToEdit as unknown as { brand_type?: string })?.brand_type
+      ? (productToEdit as unknown as { division?: string })?.division
       : undefined
   );
-  const [showBrandTypeModal, setShowBrandTypeModal] = useState(false);
+  const [showDivisionModal, setShowDivisionModal] = useState(false);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<
-    | (Partial<ProductInput> & { brand_type?: string; brand_category?: string })
+    | (Partial<ProductInput> & { division?: string; brand_category?: string })
     | null
   >(null);
 
@@ -122,19 +122,21 @@ const AddProductForm = forwardRef(function AddProductForm(
   );
 
   const form = useForm<
-    Partial<ProductInput> & { brand_type?: string; brand_category?: string }
+    Partial<ProductInput> & { division?: string; brand_category?: string }
   >({
     mode: "uncontrolled",
     initialValues: isEdit
       ? {
           ...(productToEdit as object),
-          brand_type: undefined,
-          brand_category: undefined,
+          division: product?.division,
+          brand_category:
+            (productToEdit as unknown as { brand_category?: string })
+              ?.brand_category ?? undefined,
         }
       : {
           price_benchmark: {},
           distributor_pricing: [],
-          brand_type: undefined,
+          division: undefined,
           brand_category: undefined,
         },
     validate: zodResolver(addProductSchema),
@@ -219,6 +221,8 @@ const AddProductForm = forwardRef(function AddProductForm(
     ],
   });
 
+  console.log({ product });
+
   const updateProduct = useUpdateProduct({
     mutationConfig: {
       onError: (error) => {
@@ -275,6 +279,12 @@ const AddProductForm = forwardRef(function AddProductForm(
     });
   });
 
+  form.watch("division", ({ value }) => {
+    if (form.getValues().brand_type !== value) {
+      form.setFieldValue("brand_type", value);
+    }
+  });
+
   if (
     isEdit &&
     (brandsLoading ||
@@ -294,9 +304,9 @@ const AddProductForm = forwardRef(function AddProductForm(
     <form
       ref={internalFormRef}
       onSubmit={form.onSubmit(async (values) => {
-        if (isEdit && values.brand_type !== initialBrandType.current) {
+        if (isEdit && values.division !== initialDivision.current) {
           setPendingSubmitValues(values);
-          setShowBrandTypeModal(true);
+          setShowDivisionModal(true);
           return;
         }
         setIsSubmitting(true);
@@ -325,6 +335,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                     .split("T")[0],
                   price_benchmark:
                     (values.price_benchmark as PriceBenchmark) || null,
+                  division: values.division,
                 },
               },
               {
@@ -351,6 +362,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                   price_benchmark:
                     (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
+                  division: values.division,
                 },
               },
               {
@@ -381,7 +393,7 @@ const AddProductForm = forwardRef(function AddProductForm(
             <Select
               label="Division"
               placeholder="Select division"
-              {...form.getInputProps("brand_type")}
+              {...form.getInputProps("division")}
               data={[
                 {
                   label: "Mass",
@@ -396,7 +408,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               clearable
             />
           </Grid.Col>
-          {form.getValues().brand_type && (
+          {form.getValues().division && (
             <Grid.Col
               span={{
                 sm: 6,
@@ -704,68 +716,6 @@ const AddProductForm = forwardRef(function AddProductForm(
             <TextInput
               {...form.getInputProps("article_sub_type")}
               label="Article sub type"
-              classNames={textInputStyles}
-            />
-          </Grid.Col> */}
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("division")}
-              label="Division"
-              data={[
-                {
-                  label: "Mass",
-                  value: "mass",
-                },
-                {
-                  label: "Luxury",
-                  value: "luxury",
-                },
-              ]}
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          {/* <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("cssp_trex_eur")}
-              label="Cssp Trex EUR"
-              classNames={textInputStyles}
-              hideControls
-              allowNegative={false}
-            />
-          </Grid.Col> */}
-          {/* <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("cssp_trex_usd")}
-              label="Cssp Trex USD"
-              classNames={textInputStyles}
-              hideControls
-              allowNegative={false}
-            />
-          </Grid.Col> */}
-          {/* <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <TextInput
-              {...form.getInputProps("shade")}
-              label="Shade"
               classNames={textInputStyles}
             />
           </Grid.Col> */}
@@ -1331,488 +1281,6 @@ const AddProductForm = forwardRef(function AddProductForm(
         </Grid>
       </FormSection>
 
-      {/* <FormSection title="Product Pricing">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("icp_eur")}
-              label="ICP EUR"
-              classNames={textInputStyles}
-              hideControls
-              allowNegative={false}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("icp_usd")}
-              label="ICP USD"
-              classNames={textInputStyles}
-              hideControls
-              allowNegative={false}
-            />
-          </Grid.Col>
-        </Grid>
-      </FormSection> */}
-      {/* <FormSection title="Product Origins">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("category_id")}
-              label="gmm category"
-              data={
-                categoriesData?.data?.map((category) => ({
-                  value: category.id.toString(),
-                  label: category.name,
-                })) || []
-              }
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("subcategory_id")}
-              label="gmm sub category"
-              data={
-                subCategoriesData?.data?.map((category) => ({
-                  value: category.id.toString(),
-                  label: category.name,
-                })) || []
-              }
-              classNames={selectStyles}
-              disabled={!form.getValues().category_id}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("market_id")}
-              label="gmm market"
-              data={
-                marketsData?.data?.map((market) => ({
-                  value: market.id.toString(),
-                  label: market.name,
-                })) || []
-              }
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("segment_id")}
-              label="gmm segment"
-              data={
-                segmentsData?.data?.map((segment) => ({
-                  value: segment.id.toString(),
-                  label: segment.name,
-                })) || []
-              }
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <TextInput
-              {...form.getInputProps("factory")}
-              label="Factory"
-              classNames={textInputStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("commodity_id")}
-              label="Commodity ID"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("country_id")}
-              label="Country of origin"
-              data={
-                countriesData?.data?.map((country) => ({
-                  value: country.id.toString(),
-                  label: country.name,
-                })) || []
-              }
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("gender")}
-              label="Gender"
-              data={[
-                {
-                  value: "male",
-                  label: "Male",
-                },
-                {
-                  value: "female",
-                  label: "Female",
-                },
-              ]}
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-        </Grid>
-      </FormSection> */}
-      {/* 
-      <FormSection title="Product Dimensions">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <TextInput
-              {...form.getInputProps("size")}
-              label="Size & Dimension"
-              classNames={textInputStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("length")}
-              label="Length"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("height")}
-              label="Height"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("width")}
-              label="Width"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("volume")}
-              label="Volume"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("gross_weight")}
-              label="Gross weight"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("net_weight")}
-              label="Net weight"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              {...form.getInputProps("units")}
-              label="Units"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-        </Grid>
-      </FormSection> */}
-      {/*<FormSection title="Price benchmark">
-        <Grid
-          gutter={{
-            sm: 32,
-            base: 16,
-          }}
-        >
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              label="Brand"
-              placeholder="Select Brand"
-              key={form.key("price_benchmark.brand_id")}
-              {...form.getInputProps("price_benchmark.brand_id")}
-              data={
-                brandsData?.data?.map((brand) => ({
-                  value: brand.id.toString(),
-                  label: brand.name,
-                })) || []
-              }
-              clearable
-              classNames={selectStyles}
-              rightSection={<ChevronDownIcon />}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              label="Product"
-              placeholder="Select Product"
-              key={form.key("price_benchmark.product_id")}
-              {...form.getInputProps("price_benchmark.product_id")}
-              data={
-                productsListData?.data?.map((product) => ({
-                  value: product.id.toString(),
-                  label: product.id.toString(),
-                })) || []
-              }
-              clearable
-              classNames={selectStyles}
-              rightSection={<ChevronDownIcon />}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <Select
-              {...form.getInputProps("category_id")}
-              label="Category"
-              placeholder="Select Category"
-              data={
-                categoriesData?.data?.map((category) => ({
-                  value: category.id.toString(),
-                  label: category.name,
-                })) || []
-              }
-              classNames={selectStyles}
-            />
-          </Grid.Col>
-          <Grid.Col
-            span={{
-              sm: 6,
-              base: 12,
-            }}
-          >
-            <NumberInput
-              key={form.key("price_benchmark.index_value")}
-              {...form.getInputProps("price_benchmark.index_value")}
-              label="Index value"
-              classNames={textInputStyles}
-              allowDecimal={false}
-              allowNegative={false}
-              hideControls
-            />
-          </Grid.Col>
-          <Grid.Col span={12}>
-            <TextInput
-              key={form.key("price_benchmark.comment")}
-              {...form.getInputProps("price_benchmark.comment")}
-              label="Add a comment"
-              placeholder="HB BOT PM 24 EDP 50ml PREM IV"
-              classNames={textAreaStyles}
-            />
-          </Grid.Col>
-        </Grid>
-
-        <Button
-          variant="default"
-          className="border-primary w-fit bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-3 hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-        >
-          Set price benchmark
-        </Button>
-      </FormSection>*/}
-
-      {/* <FormSection title="Distributors Pricing">
-        {productDistributorsData?.data.map((item, item_idx) => (
-          <Grid
-            gutter={{
-              sm: 24,
-              base: 16,
-            }}
-            key={`${item.name}-${item_idx}`}
-          >
-            <Grid.Col span={12}>
-              <div className="flex flex-col gap-6">
-                <div className="flex items-start gap-6 ">
-                  <StatusCard
-                    title={item.name}
-                    chipType="green"
-                    chipLabels={{
-                      primary: item.type,
-                      secondary: item.registered
-                        ? "registered"
-                        : "not registered",
-                    }}
-                  >
-                    <PricingFields
-                      form={form}
-                      prefix={`distributor_pricing.${item_idx}`}
-                      coefficientsData={item.coefficients}
-                      distributorId={item.id}
-                      isMirror={!(item.coefficients.length > 0)}
-                    />
-                  </StatusCard>
-                </div>
-                {item.mirrors &&
-                  item.mirrors.map((mirror, mirror_idx) => {
-                    return (
-                      <div
-                        className="flex items-start gap-4 "
-                        key={`${mirror.name}-${mirror_idx}`}
-                      >
-                        <CornerDownRightIcon />
-                        <StatusCard
-                          title={item.name}
-                          chipType="green"
-                          isChild
-                          chipLabels={{
-                            primary: item.type,
-                            secondary: item.registered,
-                          }}
-                        >
-                          <PricingFields
-                            isMirror
-                            form={form}
-                            prefix={`distributor_pricing.${item_idx}.mirrors.${mirror_idx}`}
-                            coefficientsData={mirror.coefficients}
-                          />
-                        </StatusCard>
-                      </div>
-                    );
-                  })}
-              </div>
-            </Grid.Col>
-          </Grid>
-        ))}
-      </FormSection> */}
-
       <FormSection title="Upload documents" className="mb-5">
         <FileUploadSection
           form={form}
@@ -1826,27 +1294,27 @@ const AddProductForm = forwardRef(function AddProductForm(
       </FormSection>
 
       <BrandTypeConfirmationModal
-        open={showBrandTypeModal}
+        open={showDivisionModal}
         oldType={
-          initialBrandType.current === "luxury"
+          initialDivision.current === "luxury"
             ? "Luxury"
-            : initialBrandType.current === "mass"
+            : initialDivision.current === "mass"
               ? "Mass"
               : "-"
         }
         newType={
-          pendingSubmitValues?.brand_type === "luxury"
+          pendingSubmitValues?.division === "luxury"
             ? "Luxury"
-            : pendingSubmitValues?.brand_type === "mass"
+            : pendingSubmitValues?.division === "mass"
               ? "Mass"
               : "-"
         }
         onCancel={() => {
-          setShowBrandTypeModal(false);
+          setShowDivisionModal(false);
           setPendingSubmitValues(null);
         }}
         onConfirm={() => {
-          setShowBrandTypeModal(false);
+          setShowDivisionModal(false);
           if (pendingSubmitValues) {
             setIsSubmitting(true);
             const values = pendingSubmitValues;
@@ -1875,6 +1343,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                     .split("T")[0],
                   price_benchmark:
                     (values.price_benchmark as PriceBenchmark) || null,
+                  division: values.division,
                 },
               },
               {

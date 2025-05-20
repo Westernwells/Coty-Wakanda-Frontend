@@ -43,9 +43,21 @@ export function PriceBenchmarkModal({
             </h2>
             <PriceBenchmarkSection
               form={form}
-              brandsData={brandsData}
-              productsListData={productsListData}
-              categoriesData={categoriesData}
+              brandsData={{
+                data: brandsData.map((brand) => ({ ...brand, group: "other" })),
+              }}
+              productsListData={{
+                data: productsListData.map((product) => ({
+                  ...product,
+                  brand_id: product.brand.id,
+                })),
+              }}
+              categoriesData={{
+                data: categoriesData.map((category) => ({
+                  ...category,
+                  type: "luxury",
+                })),
+              }}
             />
             <div className="flex justify-end gap-4 mt-8">
               <Button variant="outline" onClick={onClose}>
