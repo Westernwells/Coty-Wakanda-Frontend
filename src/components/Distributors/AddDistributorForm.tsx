@@ -150,7 +150,7 @@ const AddDistributorForm = ({
 }: {
   isEdit?: boolean;
   formData?: Distributor;
-  distributorId: string;
+  distributorId?: string;
 }) => {
   const form = useForm<FormValues>({
     validate: zodResolver(updateDistributorInputSchema),
@@ -328,7 +328,9 @@ const AddDistributorForm = ({
 
   const { data: brandsData } = useQuery({
     queryKey: ["brands", distributorId],
-    queryFn: () => getDistributorBrands(Number(distributorId)),
+    queryFn: () =>
+      distributorId ? getDistributorBrands(Number(distributorId)) : null,
+    enabled: !!distributorId,
   });
 
   console.log("brandsData", brandsData);
@@ -724,7 +726,7 @@ const AddDistributorForm = ({
             </div>
 
             {/* START: Marketed COTY Brands Section */}
-            <div className="bg-white rounded-2xl p-6 mt-6">
+            <div className="bg-white rounded-2xl p-6 my-6 ">
               <h2 className="text-lg font-semibold mb-4">
                 Marketed COTY brands
               </h2>
@@ -785,7 +787,7 @@ const AddDistributorForm = ({
                             <Table.Td className="w-[15%] whitespace-nowrap">
                               <Group gap="xs" align="center">
                                 <BrandProofUpload
-                                  distributorId={distributorId}
+                                  distributorId={distributorId || "0"}
                                   brand={{
                                     category: brand.category,
                                     brand_id: brand.id,
@@ -889,7 +891,7 @@ const AddDistributorForm = ({
 
                                           // Send POST request with the updated brand (all fields, updated proofs)
                                           addBrandDistributors.mutate({
-                                            distributorId,
+                                            distributorId: distributorId || "0",
                                             data: {
                                               brands: [
                                                 {
@@ -898,7 +900,7 @@ const AddDistributorForm = ({
                                                   brand_id: updatedBrand.id,
                                                   approved:
                                                     updatedBrand.approved,
-                                                  proof: updatedBrand.proofs, // send full objects
+                                                  proof: updatedBrand.proofs,
                                                   type:
                                                     updatedBrand.type ||
                                                     updatedBrand.coefficientType ||
@@ -1005,14 +1007,14 @@ const AddDistributorForm = ({
               );
               if (!updatedBrand) return;
               addBrandDistributors.mutate({
-                distributorId,
+                distributorId: distributorId || "0",
                 data: {
                   brands: [
                     {
                       category: updatedBrand.category,
                       brand_id: updatedBrand.id,
                       approved: updatedBrand.approved,
-                      proof: updatedBrand.proofs, // send full objects
+                      proof: updatedBrand.proofs,
                       type:
                         updatedBrand.type || updatedBrand.coefficientType || "",
                       pricing_id: updatedBrand.pricing?.id ?? null,
@@ -1025,14 +1027,14 @@ const AddDistributorForm = ({
           <DeleteBrandModal
             opened={!!deleteBrand}
             onClose={() => setDeleteBrand(null)}
-            distributorId={distributorId}
+            distributorId={distributorId!}
             brandId={deleteBrand?.brand?.id ?? null}
             onSuccess={() => setDeleteBrand(null)}
           />
           <AddBrandForm
             opened={!!addBrandModal?.open}
             close={() => setAddBrandModal(null)}
-            distributorId={distributorId}
+            distributorId={distributorId!}
             category={addBrandModal?.groupName || ""}
             onSuccess={handleBrandProofUploaded}
           />
@@ -1219,7 +1221,10 @@ function DeleteBrandModal({
   });
   function handleDelete() {
     if (brandId) {
-      deleteBrandMutation.mutate({ distributorId, brandId });
+      deleteBrandMutation.mutate({
+        distributorId: Number(distributorId),
+        brandId,
+      });
     }
   }
   return (
