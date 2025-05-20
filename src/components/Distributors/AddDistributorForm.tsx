@@ -84,6 +84,65 @@ interface GroupedBrand extends Brand {
   billingType: string;
 }
 
+// Helper function to generate empty group structure for consumer beauty
+function generateConsumerBeautyGroups(): {
+  name: string;
+  brands: GroupedBrand[];
+}[] {
+  return Object.entries(consumerBeautyCategoryDisplayNames).map(
+    ([key, name]) => ({
+      name,
+      brands: [],
+    })
+  );
+}
+
+// Helper function to generate empty group structure for luxury
+function generateLuxuryGroups(): { name: string; brands: GroupedBrand[] }[] {
+  return Object.entries(luxuryGroupDisplayNames).map(([key, name]) => ({
+    name,
+    brands: [],
+  }));
+}
+
+// Helper function to merge existing brands with empty group structure
+function mergeGroupsWithData(
+  emptyGroups: { name: string; brands: GroupedBrand[] }[],
+  existingBrands: Brand[] = []
+): { name: string; brands: GroupedBrand[] }[] {
+  return emptyGroups.map((group) => {
+    const matchingBrands = existingBrands.filter((brand) => {
+      const category = brand.category || "";
+      const normalizedCategory = category.toLowerCase().replace(/\s+/g, "_");
+      const normalizedGroupName = group.name.toLowerCase().replace(/\s+/g, "_");
+
+      // Match based on category name or group number
+      return (
+        normalizedCategory === normalizedGroupName ||
+        (normalizedCategory.includes("group") &&
+          normalizedGroupName.includes("group") &&
+          normalizedCategory.slice(-1) === normalizedGroupName.slice(-1))
+      );
+    });
+
+    return {
+      ...group,
+      brands: matchingBrands.map((brand) => ({
+        ...brand,
+        approved: brand.approved ?? false,
+        proofs: Array.isArray(brand.proof)
+          ? brand.proof.map((p) => ({
+              name: p.name,
+              url: p.url,
+            }))
+          : [],
+        coefficientType: brand.type || "",
+        billingType: "",
+      })),
+    };
+  });
+}
+
 const AddDistributorForm = ({
   isEdit = false,
   formData,
@@ -300,15 +359,24 @@ const AddDistributorForm = ({
 
   // Update marketedBrandGroups when brandsData or account_type changes
   useEffect(() => {
-    if (brandsData?.data) {
-      const groups = groupBrandsByAccountType(
-        brandsData.data,
-        String(form.values.account_type || "luxury")
-      );
-      setMarketedBrandGroups(groups);
-    } else {
-      setMarketedBrandGroups([]);
+    if (!form.values.account_type) return;
+
+    let groups: { name: string; brands: GroupedBrand[] }[] = [];
+    const accountType = form.values.account_type.toLowerCase();
+
+    // Generate base groups based on account type
+    if (accountType === "consumer beauty") {
+      groups = generateConsumerBeautyGroups();
+    } else if (accountType === "luxury") {
+      groups = generateLuxuryGroups();
     }
+
+    // Merge with existing data if available
+    if (brandsData?.data) {
+      groups = mergeGroupsWithData(groups, brandsData.data);
+    }
+
+    setMarketedBrandGroups(groups);
   }, [brandsData, form.values.account_type]);
 
   const updateDistributorMutations = useUpdateDistributor({
@@ -316,6 +384,16 @@ const AddDistributorForm = ({
       onSuccess: () => navigate({ to: "/distributors" }),
     },
   });
+
+  const updateAccountTypeMutation = useUpdateDistributor({
+    mutationConfig: {
+      onSuccess: () => {
+        // Refresh the brands data after account type update
+        queryClient.invalidateQueries({ queryKey: ["brands", distributorId] });
+      },
+    },
+  });
+
   const addDistributorMutations = useAddDistributor({
     mutationConfig: {
       onSuccess: () => navigate({ to: "/distributors" }),
@@ -348,6 +426,36 @@ const AddDistributorForm = ({
   }
 
   const addBrandDistributors = useAddBrandDistributors({});
+
+  // Add new function to handle account type update with proper typing
+  const handleAccountTypeChange = async (value: string | null) => {
+    // Type guard to ensure value is either "luxury" or "consumer beauty"
+    if (value && (value === "luxury" || value === "consumer beauty")) {
+      form.setFieldValue("account_type", value);
+
+      if (isEdit && formData?.id) {
+        updateAccountTypeMutation.mutate({
+          distributorId: formData.id,
+          data: {
+            type: form.values.type,
+            account_type: value,
+            name: form.values.name,
+            company_registration_number:
+              form.values.company_registration_number,
+            contact_person: form.values.contact_person,
+            contact_email: form.values.contact_email,
+            currency: form.values.currency,
+            regions: form.values.regions || [],
+            markets: form.values.markets || [],
+            categories: form.values.categories || [],
+            coefficients: form.values.coefficients || [],
+          },
+        });
+      }
+    } else if (value === null) {
+      form.setFieldValue("account_type", null);
+    }
+  };
 
   return (
     <>
@@ -465,6 +573,7 @@ const AddDistributorForm = ({
                       clearable
                       searchable
                       className="w-full"
+                      onChange={handleAccountTypeChange}
                     />
                   </Grid.Col>
                 </Grid>
