@@ -383,12 +383,18 @@ const AddProductForm = forwardRef(function AddProductForm(
               placeholder="Select division"
               {...form.getInputProps("brand_type")}
               data={[
-                { value: "luxury", label: "Luxury" },
-                { value: "mass", label: "Mass" },
+                {
+                  label: "Mass",
+                  value: "mass",
+                },
+                {
+                  label: "Luxury",
+                  value: "luxury",
+                },
               ]}
               classNames={selectStyles}
               clearable
-            />
+            />            
           </Grid.Col>
           {form.getValues().brand_type && (
             <Grid.Col
@@ -817,8 +823,8 @@ const AddProductForm = forwardRef(function AddProductForm(
             }}
           >
             <TextInput
-              {...form.getInputProps("core_heading")}
-              label="Core heading"
+              {...form.getInputProps("category")}
+              label="Core Category"
               classNames={textInputStyles}
             />
           </Grid.Col>
@@ -1638,7 +1644,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           </Grid.Col>
         </Grid>
       </FormSection> */}
-      <FormSection title="Price benchmark">
+      {/*<FormSection title="Price benchmark">
         <Grid
           gutter={{
             sm: 32,
@@ -1741,7 +1747,7 @@ const AddProductForm = forwardRef(function AddProductForm(
         >
           Set price benchmark
         </Button>
-      </FormSection>
+      </FormSection>*/}
 
       {/* <FormSection title="Distributors Pricing">
         {productDistributorsData?.data.map((item, item_idx) => (
