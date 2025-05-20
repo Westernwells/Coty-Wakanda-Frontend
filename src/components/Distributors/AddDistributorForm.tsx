@@ -698,10 +698,14 @@ const AddDistributorForm = ({
                       placeholder="Select currency"
                       value={form.values.currency}
                       data={
-                        currenciesData?.data?.map((currency: Currency) => ({
-                          value: currency.code,
-                          label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
-                        })) || []
+                        currenciesData?.data
+                          ?.filter((currency: Currency) =>
+                            ["USD", "EUR"].includes(currency.code)
+                          )
+                          .map((currency: Currency) => ({
+                            value: currency.code,
+                            label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
+                          })) || []
                       }
                       rightSection={<ChevronDownIcon />}
                       classNames={selectStyles}
