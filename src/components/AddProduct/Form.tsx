@@ -379,8 +379,8 @@ const AddProductForm = forwardRef(function AddProductForm(
             }}
           >
             <Select
-              label="Brand Type"
-              placeholder="Select brand type"
+              label="Division"
+              placeholder="Select division"
               {...form.getInputProps("brand_type")}
               data={[
                 { value: "luxury", label: "Luxury" },
