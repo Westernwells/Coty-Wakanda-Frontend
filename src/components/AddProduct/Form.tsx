@@ -394,7 +394,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               ]}
               classNames={selectStyles}
               clearable
-            />            
+            />
           </Grid.Col>
           {form.getValues().brand_type && (
             <Grid.Col
@@ -1813,7 +1813,7 @@ const AddProductForm = forwardRef(function AddProductForm(
         ))}
       </FormSection> */}
 
-      <FormSection title="Upload documents">
+      <FormSection title="Upload documents" className="mb-5">
         <FileUploadSection
           form={form}
           multiple

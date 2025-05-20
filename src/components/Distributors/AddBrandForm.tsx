@@ -1,7 +1,7 @@
 import { useAddBrandDistributors } from "@/api/distributors/add-brand-distributors";
 import { Button, Group, Modal, Select, Checkbox } from "@mantine/core";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { selectStyles } from "../Shared/Styles";
 import ExitIcon from "../Icons/ExitIcon";
 import { getBrands } from "@/api/get-brands";
@@ -32,6 +32,8 @@ export function AddBrandForm({
   const [type, setType] = useState("");
   const [productId, setProductId] = useState("");
   const [isApproved, setIsApproved] = useState(false);
+
+  const queryClient = useQueryClient();
 
   // Fetch all brands
   const { data: brandsData, isLoading: isLoadingBrands } = useQuery({
@@ -91,6 +93,9 @@ export function AddBrandForm({
         setIsApproved(false);
         close();
         onSuccess?.();
+        queryClient.invalidateQueries({
+          queryKey: ["products", { distributorId }],
+        });
       },
     },
   });
