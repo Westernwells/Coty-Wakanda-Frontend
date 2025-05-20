@@ -379,9 +379,9 @@ const AddProductForm = forwardRef(function AddProductForm(
             }}
           >
             <Select
-              label="Brand Type"
-              placeholder="Select brand type"
-              {...form.getInputProps("division")}
+              label="Division"
+              placeholder="Select division"
+              {...form.getInputProps("brand_type")}
               data={[
                 {
                   label: "Mass",

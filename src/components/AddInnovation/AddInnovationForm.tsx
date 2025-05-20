@@ -5,13 +5,12 @@ import { dateToLocalString } from "@/lib/utils";
 import { queryClient } from "@/main";
 import { Product } from "@/types";
 import { Button, Grid, Group, Select, Table, TextInput } from "@mantine/core";
-import { DateInput, YearPickerInput } from "@mantine/dates";
+import { YearPickerInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import DateIcon from "../Icons/DateIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
@@ -103,7 +102,7 @@ const AddInnovationForm = ({
         }
       })}
     >
-      <DateInput
+      {/* <DateInput
         {...form.getInputProps("forecast_deadline")}
         label="Forecast deadline"
         valueFormat="YYYY MMM DD"
@@ -111,7 +110,7 @@ const AddInnovationForm = ({
         rightSection={<DateIcon />}
         className="sm:max-w-[50%]"
         classNames={textInputStyles}
-      />
+      /> */}
       <FormSection title="General Details">
         <Grid
           gutter={{
