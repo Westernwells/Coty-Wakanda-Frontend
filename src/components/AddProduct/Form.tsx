@@ -381,14 +381,20 @@ const AddProductForm = forwardRef(function AddProductForm(
             <Select
               label="Brand Type"
               placeholder="Select brand type"
-              {...form.getInputProps("brand_type")}
+              {...form.getInputProps("division")}
               data={[
-                { value: "luxury", label: "Luxury" },
-                { value: "mass", label: "Mass" },
+                {
+                  label: "Mass",
+                  value: "mass",
+                },
+                {
+                  label: "Luxury",
+                  value: "luxury",
+                },
               ]}
               classNames={selectStyles}
               clearable
-            />
+            />            
           </Grid.Col>
           {form.getValues().brand_type && (
             <Grid.Col
@@ -817,8 +823,8 @@ const AddProductForm = forwardRef(function AddProductForm(
             }}
           >
             <TextInput
-              {...form.getInputProps("core_heading")}
-              label="Core heading"
+              {...form.getInputProps("category")}
+              label="Core Category"
               classNames={textInputStyles}
             />
           </Grid.Col>
