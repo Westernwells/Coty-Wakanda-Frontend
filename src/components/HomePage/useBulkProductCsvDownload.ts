@@ -32,6 +32,19 @@ function mapProductToCsvRow(product: Product): CsvProductRow {
   };
 }
 
+function isFilterEmpty(filter?: Filters) {
+  if (!filter) return true;
+  return (
+    !filter.search &&
+    !filter.region_id &&
+    !filter.market_id &&
+    !filter.brand_id &&
+    !filter.sub_brand_id &&
+    !filter.distributor_id &&
+    !filter.division
+  );
+}
+
 export function useBulkProductCsvDownload(filter?: Filters) {
   const [csvData, setCsvData] = useState<CsvProductRow[]>([]);
   const [csvHeaders, setCsvHeaders] = useState<
@@ -58,7 +71,9 @@ export function useBulkProductCsvDownload(filter?: Filters) {
       let cursor = 1;
       let hasNext = true;
       while (hasNext) {
-        const res = await getProducts({ cursor, page_size: 100, filter });
+        const res = isFilterEmpty(filter)
+          ? await getProducts({ cursor, page_size: 100 })
+          : await getProducts({ cursor, page_size: 100, filter });
         all = all.concat(res.data);
         hasNext = res.meta.has_next;
         cursor = res.meta.cursor;

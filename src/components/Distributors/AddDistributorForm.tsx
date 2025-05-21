@@ -698,10 +698,14 @@ const AddDistributorForm = ({
                       placeholder="Select currency"
                       value={form.values.currency}
                       data={
-                        currenciesData?.data?.map((currency: Currency) => ({
-                          value: currency.code,
-                          label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
-                        })) || []
+                        currenciesData?.data
+                          ?.filter((currency: Currency) =>
+                            ["USD", "EUR"].includes(currency.code)
+                          )
+                          .map((currency: Currency) => ({
+                            value: currency.code,
+                            label: `${currency.code} (${currency.symbol}) - ${currency.name}`,
+                          })) || []
                       }
                       rightSection={<ChevronDownIcon />}
                       classNames={selectStyles}
@@ -954,7 +958,12 @@ const AddDistributorForm = ({
                               <PencilIcon className="size-5" />
                             </Table.Td>
                             {/* Delete Action */}
-                            <Table.Td className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap">
+                            <Table.Td
+                              className="w-[5%] text-center !pr-2 cursor-pointer whitespace-nowrap"
+                              onClick={() =>
+                                setDeleteBrand({ brand, groupName: group.name })
+                              }
+                            >
                               <TrashIcon className="size-5" />
                             </Table.Td>
                           </Table.Tr>
@@ -1258,7 +1267,7 @@ function DeleteBrandModal({
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                  className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
                   onClick={handleDelete}
                   loading={deleteBrandMutation.isPending}
                   color="red"

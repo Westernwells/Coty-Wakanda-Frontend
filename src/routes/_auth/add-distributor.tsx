@@ -22,7 +22,7 @@ function RouteComponent() {
           variant="default"
           className="border-none bg-transparent   text-primary text-sm font-medium  p-0 before:content-none"
           component={Link}
-          to=".."
+          to="/distributors"
         >
           Back to Distributors
         </Button>

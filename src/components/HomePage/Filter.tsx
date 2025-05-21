@@ -126,7 +126,7 @@ const Filter = ({
     selectCount === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2 px-4";
 
   return (
-    <div className="bg-[#F5F8FA] w-full rounded-[20px] p-6 mt-5">
+    <div className="bg-white w-full rounded-[20px] p-6 mt-5">
       <Group justify="space-between" align="center">
         <Title order={2} className="text-primary font-semibold text-xl">
           Refine your results

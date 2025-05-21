@@ -227,17 +227,43 @@ const Navbar = () => {
             )}
           >
             {links.map((link) => {
-              const isActive = matchRoute({ to: link.link, fuzzy: true });
+              const isDistributorsLink = link.label === "Distributors";
+              const isProductsLink = link.label === "Products";
+              const isInnovationsLink = link.label === "Innovations";
+              let isActive;
+
+              if (isDistributorsLink) {
+                const currentPath = window.location.pathname;
+                isActive =
+                  currentPath.startsWith("/distributors") ||
+                  currentPath.startsWith("/add-distributor") ||
+                  currentPath.startsWith("/edit-distributors");
+              } else if (isProductsLink) {
+                const currentPath = window.location.pathname;
+                isActive =
+                  currentPath.startsWith("/products") ||
+                  currentPath.startsWith("/add-product") ||
+                  currentPath.startsWith("/edit-product");
+              } else if (isInnovationsLink) {
+                const currentPath = window.location.pathname;
+                isActive =
+                  currentPath.startsWith("/innovations") ||
+                  currentPath.startsWith("/add-innovation") ||
+                  currentPath.startsWith("/edit-innovation");
+              } else {
+                isActive = matchRoute({ to: link.link, fuzzy: true });
+              }
               const isHovered = hoveredLink === link.link;
               return (
                 <Link
                   to={link.link}
                   key={link.label}
                   className={cn(
-                    "flex items-center gap-x-2 text-white [&.active]:text-primary [&.active]:bg-white rounded-[10px] [&.active]:font-medium py-3 hover:text-[#00EBB2] transition-all ease-in-out duration-300",
+                    "flex items-center gap-x-2 text-white rounded-[10px] py-3 hover:text-[#00EBB2] transition-all ease-in-out duration-300",
                     isDesktopNavbarCollapsed
                       ? "px-2 justify-center w-full"
-                      : "px-2"
+                      : "px-2",
+                    isActive && "bg-white text-primary font-medium"
                   )}
                   title={isDesktopNavbarCollapsed ? link.label : undefined}
                   onMouseEnter={() => setHoveredLink(link.link)}
