@@ -166,7 +166,7 @@ const AddProductForm = forwardRef(function AddProductForm(
       },
       {
         queryKey: ["categories"],
-        queryFn: () => getCategories({ page_size: 999999 }),
+        queryFn: () => getCategories({ type: "core", page_size: 999999 }),
       },
       {
         queryKey: ["subCategories"],
@@ -221,7 +221,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     ],
   });
 
-  console.log({ product });
+  console.log({ categoriesData });
 
   const updateProduct = useUpdateProduct({
     mutationConfig: {
@@ -313,16 +313,14 @@ const AddProductForm = forwardRef(function AddProductForm(
         try {
           const { documents, ...toSubmit } = values;
           if (isEdit) {
-            const promises: Promise<ApiResponseFiles>[] = [];
             documents?.map((doc: { title: string; url: string }) => {
-              const data = addDocument.mutateAsync({
+              addDocument.mutateAsync({
                 productId: product?.id || 0,
                 data: {
                   title: doc.title,
                   url: doc.url,
                 },
               });
-              promises.push(data);
             });
             updateProduct.mutate(
               {
@@ -772,10 +770,16 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
-              {...form.getInputProps("category")}
+            <Select
+              {...form.getInputProps("category_id")}
               label="Core Category"
-              classNames={textInputStyles}
+              data={
+                categoriesData?.data?.map((category) => ({
+                  value: category.id.toString(),
+                  label: category.name,
+                })) || []
+              }
+              classNames={selectStyles}
             />
           </Grid.Col>
           <Grid.Col
@@ -1321,16 +1325,14 @@ const AddProductForm = forwardRef(function AddProductForm(
             setPendingSubmitValues(null);
             // Repeat the mutation logic for edit here
             const { documents, ...toSubmit } = values;
-            const promises: Promise<ApiResponseFiles>[] = [];
             documents?.map((doc: { title: string; url: string }) => {
-              const data = addDocument.mutateAsync({
+              addDocument.mutateAsync({
                 productId: product?.id || 0,
                 data: {
                   title: doc.title,
                   url: doc.url,
                 },
               });
-              promises.push(data);
             });
             updateProduct.mutate(
               {
