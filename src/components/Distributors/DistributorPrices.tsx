@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { MasterDistributor } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface DistributorPricesProps {
   distributors: MasterDistributor[];
@@ -9,6 +10,9 @@ interface DistributorPricesProps {
   setSelectedRow: (irc: string | null) => void;
   tableHeader: string[];
   tableFields: string[];
+  scrollTop: number;
+  setScrollTop: (scrollTop: number) => void;
+  scrollSource: "product" | "distributor" | null;
 }
 
 const DistributorPrices: React.FC<DistributorPricesProps> = ({
@@ -17,6 +21,9 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
   setSelectedRow,
   tableHeader,
   tableFields,
+  scrollTop,
+  setScrollTop,
+  scrollSource,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingPrice, setEditingPrice] = useState<{
@@ -27,6 +34,38 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
     irc: string;
     rrsp: number;
   } | null>(null);
+
+  // Infinite scroll state for distributor prices
+  const PAGE_SIZE = 20;
+  type PriceType = MasterDistributor["data"][number];
+  const [currentDistributorPrices, setCurrentDistributorPrices] = useState<
+    PriceType[]
+  >([]);
+  const [hasMorePrices, setHasMorePrices] = useState(true);
+  const [isLoadingMorePrices, setIsLoadingMorePrices] = useState(false);
+
+  // Update prices when distributor changes
+  useEffect(() => {
+    if (distributors[currentIndex]) {
+      setCurrentDistributorPrices(
+        distributors[currentIndex].data.slice(0, PAGE_SIZE)
+      );
+      setHasMorePrices(distributors[currentIndex].data.length > PAGE_SIZE);
+    }
+  }, [currentIndex, distributors]);
+
+  // Fetch more prices for infinite scroll
+  const fetchMoreDistributorPrices = async () => {
+    if (!distributors[currentIndex]) return;
+    setIsLoadingMorePrices(true);
+    // Simulate async fetch
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const allPrices = distributors[currentIndex].data;
+    const nextLength = currentDistributorPrices.length + PAGE_SIZE;
+    setCurrentDistributorPrices(allPrices.slice(0, nextLength));
+    setHasMorePrices(allPrices.length > nextLength);
+    setIsLoadingMorePrices(false);
+  };
 
   const nextDistributor = () => {
     setCurrentIndex((prev) => (prev + 1) % (distributors.length || 1));
@@ -77,6 +116,36 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
     // Here you would typically update the RRSP in your data store
   };
 
+  const scrollableRef = React.useRef<HTMLDivElement>(null);
+  const scrolling = React.useRef(false);
+
+  // Sync scroll position from parent
+  React.useEffect(() => {
+    if (scrollSource !== "distributor" && scrollableRef.current) {
+      if (Math.abs(scrollableRef.current.scrollTop - scrollTop) > 1) {
+        scrolling.current = true;
+        scrollableRef.current.scrollTop = scrollTop;
+      }
+    }
+  }, [scrollTop, scrollSource]);
+
+  // After setting scroll, reset scrollSource to null
+  React.useEffect(() => {
+    if (scrolling.current && scrollSource !== "distributor") {
+      scrolling.current = false;
+      setScrollTop(scrollTop); // This will set source to 'distributor' in parent
+    }
+  }, [scrollTop, scrollSource, setScrollTop]);
+
+  // On scroll, update parent if source is not distributor
+  function handleScroll() {
+    if (scrollableRef.current) {
+      if (!scrolling.current) {
+        setScrollTop(scrollableRef.current.scrollTop);
+      }
+    }
+  }
+
   if (!currentDistributor) {
     return (
       <div className="flex flex-col h-full p-4">
@@ -87,6 +156,8 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
       </div>
     );
   }
+
+  console.log({ distributors });
 
   return (
     <div className="flex flex-col h-full">
@@ -122,111 +193,136 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
         </div>
       </div>
 
-      <div className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              {tableHeader.map((header) => (
-                <th
-                  key={header}
-                  className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {header}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {currentDistributor.data.map((price) => (
-              <tr
-                key={price.irc + "-" + currentDistributor.id}
-                onClick={() => setSelectedRow(price.irc as string)}
-                className={cn(
-                  "cursor-pointer hover:bg-primary/10",
-                  selectedRow === price.irc && "bg-primary/30"
-                )}
-              >
-                {tableFields.map((field) => {
-                  // Special handling for editable fields
-                  if (field === "billing_price") {
-                    return (
-                      <td
-                        key={field}
-                        className="px-2 py-1 text-sm text-gray-900"
-                      >
-                        {editingPrice?.irc === price.irc ? (
-                          <input
-                            type="number"
-                            value={editingPrice.price}
-                            onChange={handlePriceChange}
-                            onBlur={handlePriceBlur}
-                            autoFocus
-                            className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
-                            step="0.01"
-                          />
-                        ) : (
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePriceEdit(
-                                price.irc as string,
-                                Number(price.billing_price)
-                              );
-                            }}
-                            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
-                          >
-                            ${Number(price.billing_price).toFixed(2)}
-                          </div>
-                        )}
-                      </td>
-                    );
-                  }
-                  if (field === "rrsp") {
-                    return (
-                      <td
-                        key={field}
-                        className="px-2 py-1 text-sm text-gray-900"
-                      >
-                        {editingRRSP?.irc === price.irc ? (
-                          <input
-                            type="number"
-                            value={editingRRSP.rrsp}
-                            onChange={handleRRSPChange}
-                            onBlur={handleRRSPBlur}
-                            autoFocus
-                            className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
-                            step="0.01"
-                          />
-                        ) : (
-                          <div
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRRSPEdit(
-                                price.irc as string,
-                                Number(price.rrsp)
-                              );
-                            }}
-                            className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
-                          >
-                            ${Number(price.rrsp).toFixed(2)}
-                          </div>
-                        )}
-                      </td>
-                    );
-                  }
-                  // Default rendering for other fields
-                  return (
-                    <td key={field} className="px-2 py-1 text-sm text-gray-900">
-                      {(price as Record<string, string | number | null>)[
-                        field
-                      ] ?? "-"}
-                    </td>
-                  );
-                })}
+      <div
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        ref={scrollableRef}
+        onScroll={handleScroll}
+      >
+        <InfiniteScroll
+          dataLength={currentDistributorPrices.length}
+          next={fetchMoreDistributorPrices}
+          hasMore={hasMorePrices}
+          loader={
+            isLoadingMorePrices ? (
+              <div className="text-center py-2">Loading...</div>
+            ) : null
+          }
+          endMessage={
+            <div className="text-center text-gray-500 py-2">
+              {currentDistributorPrices.length > 0
+                ? "No more prices to load."
+                : ""}
+            </div>
+          }
+        >
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                {tableHeader.map((header) => (
+                  <th
+                    key={header}
+                    className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {header}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {currentDistributorPrices.map((price) => (
+                <tr
+                  key={price.irc + "-" + distributors[currentIndex].id}
+                  onClick={() => setSelectedRow(price.irc as string)}
+                  className={cn(
+                    "cursor-pointer hover:bg-primary/10",
+                    selectedRow === price.irc && "bg-primary/30"
+                  )}
+                >
+                  {tableFields.map((field) => {
+                    // Special handling for editable fields
+                    if (field === "billing_price") {
+                      return (
+                        <td
+                          key={field}
+                          className="px-2 py-1 text-sm text-gray-900"
+                        >
+                          {editingPrice && editingPrice.irc === price.irc ? (
+                            <input
+                              type="number"
+                              value={editingPrice.price}
+                              onChange={handlePriceChange}
+                              onBlur={handlePriceBlur}
+                              autoFocus
+                              className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                              step="0.01"
+                            />
+                          ) : (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handlePriceEdit(
+                                  price.irc as string,
+                                  Number(price.billing_price)
+                                );
+                              }}
+                              className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                            >
+                              ${Number(price.billing_price).toFixed(2)}
+                            </div>
+                          )}
+                        </td>
+                      );
+                    }
+                    if (field === "rrsp") {
+                      return (
+                        <td
+                          key={field}
+                          className="px-2 py-1 text-sm text-gray-900"
+                        >
+                          {editingRRSP && editingRRSP.irc === price.irc ? (
+                            <input
+                              type="number"
+                              value={editingRRSP.rrsp}
+                              onChange={handleRRSPChange}
+                              onBlur={handleRRSPBlur}
+                              autoFocus
+                              className="w-20 border border-gray-300 rounded px-1 py-0.5 text-sm"
+                              step="0.01"
+                            />
+                          ) : (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRRSPEdit(
+                                  price.irc as string,
+                                  Number(price.rrsp)
+                                );
+                              }}
+                              className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                            >
+                              ${Number(price.rrsp).toFixed(2)}
+                            </div>
+                          )}
+                        </td>
+                      );
+                    }
+                    // Default rendering for other fields
+                    return (
+                      <td
+                        key={field}
+                        className="px-2 py-1 text-sm text-gray-900"
+                      >
+                        {(price as Record<string, string | number | null>)[
+                          field
+                        ] ?? "-"}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </InfiniteScroll>
       </div>
     </div>
   );
