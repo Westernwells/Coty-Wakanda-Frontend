@@ -11,6 +11,9 @@ interface ProductTableProps {
   fetchMoreData: () => Promise<void>;
   hasMore: boolean;
   isLoadingMore: boolean;
+  scrollTop: number;
+  setScrollTop: (scrollTop: number) => void;
+  scrollSource: "product" | "distributor" | null;
 }
 
 const TableLoader = () => (
@@ -26,8 +29,39 @@ const ProductTable: React.FC<ProductTableProps> = ({
   fetchMoreData,
   hasMore,
   isLoadingMore,
+  scrollTop,
+  setScrollTop,
+  scrollSource,
 }) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
+  const scrolling = React.useRef(false);
+
+  // Sync scroll position from parent
+  React.useEffect(() => {
+    if (scrollSource !== "product" && scrollableRef.current) {
+      if (Math.abs(scrollableRef.current.scrollTop - scrollTop) > 1) {
+        scrolling.current = true;
+        scrollableRef.current.scrollTop = scrollTop;
+      }
+    }
+  }, [scrollTop, scrollSource]);
+
+  // After setting scroll, reset scrollSource to null
+  React.useEffect(() => {
+    if (scrolling.current && scrollSource !== "product") {
+      scrolling.current = false;
+      setScrollTop(scrollTop); // This will set source to 'product' in parent
+    }
+  }, [scrollTop, scrollSource, setScrollTop]);
+
+  // On scroll, update parent if source is not product
+  function handleScroll() {
+    if (scrollableRef.current) {
+      if (!scrolling.current) {
+        setScrollTop(scrollableRef.current.scrollTop);
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -38,6 +72,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
         id="productTableScrollable"
         ref={scrollableRef}
         className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        onScroll={handleScroll}
       >
         <InfiniteScroll
           dataLength={products.length}

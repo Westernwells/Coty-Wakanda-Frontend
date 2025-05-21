@@ -6,7 +6,7 @@ import {
   Meta,
 } from "@/types";
 import { Loader } from "@mantine/core";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import DistributorPrices from "./DistributorPrices";
 import ProductTable from "./ProductTable";
 
@@ -35,6 +35,21 @@ const MasterDataViewModal = ({
   const [productsMeta, setProductsMeta] = useState<Meta>(initialMeta);
   const [productsHasMore, setProductsHasMore] = useState(initialMeta.has_next);
   const [productsIsLoadingMore, setProductsIsLoadingMore] = useState(false);
+
+  // --- Add scroll sync state ---
+  const [scrollTop, setScrollTop] = useState(0);
+  const [scrollSource, setScrollSource] = useState<
+    "product" | "distributor" | null
+  >(null);
+
+  // Helper to update scrollTop and source
+  function handleScrollSync(
+    newScrollTop: number,
+    source: "product" | "distributor"
+  ) {
+    setScrollTop(newScrollTop);
+    setScrollSource(source);
+  }
 
   useEffect(() => {
     setMasterProducts(initialData);
@@ -185,6 +200,9 @@ const MasterDataViewModal = ({
                 fetchMoreData={fetchMoreProductsData}
                 hasMore={productsHasMore}
                 isLoadingMore={productsIsLoadingMore}
+                scrollTop={scrollTop}
+                setScrollTop={(val) => handleScrollSync(val, "product")}
+                scrollSource={scrollSource}
               />
             </div>
 
@@ -212,6 +230,9 @@ const MasterDataViewModal = ({
                     "french_eur",
                   ]
                 }
+                scrollTop={scrollTop}
+                setScrollTop={(val) => handleScrollSync(val, "distributor")}
+                scrollSource={scrollSource}
               />
             </div>
           </div>
