@@ -237,7 +237,8 @@ const Navbar = () => {
                 isActive =
                   currentPath.startsWith("/distributors") ||
                   currentPath.startsWith("/add-distributor") ||
-                  currentPath.startsWith("/edit-distributors");
+                  currentPath.startsWith("/edit-distributors") ||
+                  currentPath.startsWith("/master-products");
               } else if (isProductsLink) {
                 const currentPath = window.location.pathname;
                 isActive =
