@@ -127,6 +127,7 @@ const AddInnovationForm = ({
             <Select
               {...form.getInputProps("brand_id")}
               placeholder="Select brand"
+              label="Brand"
               data={
                 brandsData?.data?.map((brand) => ({
                   value: brand.id.toString(),
@@ -148,6 +149,7 @@ const AddInnovationForm = ({
             <Select
               {...form.getInputProps("sub_brand_id")}
               placeholder="Select brand Pillar"
+              label="Brand Pillar"
               disabled={
                 form.getValues().brand_id === "" ||
                 brandPillarsData?.data.length === 0
@@ -171,6 +173,7 @@ const AddInnovationForm = ({
             }}
           >
             <YearPickerInput
+              label="Year"
               {...form.getInputProps("year")}
               placeholder="Pick Year"
               valueFormat="YYYY"
@@ -186,6 +189,7 @@ const AddInnovationForm = ({
             <Select
               {...form.getInputProps("format")}
               placeholder="Select Format"
+              label="Format"
               data={[
                 { label: "format", value: "format1" },
                 { label: "unformat", value: "format2" },
