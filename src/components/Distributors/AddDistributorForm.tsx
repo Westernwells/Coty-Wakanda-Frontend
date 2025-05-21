@@ -459,6 +459,23 @@ const AddDistributorForm = ({
     }
   };
 
+  async function downloadFile(url: string, filename: string) {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  }
+
   return (
     <>
       {updateDistributorMutations.isPending ||
@@ -836,7 +853,9 @@ const AddDistributorForm = ({
                                         onClick={(
                                           e: React.MouseEvent<HTMLAnchorElement>
                                         ) => {
-                                          if (!proof.url) e.preventDefault();
+                                          e.preventDefault();
+                                          if (!proof.url) return;
+                                          downloadFile(proof.url, proof.name);
                                         }}
                                         className="underline text-blue-600 hover:text-blue-800 cursor-pointer truncate max-w-[200px] inline-block"
                                         title={proof.name}
