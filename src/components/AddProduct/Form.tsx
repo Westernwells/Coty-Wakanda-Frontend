@@ -11,11 +11,9 @@ import { addProductSchema, useAddProduct } from "@/api/products/add-product";
 import { getProductDistributors } from "@/api/products/get-product-distributors";
 import { getProducts } from "@/api/products/get-products";
 import { useUpdateProduct } from "@/api/products/update-product";
-import { ApiResponseFiles } from "@/api/products/upload-document";
 import { queryClient } from "@/main";
 import { PriceBenchmark, Product, ProductInput } from "@/types";
 import {
-  Button,
   Grid,
   Group,
   Loader,
@@ -29,19 +27,11 @@ import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "react-toastify";
-import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import CornerDownRightIcon from "../Icons/CornerDownRightIcon";
 import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
-import { PricingFields } from "../Shared/Form/PricingFields";
 import { FormSection } from "../Shared/Form/Section";
-import { StatusCard } from "../Shared/Form/StatusCard";
-import {
-  selectStyles,
-  textAreaStyles,
-  textInputStyles,
-} from "../Shared/Styles";
+import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { BrandTypeConfirmationModal } from "./brand-type-confirmation-modal";
 
 const AddProductForm = forwardRef(function AddProductForm(
@@ -220,8 +210,6 @@ const AddProductForm = forwardRef(function AddProductForm(
       },
     ],
   });
-
-  console.log({ categoriesData });
 
   const updateProduct = useUpdateProduct({
     mutationConfig: {
@@ -1290,6 +1278,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           form={form}
           multiple
           id="documents"
+          productId={product?.id}
           span={{
             lg: 4,
             base: 12,
