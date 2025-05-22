@@ -3,19 +3,19 @@ import { MutationConfig } from "@/lib/react-query";
 import { useMutation } from "@tanstack/react-query";
 
 export type Data = {
-  id: number
-  product_id: number
-  title: string
-  url: string
-  created_at: string
-  updated_at: string
+  id: number;
+  product_id: number;
+  title: string;
+  url: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ApiResponseFiles = {
-    data: {
-      message: string;
-      data: Data;
-    };
+  data: {
+    message: string;
+    data: Data;
+  };
 };
 
 export const addDocument = ({
@@ -23,8 +23,9 @@ export const addDocument = ({
   data,
 }: {
   productId: number;
-  data: {title: string, url: string};
+  data: { title: string; url: string };
 }): Promise<ApiResponseFiles> => {
+  console.log("sending data", { productId, data });
   return axios.post(`/products/${productId}/documents`, data);
 };
 
