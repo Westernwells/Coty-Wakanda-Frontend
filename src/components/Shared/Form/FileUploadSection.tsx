@@ -145,14 +145,21 @@ export function FileUploadSection<T = Record<string, unknown>>({
     }
   }
 
-  function handleDownload(url: string, title: string) {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = title;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  async function handleDownload(url: string, title: string) {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = title;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
   }
 
   function handleView(url: string) {
