@@ -452,7 +452,8 @@ export const InnovationProductsTable = forwardRef(
           opened={isBenchmarkModalOpen}
           onClose={handleCloseBenchmarkModal}
           onSave={handleSaveBenchmark}
-          form={form}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          form={form as any}
           brandsData={brandsData}
           productsListData={productsListData}
           categoriesData={categoriesData}

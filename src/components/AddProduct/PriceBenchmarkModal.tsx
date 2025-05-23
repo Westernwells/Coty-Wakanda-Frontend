@@ -1,4 +1,5 @@
 import { Modal, Button } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
 import { PriceBenchmarkSection } from "./PriceBenchmarkSection";
 import { Category } from "@/types";
 import { Brand } from "@/types";
@@ -8,7 +9,7 @@ interface PriceBenchmarkModalProps {
   opened: boolean;
   onClose: () => void;
   onSave: () => void;
-  form: unknown;
+  form: UseFormReturnType<unknown>;
   brandsData: Brand[];
   productsListData: Product[];
   categoriesData: Category[];
@@ -42,7 +43,8 @@ export function PriceBenchmarkModal({
               Set Price Benchmark
             </h2>
             <PriceBenchmarkSection
-              form={form}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              form={form as any}
               brandsData={{
                 data: brandsData.map((brand) => ({ ...brand, group: "other" })),
               }}

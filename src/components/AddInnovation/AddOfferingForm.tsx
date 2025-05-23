@@ -12,7 +12,7 @@ import { DateInput } from "@mantine/dates";
 import { UseFormReturnType } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { PlusIcon } from "lucide-react";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
 import ExitIcon from "../Icons/ExitIcon";
@@ -32,6 +32,7 @@ const AddOfferingForm = ({
   setOfferingOpen,
   offeringIndex,
   form,
+  onProductOpenChange,
 }: {
   setOfferingOpen: React.Dispatch<React.SetStateAction<boolean>>;
   offeringIndex: number;
@@ -58,10 +59,16 @@ const AddOfferingForm = ({
       >;
     }[];
   }>;
+  onProductOpenChange?: (isOpen: boolean) => void;
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const [productOpen, setProductOpen] = useState(-1);
   const [isEdit, setIsEdit] = useState(false);
+
+  // Notify parent when product form opens/closes
+  useEffect(() => {
+    onProductOpenChange?.(productOpen >= 0);
+  }, [productOpen, onProductOpenChange]);
 
   const idx =
     offeringIndex !== -1
@@ -100,6 +107,12 @@ const AddOfferingForm = ({
 
   return (
     <>
+      <div className="my-6">
+        <h2 className="text-xl font-semibold text-primary">Add Offering</h2>
+        <p className="text-gray-600 text-sm mt-1">
+          Add offering details to your innovation
+        </p>
+      </div>
       <Grid
         gutter={{
           sm: 32,
@@ -190,11 +203,17 @@ const AddOfferingForm = ({
               base: 12,
             }}
           >
-            <TextInput
+            <Select
               {...form.getInputProps(`offerings.${idx}.type`)}
-              placeholder="Type"
               label="Type"
-              classNames={textInputStyles}
+              placeholder="Select type"
+              data={[
+                { value: "saleable", label: "Saleable" },
+                { value: "non saleable", label: "Non Saleable" },
+              ]}
+              rightSection={<ChevronDownIcon />}
+              classNames={selectStyles}
+              clearable
             />
           </Grid.Col>
         </Grid>
@@ -276,6 +295,13 @@ const AddOfferingForm = ({
       </Grid>
       <Group justify="flex-end" mt="md">
         <Button
+          variant="outline"
+          className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+          onClick={() => setOfferingOpen(false)}
+        >
+          Back
+        </Button>
+        <Button
           type="submit"
           onClick={() => {
             const errors = Object.keys(form.validate().errors).some((key) =>
@@ -303,9 +329,22 @@ const AddOfferingForm = ({
         <Modal.Content className="!items-center min-w-[70%]">
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
-              <h2 className="text-xl font-semibold mb-6 text-primary">
-                Add IRC
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-primary">Add IRC</h2>
+                <Button
+                  variant="subtle"
+                  className="text-primary hover:bg-primary hover:bg-opacity-10 transition-all ease-in-out duration-300"
+                  onClick={() => {
+                    form.removeListItem(
+                      `offerings.${idx}.products`,
+                      productIdx
+                    );
+                    close();
+                  }}
+                >
+                  ← Back
+                </Button>
+              </div>
               <div className="space-y-6">
                 <TextInput
                   {...form.getInputProps(
