@@ -41,6 +41,7 @@ import { Route as AuthProductsProductIdImport } from './routes/_auth/products/$p
 import { Route as AuthInnovationForcastsSubmitForecastIdImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
 import { Route as AuthForecastDetailsProductIdImport } from './routes/_auth/forecast-details/$productId'
 import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
+import { Route as AuthEditInnovationInnovationIdImport } from './routes/_auth/edit-innovation/$innovationId'
 import { Route as AuthEditDistributorsDistributorIdImport } from './routes/_auth/edit-distributors/$distributorId'
 import { Route as AuthSettingsEditPricingListPricingListIdImport } from './routes/_auth/settings/edit-pricing-list/$pricingListId'
 import { Route as AuthSettingsEditBillingListIdImport } from './routes/_auth/settings/edit-billing-list/$id'
@@ -230,6 +231,13 @@ const AuthEditProductProductIdRoute = AuthEditProductProductIdImport.update({
   getParentRoute: () => AuthRoute,
 } as any)
 
+const AuthEditInnovationInnovationIdRoute =
+  AuthEditInnovationInnovationIdImport.update({
+    id: '/edit-innovation/$innovationId',
+    path: '/edit-innovation/$innovationId',
+    getParentRoute: () => AuthRoute,
+  } as any)
+
 const AuthEditDistributorsDistributorIdRoute =
   AuthEditDistributorsDistributorIdImport.update({
     id: '/edit-distributors/$distributorId',
@@ -416,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEditDistributorsDistributorIdImport
       parentRoute: typeof AuthImport
     }
+    '/_auth/edit-innovation/$innovationId': {
+      id: '/_auth/edit-innovation/$innovationId'
+      path: '/edit-innovation/$innovationId'
+      fullPath: '/edit-innovation/$innovationId'
+      preLoaderRoute: typeof AuthEditInnovationInnovationIdImport
+      parentRoute: typeof AuthImport
+    }
     '/_auth/edit-product/$productId': {
       id: '/_auth/edit-product/$productId'
       path: '/edit-product/$productId'
@@ -512,6 +527,7 @@ interface AuthRouteChildren {
   AuthStockOnHandRoute: typeof AuthStockOnHandRoute
   AuthIndexRoute: typeof AuthIndexRoute
   AuthEditDistributorsDistributorIdRoute: typeof AuthEditDistributorsDistributorIdRoute
+  AuthEditInnovationInnovationIdRoute: typeof AuthEditInnovationInnovationIdRoute
   AuthEditProductProductIdRoute: typeof AuthEditProductProductIdRoute
   AuthForecastDetailsProductIdRoute: typeof AuthForecastDetailsProductIdRoute
   AuthInnovationForcastsSubmitForecastIdRoute: typeof AuthInnovationForcastsSubmitForecastIdRoute
@@ -546,6 +562,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthIndexRoute: AuthIndexRoute,
   AuthEditDistributorsDistributorIdRoute:
     AuthEditDistributorsDistributorIdRoute,
+  AuthEditInnovationInnovationIdRoute: AuthEditInnovationInnovationIdRoute,
   AuthEditProductProductIdRoute: AuthEditProductProductIdRoute,
   AuthForecastDetailsProductIdRoute: AuthForecastDetailsProductIdRoute,
   AuthInnovationForcastsSubmitForecastIdRoute:
@@ -585,6 +602,7 @@ export interface FileRoutesByFullPath {
   '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
@@ -620,6 +638,7 @@ export interface FileRoutesByTo {
   '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
   '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
   '/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
@@ -657,6 +676,7 @@ export interface FileRoutesById {
   '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
   '/_auth/': typeof AuthIndexRoute
   '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/_auth/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
   '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
   '/_auth/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
   '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
@@ -694,6 +714,7 @@ export interface FileRouteTypes {
     | '/stock-on-hand'
     | '/'
     | '/edit-distributors/$distributorId'
+    | '/edit-innovation/$innovationId'
     | '/edit-product/$productId'
     | '/forecast-details/$productId'
     | '/innovation-forcasts-submit/$forecastId'
@@ -728,6 +749,7 @@ export interface FileRouteTypes {
     | '/stock-on-hand'
     | '/'
     | '/edit-distributors/$distributorId'
+    | '/edit-innovation/$innovationId'
     | '/edit-product/$productId'
     | '/forecast-details/$productId'
     | '/innovation-forcasts-submit/$forecastId'
@@ -763,6 +785,7 @@ export interface FileRouteTypes {
     | '/_auth/stock-on-hand'
     | '/_auth/'
     | '/_auth/edit-distributors/$distributorId'
+    | '/_auth/edit-innovation/$innovationId'
     | '/_auth/edit-product/$productId'
     | '/_auth/forecast-details/$productId'
     | '/_auth/innovation-forcasts-submit/$forecastId'
@@ -826,6 +849,7 @@ export const routeTree = rootRoute
         "/_auth/stock-on-hand",
         "/_auth/",
         "/_auth/edit-distributors/$distributorId",
+        "/_auth/edit-innovation/$innovationId",
         "/_auth/edit-product/$productId",
         "/_auth/forecast-details/$productId",
         "/_auth/innovation-forcasts-submit/$forecastId",
@@ -922,6 +946,10 @@ export const routeTree = rootRoute
     },
     "/_auth/edit-distributors/$distributorId": {
       "filePath": "_auth/edit-distributors/$distributorId.tsx",
+      "parent": "/_auth"
+    },
+    "/_auth/edit-innovation/$innovationId": {
+      "filePath": "_auth/edit-innovation/$innovationId.tsx",
       "parent": "/_auth"
     },
     "/_auth/edit-product/$productId": {
