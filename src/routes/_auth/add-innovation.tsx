@@ -15,6 +15,8 @@ export const Route = createFileRoute("/_auth/add-innovation")({
 function RouteComponent() {
   const [offeringOpen, setOfferingOpen] = useState(false);
   const [offeringIndex, setOfferingIndex] = useState(-1);
+  const [productOpen, setProductOpen] = useState(false);
+
   const schema = z.object({
     brand_id: z
       .string({
@@ -80,7 +82,16 @@ function RouteComponent() {
 
   return (
     <div className="w-full">
-      <Headline title="Create Innovation" />
+      <Headline
+        title={
+          productOpen
+            ? "Add IRC Product"
+            : offeringOpen
+              ? "Add Offering"
+              : "Create Innovation"
+        }
+      />
+
       <section className="mt-3 sm:mt-8">
         <Button
           leftSection={
@@ -90,10 +101,24 @@ function RouteComponent() {
           }
           variant="default"
           className="border-none bg-transparent   text-primary text-sm font-medium  p-0 before:content-none"
-          component={Link}
-          to="/innovations"
+          component={!offeringOpen ? Link : undefined}
+          to={!offeringOpen ? "/innovations" : undefined}
+          onClick={() => {
+            if (productOpen) {
+              // If in product form, go back to offering
+              setProductOpen(false);
+            } else if (offeringOpen) {
+              // If in offering form, go back to innovation
+              setOfferingOpen(false);
+            }
+            // If in innovation form, Link component handles navigation to /innovations
+          }}
         >
-          Back to Innovations
+          {productOpen
+            ? "Back to Offering"
+            : offeringOpen
+              ? "Back to Innovation"
+              : "Back to Innovations"}
         </Button>
       </section>
       {!offeringOpen ? (
@@ -107,6 +132,7 @@ function RouteComponent() {
           setOfferingOpen={setOfferingOpen}
           offeringIndex={offeringIndex}
           form={form}
+          onProductOpenChange={setProductOpen}
         />
       )}
     </div>

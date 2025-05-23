@@ -1,4 +1,5 @@
 import { Grid, Select, NumberInput, TextInput } from "@mantine/core";
+import { UseFormReturnType } from "@mantine/form";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import {
   selectStyles,
@@ -25,8 +26,18 @@ interface ExtendedProduct extends Omit<Product, "material_description"> {
   material_description?: string;
 }
 
+interface FormValues {
+  category_id?: string;
+  price_benchmark?: {
+    brand_id?: string;
+    product_id?: string;
+    index_value?: number;
+    comment?: string;
+  };
+}
+
 interface PriceBenchmarkSectionProps {
-  form: any;
+  form: UseFormReturnType<FormValues, (values: FormValues) => FormValues>;
   brandsData: {
     data: ExtendedBrand[];
   };
@@ -44,20 +55,23 @@ export function PriceBenchmarkSection({
   productsListData,
   categoriesData,
 }: PriceBenchmarkSectionProps) {
-  // Watch for category changes
+  // Watch for category changes using form.values instead of form.watch
   useEffect(() => {
-    const unsubscribe = form.watch("category_id", () => {
-      // Reset brand selection when category changes
-      form.setFieldValue("price_benchmark.brand_id", null);
-      // Also reset product when brand changes
-      form.setFieldValue("price_benchmark.product_id", null);
+    // Safely reset brand and product selections when category changes
+    const currentValues = form.values;
+    form.setValues({
+      ...currentValues,
+      price_benchmark: {
+        ...currentValues.price_benchmark,
+        brand_id: undefined,
+        product_id: undefined,
+      },
     });
-    return () => unsubscribe();
-  }, [form]);
+  }, [form.values.category_id, form]);
 
-  // Filter and group brands based on selected category
+  // Filter and group brands based on selected category with duplicate removal
   const groupedBrands = useMemo(() => {
-    const selectedCategoryId = form.getValues().category_id;
+    const selectedCategoryId = form.values.category_id;
     if (!selectedCategoryId || !categoriesData?.data || !brandsData?.data)
       return [];
 
@@ -67,29 +81,27 @@ export function PriceBenchmarkSection({
 
     if (!selectedCategory) return [];
 
-    // Group brands into sections
-    const groups = brandsData.data.reduce(
-      (
-        acc: {
-          label: string;
-          options: { value: string; label: string; disabled?: boolean }[];
-        }[],
-        brand
-      ) => {
+    // Use Set to track seen brand IDs and prevent duplicates
+    const seenBrandIds = new Set<string>();
+
+    // Create a flat array for Mantine Select (grouped data not supported with current structure)
+    const flatBrands = brandsData.data.reduce(
+      (acc: { value: string; label: string; disabled?: boolean }[], brand) => {
+        const brandIdString = brand.id.toString();
+
+        // Skip if we've already seen this brand ID
+        if (seenBrandIds.has(brandIdString)) {
+          return acc;
+        }
+        seenBrandIds.add(brandIdString);
+
         const isApproved = brand.is_approved;
         const groupLabel = brand.group === "other" ? "Other" : brand.group;
 
-        // Find existing group or create new one
-        let group = acc.find((g) => g.label === groupLabel);
-        if (!group) {
-          group = { label: groupLabel, options: [] };
-          acc.push(group);
-        }
-
-        // Add brand to group
-        group.options.push({
-          value: brand.id.toString(),
-          label: `${brand.name}${!isApproved ? " (Not Approved)" : ""}`,
+        // Add brand to flat array with group prefix
+        acc.push({
+          value: brandIdString,
+          label: `[${groupLabel}] ${brand.name}${!isApproved ? " (Not Approved)" : ""}`,
           disabled: !isApproved,
         });
 
@@ -98,26 +110,73 @@ export function PriceBenchmarkSection({
       []
     );
 
-    // Sort groups to ensure "Other" is first
-    return groups.sort((a, b) => {
-      if (a.label === "Other") return -1;
-      if (b.label === "Other") return 1;
+    // Sort brands to ensure "Other" group is first
+    return flatBrands.sort((a, b) => {
+      const aIsOther = a.label.startsWith("[Other]");
+      const bIsOther = b.label.startsWith("[Other]");
+
+      if (aIsOther && !bIsOther) return -1;
+      if (!aIsOther && bIsOther) return 1;
+
       return a.label.localeCompare(b.label);
     });
-  }, [form.getValues().category_id, categoriesData?.data, brandsData?.data]);
+  }, [form.values.category_id, categoriesData?.data, brandsData?.data]);
 
-  // Filter products based on selected brand
+  // Filter products based on selected brand with duplicate removal
   const filteredProducts = useMemo(() => {
-    const selectedBrandId = form.getValues()["price_benchmark.brand_id"];
+    const selectedBrandId = form.values.price_benchmark?.brand_id;
     if (!selectedBrandId || !productsListData?.data) return [];
+
+    // Use Set to track seen product IDs and prevent duplicates
+    const seenProductIds = new Set<string>();
 
     return productsListData.data
       .filter((product) => product.brand_id.toString() === selectedBrandId)
-      .map((product) => ({
-        value: product.id.toString(),
-        label: product.material_description || product.id.toString(),
-      }));
-  }, [form.getValues()["price_benchmark.brand_id"], productsListData?.data]);
+      .reduce((acc: { value: string; label: string }[], product) => {
+        const productIdString = product.id.toString();
+
+        // Skip if we've already seen this product ID
+        if (seenProductIds.has(productIdString)) {
+          return acc;
+        }
+        seenProductIds.add(productIdString);
+
+        acc.push({
+          value: productIdString,
+          label: product.material_description || productIdString,
+        });
+
+        return acc;
+      }, []);
+  }, [form.values.price_benchmark?.brand_id, productsListData?.data]);
+
+  // Get unique categories with duplicate removal
+  const uniqueCategories = useMemo(() => {
+    if (!categoriesData?.data) return [];
+
+    // Use Set to track seen category IDs and prevent duplicates
+    const seenCategoryIds = new Set<string>();
+
+    return categoriesData.data.reduce(
+      (acc: { value: string; label: string }[], category) => {
+        const categoryIdString = category.id.toString();
+
+        // Skip if we've already seen this category ID
+        if (seenCategoryIds.has(categoryIdString)) {
+          return acc;
+        }
+        seenCategoryIds.add(categoryIdString);
+
+        acc.push({
+          value: categoryIdString,
+          label: category.name,
+        });
+
+        return acc;
+      },
+      []
+    );
+  }, [categoriesData?.data]);
 
   return (
     <Grid gutter={{ sm: 32, base: 16 }}>
@@ -126,12 +185,7 @@ export function PriceBenchmarkSection({
           {...form.getInputProps("category_id")}
           label="Account Category"
           placeholder="Select Account Category"
-          data={
-            categoriesData?.data?.map((category) => ({
-              value: category.id.toString(),
-              label: category.name,
-            })) || []
-          }
+          data={uniqueCategories}
           classNames={selectStyles}
         />
       </Grid.Col>
@@ -145,7 +199,7 @@ export function PriceBenchmarkSection({
           clearable
           classNames={selectStyles}
           rightSection={<ChevronDownIcon />}
-          disabled={!form.getValues().category_id}
+          disabled={!form.values.category_id}
         />
       </Grid.Col>
       <Grid.Col span={{ sm: 6, base: 12 }}>
@@ -158,7 +212,7 @@ export function PriceBenchmarkSection({
           clearable
           classNames={selectStyles}
           rightSection={<ChevronDownIcon />}
-          disabled={!form.getValues()["price_benchmark.brand_id"]}
+          disabled={!form.values.price_benchmark?.brand_id}
         />
       </Grid.Col>
       <Grid.Col span={{ sm: 6, base: 12 }}>

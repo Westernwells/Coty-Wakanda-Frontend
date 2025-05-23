@@ -177,6 +177,12 @@ const EditInnovationProductForm = ({
 
   return (
     <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-primary">Add IRC Product</h2>
+        <p className="text-gray-600 text-sm mt-1">
+          Add product details to your offering
+        </p>
+      </div>
       <FormSection title="Product details" className="mt-2 sm:mt-5">
         <Radio.Group
           {...form.getInputProps(`${path}.pref`)}
@@ -954,6 +960,13 @@ const EditInnovationProductForm = ({
       </FormSection>
 
       <Group justify="flex-end" mt="md">
+        <Button
+          variant="outline"
+          className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+          onClick={() => setProductOpen(-1)}
+        >
+          Back
+        </Button>
         <Button type="submit" onClick={() => setProductOpen(-1)}>
           Submit
         </Button>
