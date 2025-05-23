@@ -60,10 +60,18 @@ export function PriceBenchmarkModal({
               }}
             />
             <div className="flex justify-end gap-4 mt-8">
-              <Button variant="outline" onClick={onClose}>
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+              >
                 Cancel
               </Button>
-              <Button variant="filled" onClick={onSave}>
+              <Button
+                variant="filled"
+                onClick={onSave}
+                className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+              >
                 Save
               </Button>
             </div>
