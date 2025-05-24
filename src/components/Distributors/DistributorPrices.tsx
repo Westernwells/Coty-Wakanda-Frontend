@@ -3,6 +3,7 @@ import { MasterDistributor } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { Table } from "@mantine/core";
 
 interface DistributorPricesProps {
   distributors: MasterDistributor[];
@@ -215,37 +216,42 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
             </div>
           }
         >
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                {tableHeader.map((header) => (
-                  <th
+          <Table
+            verticalSpacing="sm"
+            borderColor="transparent"
+            striped="even"
+            stripedColor="#F2F4F6"
+          >
+            <Table.Thead>
+              <Table.Tr className="bg-primary text-white">
+                {tableHeader.map((header, index) => (
+                  <Table.Th
                     key={header}
-                    className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className={cn(
+                      "text-white font-medium",
+                      index === 0 && "rounded-ss-xl",
+                      index === tableHeader.length - 1 && "rounded-se-xl"
+                    )}
                   >
                     {header}
-                  </th>
+                  </Table.Th>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
               {currentDistributorPrices.map((price) => (
-                <tr
+                <Table.Tr
                   key={price.irc + "-" + distributors[currentIndex].id}
                   onClick={() => setSelectedRow(price.irc as string)}
                   className={cn(
-                    "cursor-pointer hover:bg-primary/10",
+                    "cursor-pointer",
                     selectedRow === price.irc && "bg-primary/30"
                   )}
                 >
                   {tableFields.map((field) => {
-                    // Special handling for editable fields
                     if (field === "billing_price") {
                       return (
-                        <td
-                          key={field}
-                          className="px-2 py-1 text-sm text-gray-900"
-                        >
+                        <Table.Td key={field}>
                           {editingPrice && editingPrice.irc === price.irc ? (
                             <input
                               type="number"
@@ -270,15 +276,12 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                               ${Number(price.billing_price).toFixed(2)}
                             </div>
                           )}
-                        </td>
+                        </Table.Td>
                       );
                     }
                     if (field === "rrsp") {
                       return (
-                        <td
-                          key={field}
-                          className="px-2 py-1 text-sm text-gray-900"
-                        >
+                        <Table.Td key={field}>
                           {editingRRSP && editingRRSP.irc === price.irc ? (
                             <input
                               type="number"
@@ -303,25 +306,21 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                               ${Number(price.rrsp).toFixed(2)}
                             </div>
                           )}
-                        </td>
+                        </Table.Td>
                       );
                     }
-                    // Default rendering for other fields
                     return (
-                      <td
-                        key={field}
-                        className="px-2 py-1 text-sm text-gray-900"
-                      >
+                      <Table.Td key={field}>
                         {(price as Record<string, string | number | null>)[
                           field
                         ] ?? "-"}
-                      </td>
+                      </Table.Td>
                     );
                   })}
-                </tr>
+                </Table.Tr>
               ))}
-            </tbody>
-          </table>
+            </Table.Tbody>
+          </Table>
         </InfiniteScroll>
       </div>
     </div>
