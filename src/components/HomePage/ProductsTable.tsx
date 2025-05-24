@@ -205,7 +205,7 @@ function ProductsTable({
   }
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 mt-5">
+    <div className="bg-white shadow-md rounded-lg  mt-5">
       <div className="relative border border-primary rounded-xl border-t-0">
         <InfiniteScroll
           dataLength={products.length}
