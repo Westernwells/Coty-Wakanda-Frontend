@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 
-import AddInnovationForm from "@/components/AddInnovation/AddInnovationForm";
+import EditInnovationForm from "@/components/AddInnovation/EditInnovationForm";
 import { Button } from "@mantine/core";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
 import { XIcon } from "lucide-react";
@@ -23,10 +23,14 @@ function RouteComponent() {
     queryFn: () => getInnovation(innovationId),
   });
 
-  console.log({ data });
+  console.log({ innovationById: data?.data });
 
   if (isLoading) {
     return <LoadingSpinner />;
+  }
+
+  if (!data?.data) {
+    return <div>Innovation not found</div>;
   }
 
   return (
@@ -68,10 +72,9 @@ function RouteComponent() {
           </Button>
         </div>
       </section>
-      <AddInnovationForm
+      <EditInnovationForm
         ref={formRef}
-        formData={data?.data}
-        isEdit
+        innovationData={data.data}
         innovationId={innovationId}
       />
     </div>

@@ -22,6 +22,11 @@ export const getPresignedUrl = async ({
   data: FormData;
 }): Promise<ApiResponseFiles> => {
   try {
+    // Ensure file_name is present. The backend expects it.
+    if (!data.get("file_name") && data.get("file")) {
+      const file = data.get("file") as File;
+      data.append("file_name", file.name);
+    }
     const response = await axios.post(`/aws-presigned-url`, data);
     return response;
   } catch (error) {
@@ -67,15 +72,19 @@ export const useFileUpload = ({
     mutationFn: async ({ data }: { data: FormData }) => {
       try {
         // Step 1: Get presigned URL
+        const file = data.get("file");
+        if (!file || !(file instanceof File)) {
+          throw new Error("No valid file found in form data");
+        }
+        // Ensure file_name is appended before calling getPresignedUrl
+        if (!data.get("file_name")) {
+          data.append("file_name", file.name);
+        }
+
         const presignedUrlResponse = await getPresignedUrl({ data });
 
         if (!presignedUrlResponse?.data?.data?.url) {
           throw new Error("No presigned URL received from server");
-        }
-
-        const file = data.get("file");
-        if (!file || !(file instanceof File)) {
-          throw new Error("No valid file found in form data");
         }
 
         const contentType = file.type || "application/octet-stream";
