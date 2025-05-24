@@ -2,56 +2,79 @@ import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { useAddInnovation } from "@/api/innovations/add-innovation";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
+import { useFileUpload } from "@/api/products/upload-document";
 import { dateToLocalString } from "@/lib/utils";
 import { queryClient } from "@/main";
 import { Innovation, Product } from "@/types";
-import { Button, Grid, Group, Select, Table, TextInput } from "@mantine/core";
-import { YearPickerInput } from "@mantine/dates";
+import {
+  Button,
+  Grid,
+  Group,
+  Select,
+  Table,
+  TextInput,
+  CloseButton,
+  Modal,
+  Collapse,
+} from "@mantine/core";
+import { YearPickerInput, DateInput } from "@mantine/dates";
 import { useForm, UseFormReturnType, zodResolver } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { PlusIcon } from "lucide-react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { X, Upload, Save } from "lucide-react";
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { z } from "zod";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
-import PencilIcon from "../Icons/PencilIcon";
+import DateIcon from "../Icons/DateIcon";
+import ExitIcon from "../Icons/ExitIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import OfferingTable from "./OfferingTable";
 
 type FormValues = {
+  status: string;
   brand_id: string;
   sub_brand_id: string;
   year: Date;
   format: string;
   launch_name: string;
-  other_name: string;
-  document: string;
+  reference_name: string[];
+  internal_offering_deck: string;
+  customer_offering_deck: string;
   forecast_deadline: Date;
-  offerings?: {
+  offerings?: Array<{
     number: string;
     icw: Date;
     ocd: Date;
     type: string;
     deck: string;
     market_deck: string;
-    products: Array<
-      Partial<Product> & {
-        currency: string;
-      }
-    >;
-  }[];
+    products: Array<{
+      irc: string;
+      currency: string;
+      price: number;
+    }>;
+  }>;
 };
 
 const formSchema = z.object({
+  status: z.string().min(1, "Status is required"),
   brand_id: z.string().min(1, "Brand is required"),
   sub_brand_id: z.string().min(1, "Brand Pillar is required"),
   year: z.date(),
   format: z.string().min(1, "Format is required"),
   launch_name: z.string().min(1, "Launch name is required"),
-  other_name: z.string().optional(),
-  document: z.string().optional(),
+  reference_name: z.array(z.string()).optional(),
+  internal_offering_deck: z.string().optional(),
+  customer_offering_deck: z.string().optional(),
   forecast_deadline: z.date(),
   offerings: z
     .array(
@@ -68,169 +91,381 @@ const formSchema = z.object({
     .optional(),
 });
 
+type OfferingType = {
+  number: string;
+  icw: Date;
+  ocd: Date;
+  type: string;
+  deck: string;
+  market_deck: string;
+  products: Array<{
+    irc: string;
+    currency: string;
+    price: number;
+  }>;
+};
+
 const AddInnovationForm = forwardRef<
   { submit: () => void; isSubmitting: boolean },
   {
-    setOfferingOpen?: React.Dispatch<React.SetStateAction<boolean>>;
-    setOfferingIndex?: React.Dispatch<React.SetStateAction<number>>;
     isEdit?: boolean;
     formData?: Innovation;
     innovationId?: string;
     form?: UseFormReturnType<FormValues>;
   }
->(
-  (
-    {
-      setOfferingOpen,
-      setOfferingIndex,
-      isEdit = false,
-      formData,
-      innovationId,
-      form: externalForm,
+>(({ isEdit = false, formData, innovationId, form: externalForm }, ref) => {
+  const navigate = useNavigate();
+  const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [referenceNameInput, setReferenceNameInput] = useState("");
+  const [referenceNames, setReferenceNames] = useState<string[]>([]);
+
+  // File upload states
+  const [uploadedFiles, setUploadedFiles] = useState({
+    internal_offering_deck: "",
+    customer_offering_deck: "",
+  });
+  const [uploadingFiles, setUploadingFiles] = useState({
+    internal_offering_deck: false,
+    customer_offering_deck: false,
+  });
+
+  // Track form changes state
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Initialize form if not provided externally
+  const internalForm = useForm<FormValues>({
+    validate: zodResolver(formSchema),
+    initialValues: {
+      status: "active",
+      brand_id: "",
+      sub_brand_id: "",
+      year: new Date(),
+      format: "",
+      launch_name: "",
+      reference_name: [],
+      internal_offering_deck: "",
+      customer_offering_deck: "",
+      forecast_deadline: new Date(),
+      offerings: [],
     },
-    ref
+  });
+
+  // Use external form if provided, otherwise use internal form
+  const form = externalForm || internalForm;
+
+  const [{ data: brandsData }, { data: brandPillarsData }] = useQueries({
+    queries: [
+      { queryKey: ["brands"], queryFn: () => getBrands() },
+      {
+        queryKey: ["brandPillars", selectedBrandId],
+        queryFn: () =>
+          getBrandPillars({ filter: { brand_id: selectedBrandId } }),
+        enabled: !!selectedBrandId,
+      },
+    ],
+  });
+
+  const addInnovationMutation = useAddInnovation({
+    mutationConfig: {
+      onSuccess: () => {
+        setIsSubmitting(false);
+        navigate({ to: "/innovations" });
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      },
+    },
+  });
+  const updateInnovationMutation = useUpdateInnovation({
+    mutationConfig: {
+      onSuccess: () => {
+        setIsSubmitting(false);
+        navigate({ to: "/innovations" });
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      },
+    },
+  });
+
+  // File upload mutation
+  const fileUploadMutation = useFileUpload({
+    mutationConfig: {
+      onSuccess: (response, variables) => {
+        const fileType = variables.data.get("file_type") as string;
+        const publicUrl = response?.data?.data?.public_url;
+
+        if (publicUrl && fileType) {
+          setUploadedFiles((prev) => ({
+            ...prev,
+            [fileType]: publicUrl,
+          }));
+
+          // Update form value
+          form.setFieldValue(fileType as keyof FormValues, publicUrl);
+        }
+
+        setUploadingFiles((prev) => ({
+          ...prev,
+          [fileType]: false,
+        }));
+      },
+      onError: (error, variables) => {
+        const fileType = variables.data.get("file_type") as string;
+        console.error("File upload failed:", error);
+        setUploadingFiles((prev) => ({
+          ...prev,
+          [fileType]: false,
+        }));
+      },
+    },
+  });
+
+  // Expose submit function and isSubmitting state to parent via ref
+  useImperativeHandle(ref, () => ({
+    submit: handleSubmit,
+    isSubmitting,
+  }));
+
+  // File upload handler
+  const handleFileUpload = (
+    file: File,
+    fileType: keyof typeof uploadedFiles
   ) => {
-    const navigate = useNavigate();
-    const [selectedBrandId, setSelectedBrandId] = useState<string>("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    if (!file) return;
 
-    // Initialize form if not provided externally
-    const internalForm = useForm<FormValues>({
-      validate: zodResolver(formSchema),
-      initialValues: {
-        brand_id: "",
-        sub_brand_id: "",
-        year: new Date(),
-        format: "",
-        launch_name: "",
-        other_name: "",
-        document: "",
-        forecast_deadline: new Date(),
-        offerings: [],
-      },
-    });
-
-    // Use external form if provided, otherwise use internal form
-    const form = externalForm || internalForm;
-
-    const [{ data: brandsData }, { data: brandPillarsData }] = useQueries({
-      queries: [
-        { queryKey: ["brands"], queryFn: () => getBrands() },
-        {
-          queryKey: ["brandPillars", selectedBrandId],
-          queryFn: () =>
-            getBrandPillars({ filter: { brand_id: selectedBrandId } }),
-          enabled: !!selectedBrandId,
-        },
-      ],
-    });
-
-    const addInnovationMutation = useAddInnovation({ mutationConfig: {} });
-    const updateInnovationMutation = useUpdateInnovation({
-      mutationConfig: {
-        onSuccess: () => {
-          setIsSubmitting(false);
-          navigate({ to: "/innovations" });
-        },
-        onError: () => {
-          setIsSubmitting(false);
-        },
-      },
-    });
-
-    // Expose submit function and isSubmitting state to parent via ref
-    useImperativeHandle(ref, () => ({
-      submit: handleSubmit,
-      isSubmitting,
+    setUploadingFiles((prev) => ({
+      ...prev,
+      [fileType]: true,
     }));
 
-    const handleSubmit = () => {
-      const validation = form.validate();
-      if (Object.keys(validation.errors).length > 0) {
-        console.log("Form validation errors:", validation.errors);
-        return;
-      }
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("file_type", fileType);
 
-      setIsSubmitting(true);
-      const values = form.getValues();
-      const { year, forecast_deadline, offerings, ...toSubmit } = values;
+    fileUploadMutation.mutate({ data: formData });
+  };
 
-      const submitData = {
-        ...toSubmit,
-        forecast_deadline: forecast_deadline.toISOString().split("T")[0],
-        year: year?.getFullYear().toString(),
-        offerings: offerings?.map((offering) => {
-          return {
-            ...offering,
-            icw: offering.icw.toISOString().split("T")[0],
-            ocd: offering.ocd.toISOString().split("T")[0],
-          };
-        }),
-      };
+  const handleSubmit = () => {
+    const validation = form.validate();
+    if (Object.keys(validation.errors).length > 0) {
+      console.log("Form validation errors:", validation.errors);
+      return;
+    }
 
-      if (isEdit && innovationId) {
-        updateInnovationMutation.mutate({
-          innovationId: parseInt(innovationId),
-          data: submitData,
-        });
-      } else {
-        addInnovationMutation.mutate(
-          { data: submitData },
-          {
-            onSuccess: () => {
-              setIsSubmitting(false);
-              navigate({ to: "/innovations" });
-            },
-            onError: () => {
-              setIsSubmitting(false);
-            },
-          }
-        );
-      }
+    setIsSubmitting(true);
+    const values = form.getValues();
+    const { year, forecast_deadline, offerings, reference_name, ...toSubmit } =
+      values;
+
+    const submitData = {
+      ...toSubmit,
+      reference_name,
+      // Use uploaded URLs from state, fallback to form values
+      internal_offering_deck:
+        uploadedFiles.internal_offering_deck || values.internal_offering_deck,
+      customer_offering_deck:
+        uploadedFiles.customer_offering_deck || values.customer_offering_deck,
+      forecast_deadline: forecast_deadline.toISOString().split("T")[0],
+      year: year?.getFullYear().toString(),
+      offerings: offerings?.map((offering) => {
+        return {
+          ...offering,
+          icw: offering.icw.toISOString().split("T")[0],
+          ocd: offering.ocd.toISOString().split("T")[0],
+        };
+      }),
     };
 
-    // Set form values when editing
-    useEffect(() => {
-      if (formData && isEdit) {
-        const brandId = formData.brand.id.toString();
-        form.setValues({
-          brand_id: brandId,
-          sub_brand_id: formData.brand_pillar.id.toString(),
-          year: new Date(parseInt(formData.year), 0, 1),
-          format: formData.format,
-          launch_name: formData.launch_name,
-          other_name: formData.launch_ref, // assuming this maps to other_name
-          document: "",
-          forecast_deadline: new Date(formData.forecast_deadline),
-          offerings: [],
-        });
-        setSelectedBrandId(brandId);
-      }
-    }, [formData, isEdit]);
+    if (isEdit && innovationId) {
+      updateInnovationMutation.mutate({
+        innovationId: parseInt(innovationId),
+        data: submitData,
+      });
+    } else {
+      addInnovationMutation.mutate({ data: submitData });
+    }
+  };
 
-    // Handle brand change to clear sub_brand_id and update selected brand
-    const handleBrandChange = (brandId: string | null) => {
-      const newBrandId = brandId || "";
-      form.setFieldValue("brand_id", newBrandId);
-      // Always reset brand pillar when brand changes
-      form.setFieldValue("sub_brand_id", "");
-      // Clear any existing validation errors for sub_brand_id
-      form.clearFieldError("sub_brand_id");
-      setSelectedBrandId(newBrandId);
-    };
+  // Set form values when editing
+  useEffect(() => {
+    if (formData && isEdit) {
+      const brandId = formData.brand.id.toString();
+      const existingReferenceNames = formData.launch_ref
+        ? [formData.launch_ref]
+        : [];
 
-    return (
-      <form onSubmit={form.onSubmit(handleSubmit)}>
-        {/* <DateInput
-        {...form.getInputProps("forecast_deadline")}
-        label="Forecast deadline"
-        valueFormat="YYYY MMM DD"
-        placeholder="Select date"
-        rightSection={<DateIcon />}
-        className="sm:max-w-[50%]"
-        classNames={textInputStyles}
-      /> */}
-        <FormSection title="General Details">
+      form.setValues({
+        status: "active",
+        brand_id: brandId,
+        sub_brand_id: formData.brand_pillar.id.toString(),
+        year: new Date(parseInt(formData.year), 0, 1),
+        format: formData.format,
+        launch_name: formData.launch_name,
+        reference_name: existingReferenceNames,
+        internal_offering_deck: "",
+        customer_offering_deck: "",
+        forecast_deadline: new Date(formData.forecast_deadline),
+        offerings: [],
+      });
+      setSelectedBrandId(brandId);
+      setReferenceNames(existingReferenceNames);
+      setHasChanges(false);
+
+      // Reset uploaded file states
+      setUploadedFiles({
+        internal_offering_deck: "",
+        customer_offering_deck: "",
+      });
+    }
+  }, [formData, isEdit]);
+
+  // Track form changes
+  useEffect(() => {
+    if (isEdit && formData) {
+      const hasFormChanges =
+        form.values.status !== "active" || // Default status
+        form.values.brand_id !== formData.brand.id.toString() ||
+        form.values.sub_brand_id !== formData.brand_pillar.id.toString() ||
+        form.values.year.getFullYear() !== parseInt(formData.year) ||
+        form.values.format !== formData.format ||
+        form.values.launch_name !== formData.launch_name ||
+        JSON.stringify(form.values.reference_name) !==
+          JSON.stringify(formData.launch_ref ? [formData.launch_ref] : []) ||
+        form.values.forecast_deadline.toISOString().split("T")[0] !==
+          formData.forecast_deadline;
+
+      setHasChanges(hasFormChanges);
+    }
+  }, [form.values, formData, isEdit]);
+
+  const resetForm = () => {
+    if (formData && isEdit) {
+      const brandId = formData.brand.id.toString();
+      const existingReferenceNames = formData.launch_ref
+        ? [formData.launch_ref]
+        : [];
+
+      form.setValues({
+        status: "active",
+        brand_id: brandId,
+        sub_brand_id: formData.brand_pillar.id.toString(),
+        year: new Date(parseInt(formData.year), 0, 1),
+        format: formData.format,
+        launch_name: formData.launch_name,
+        reference_name: existingReferenceNames,
+        internal_offering_deck: "",
+        customer_offering_deck: "",
+        forecast_deadline: new Date(formData.forecast_deadline),
+        offerings: [],
+      });
+      setSelectedBrandId(brandId);
+      setReferenceNames(existingReferenceNames);
+      setHasChanges(false);
+
+      // Reset uploaded file states
+      setUploadedFiles({
+        internal_offering_deck: "",
+        customer_offering_deck: "",
+      });
+    }
+  };
+
+  // Handle brand change to clear sub_brand_id and update selected brand
+  const handleBrandChange = (brandId: string | null) => {
+    const newBrandId = brandId || "";
+    form.setFieldValue("brand_id", newBrandId);
+    // Always reset brand pillar when brand changes
+    form.setFieldValue("sub_brand_id", "");
+    // Clear any existing validation errors for sub_brand_id
+    form.clearFieldError("sub_brand_id");
+    setSelectedBrandId(newBrandId);
+  };
+
+  // Handle adding reference name
+  const handleAddReferenceName = () => {
+    if (referenceNameInput.trim()) {
+      const newNames = [...referenceNames, referenceNameInput.trim()];
+      setReferenceNames(newNames);
+      form.setFieldValue("reference_name", newNames);
+      setReferenceNameInput("");
+      console.log("Added reference name:", referenceNameInput.trim());
+    }
+  };
+
+  // Handle removing reference name
+  const handleRemoveReferenceName = (index: number) => {
+    const newNames = referenceNames.filter((_, i) => i !== index);
+    setReferenceNames(newNames);
+    form.setFieldValue("reference_name", newNames);
+  };
+
+  // Offering management handlers
+  const handleAddOffering = (offering: OfferingType) => {
+    if (form.getValues().offerings?.length) {
+      form.insertListItem("offerings", offering);
+    } else {
+      form.setFieldValue("offerings", [offering]);
+    }
+  };
+
+  const handleEditOffering = (index: number, offering: OfferingType) => {
+    form.setFieldValue(`offerings.${index}`, offering);
+  };
+
+  const handleDeleteOffering = (index: number) => {
+    form.removeListItem("offerings", index);
+  };
+
+  return (
+    <form onSubmit={form.onSubmit(handleSubmit)}>
+      {!isEdit ? (
+        <div className="flex justify-end items-center mb-6">
+          <Group gap={10}>
+            {
+              <Button
+                variant="outline"
+                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                leftSection={<ExitIcon />}
+                onClick={() => {
+                  resetForm();
+                  navigate({ to: "/innovations" });
+                }}
+              >
+                Cancel
+              </Button>
+            }
+            <Button
+              leftSection={<Save className="size-4" />}
+              type="submit"
+              variant="outline"
+              className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating..." : "Create Innovation"}
+            </Button>
+          </Group>
+        </div>
+      ) : null}
+      <div className="bg-white rounded-2xl px-6 mt-6">
+        <FormSection title="General details">
+          <div className="mb-6">
+            <Select
+              {...form.getInputProps("status")}
+              label="Status"
+              placeholder="Select status"
+              data={[
+                { value: "active", label: "Active" },
+                { value: "cancelled", label: "Cancelled" },
+                { value: "archived", label: "Archived" },
+              ]}
+              rightSection={<ChevronDownIcon />}
+              classNames={selectStyles}
+              className="w-full max-w-md"
+            />
+          </div>
           <Grid
             gutter={{
               sm: 32,
@@ -273,8 +508,8 @@ const AddInnovationForm = forwardRef<
                   form.setFieldValue("sub_brand_id", value || "")
                 }
                 error={form.errors.sub_brand_id}
-                placeholder="Select brand Pillar"
-                label="Brand Pillar"
+                placeholder="Select brand pillar"
+                label="Brand pillar"
                 disabled={
                   form.getValues().brand_id === "" ||
                   brandPillarsData?.data.length === 0
@@ -300,7 +535,7 @@ const AddInnovationForm = forwardRef<
               <YearPickerInput
                 label="Year"
                 {...form.getInputProps("year")}
-                placeholder="Pick Year"
+                placeholder="Select year"
                 valueFormat="YYYY"
                 classNames={selectStyles}
               />
@@ -313,54 +548,16 @@ const AddInnovationForm = forwardRef<
             >
               <Select
                 {...form.getInputProps("format")}
-                placeholder="Select Format"
+                placeholder="Select format"
                 label="Format"
                 data={[
-                  { label: "format", value: "format1" },
-                  { label: "unformat", value: "format2" },
+                  { label: "Format 1", value: "format1" },
+                  { label: "Format 2", value: "format2" },
                 ]}
                 rightSection={<ChevronDownIcon />}
                 classNames={selectStyles}
                 clearable
                 searchable
-              />
-            </Grid.Col>
-          </Grid>
-        </FormSection>
-
-        <FormSection title="Custom Details">
-          <Grid
-            gutter={{
-              sm: 32,
-              base: 16,
-            }}
-          >
-            <Grid.Col
-              span={{
-                sm: 6,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("launch_ref")}
-                label="Launch ref"
-                placeholder="000000"
-                classNames={textInputStyles}
-                disabled
-              />
-            </Grid.Col>
-            <Grid.Col
-              span={{
-                sm: 6,
-                base: 12,
-              }}
-            >
-              <TextInput
-                {...form.getInputProps("launch_id")}
-                label="Launch ID"
-                placeholder="Brand-SubBrand-Year-Format-LaunchName"
-                classNames={textInputStyles}
-                disabled
               />
             </Grid.Col>
             <Grid.Col
@@ -371,8 +568,8 @@ const AddInnovationForm = forwardRef<
             >
               <TextInput
                 {...form.getInputProps("launch_name")}
-                label="Launch Name"
-                placeholder="Enter Name"
+                placeholder="Enter launch name"
+                label="Launch name"
                 classNames={textInputStyles}
               />
             </Grid.Col>
@@ -382,133 +579,202 @@ const AddInnovationForm = forwardRef<
                 base: 12,
               }}
             >
-              <TextInput
-                {...form.getInputProps("other_name")}
-                label="Other reference names"
-                placeholder="Enter reference name"
+              <DateInput
+                {...form.getInputProps("forecast_deadline")}
+                label="Forecast deadline"
+                valueFormat="YYYY MMM DD"
+                placeholder="Select forecast deadline"
+                rightSection={<DateIcon />}
                 classNames={textInputStyles}
               />
             </Grid.Col>
-          </Grid>
-        </FormSection>
-        <FormSection title="Custom Details">
-          <Grid
-            gutter={{
-              sm: 32,
-              base: 16,
-            }}
-          >
-            {form.getValues().offerings && (
-              <Grid.Col span={12}>
-                <div className="relative border border-primary rounded-xl border-t-0">
-                  <Table.ScrollContainer minWidth={768}>
-                    <Table
-                      verticalSpacing="sm"
-                      borderColor="transparent"
-                      striped="even"
-                      stripedColor="#F2F4F6"
-                    >
-                      <Table.Thead>
-                        <Table.Tr className="bg-primary text-white">
-                          <Table.Th className="rounded-ss-xl">
-                            Offering Number
-                          </Table.Th>
-                          <Table.Th>Deadline for forecast</Table.Th>
-                          <Table.Th>Global ICW</Table.Th>
-                          <Table.Th>Type</Table.Th>
-                          <Table.Th className="rounded-se-xl"></Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {form.getValues().offerings?.map((offering, index) => (
-                          <Table.Tr key={offering.number}>
-                            <Table.Td className="rounded-ss-xl">
-                              {offering.number}
-                            </Table.Td>
-                            <Table.Td>
-                              {dateToLocalString(offering.icw)}
-                            </Table.Td>
-                            <Table.Td>
-                              {dateToLocalString(offering.icw)}
-                            </Table.Td>
-                            <Table.Td>{offering.type}</Table.Td>
-                            <Table.Td
-                              className="rounded-se-xl cursor-pointer"
-                              onClick={() => {
-                                setOfferingIndex?.(index);
-                                setOfferingOpen?.(true);
-                              }}
-                            >
-                              <PencilIcon />
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  </Table.ScrollContainer>
-                </div>
-              </Grid.Col>
-            )}
             <Grid.Col
               span={{
-                lg: 6,
+                sm: 6,
                 base: 12,
               }}
             >
-              <FormField label="Add new offering">
-                <Button
-                  variant="outline"
-                  className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                  leftSection={<PlusIcon size={24} />}
-                  onClick={() => {
-                    if (form.getValues().offerings?.length) {
-                      form.insertListItem("offerings", {
-                        number: "",
-                        icw: new Date(),
-                        ocd: new Date(),
-                        type: "",
-                        deck: "",
-                        market_deck: "",
-                        products: [],
-                      });
-                    } else {
-                      form.setFieldValue("offerings", [
-                        {
-                          number: "",
-                          icw: new Date(),
-                          ocd: new Date(),
-                          type: "",
-                          deck: "",
-                          market_deck: "",
-                          products: [],
-                        },
-                      ]);
-                    }
-                    setOfferingOpen?.(true);
-                  }}
-                >
-                  Add Offering
-                </Button>
+              <FormField label="Add reference names (Optional)">
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <TextInput
+                      value={referenceNameInput}
+                      onChange={(e) => setReferenceNameInput(e.target.value)}
+                      placeholder="Enter reference name"
+                      classNames={textInputStyles}
+                      className="flex-1"
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddReferenceName();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddReferenceName}
+                      className="bg-primary hover:bg-primary/90 text-white px-6"
+                      disabled={!referenceNameInput.trim()}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  {referenceNames && referenceNames.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {referenceNames.map((name, index) => (
+                        <div
+                          key={index}
+                          className="inline-flex items-center gap-2 bg-[#2563eb] text-white px-3 py-1.5 rounded-full text-sm font-medium"
+                        >
+                          <span>{name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveReferenceName(index)}
+                            className="hover:bg-[#1d4ed8] rounded-full p-0.5 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </FormField>
             </Grid.Col>
             <Grid.Col
               span={{
-                lg: 6,
+                sm: 6,
                 base: 12,
               }}
             >
-              <FileUploadSection
-                form={form}
-                id="offering_file"
-                multiple={true}
-                accept="application/vnd.ms-excel, text/csv"
-              />
+              <div className="flex flex-col gap-6">
+                <FormField label="Internal offering deck">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.ppt,.pptx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file, "internal_offering_deck");
+                          }
+                        }}
+                        style={{ display: "none" }}
+                        id="internal_offering_deck_input"
+                      />
+                      <Button
+                        type="button"
+                        variant="filled"
+                        className="bg-primary hover:bg-primary/90 text-white"
+                        onClick={() =>
+                          document
+                            .getElementById("internal_offering_deck_input")
+                            ?.click()
+                        }
+                        disabled={uploadingFiles.internal_offering_deck}
+                        leftSection={
+                          uploadingFiles.internal_offering_deck ? null : (
+                            <Upload size={16} />
+                          )
+                        }
+                      >
+                        {uploadingFiles.internal_offering_deck
+                          ? "Uploading..."
+                          : "Upload"}
+                      </Button>
+                    </div>
+                    {uploadedFiles.internal_offering_deck && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600">
+                        <span>File uploaded successfully</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadedFiles((prev) => ({
+                              ...prev,
+                              internal_offering_deck: "",
+                            }));
+                            form.setFieldValue("internal_offering_deck", "");
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </FormField>
+
+                <FormField label="Offering deck for customers">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="file"
+                        accept=".pdf,.ppt,.pptx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleFileUpload(file, "customer_offering_deck");
+                          }
+                        }}
+                        style={{ display: "none" }}
+                        id="customer_offering_deck_input"
+                      />
+                      <Button
+                        type="button"
+                        variant="filled"
+                        className="bg-primary hover:bg-primary/90 text-white"
+                        onClick={() =>
+                          document
+                            .getElementById("customer_offering_deck_input")
+                            ?.click()
+                        }
+                        disabled={uploadingFiles.customer_offering_deck}
+                        leftSection={
+                          uploadingFiles.customer_offering_deck ? null : (
+                            <Upload size={16} />
+                          )
+                        }
+                      >
+                        {uploadingFiles.customer_offering_deck
+                          ? "Uploading..."
+                          : "Upload"}
+                      </Button>
+                    </div>
+                    {uploadedFiles.customer_offering_deck && (
+                      <div className="flex items-center gap-2 text-sm text-blue-600">
+                        <span>File uploaded successfully</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadedFiles((prev) => ({
+                              ...prev,
+                              customer_offering_deck: "",
+                            }));
+                            form.setFieldValue("customer_offering_deck", "");
+                          }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </FormField>
+              </div>
             </Grid.Col>
           </Grid>
         </FormSection>
-      </form>
-    );
-  }
-);
+      </div>
+
+      <OfferingTable
+        offerings={form.getValues().offerings || []}
+        onAdd={handleAddOffering}
+        onEdit={handleEditOffering}
+        onDelete={handleDeleteOffering}
+      />
+    </form>
+  );
+});
 
 export default AddInnovationForm;

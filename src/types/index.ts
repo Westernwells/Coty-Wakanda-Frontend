@@ -427,8 +427,10 @@ export interface InnovationInput {
   year: string;
   format: string;
   launch_name: string;
-  other_name: string;
-  document: string;
+  reference_name: string[];
+  internal_offering_deck?: string;
+  customer_offering_deck?: string;
+  status: string;
   forecast_deadline: string;
   offerings?: {
     number: string;
@@ -437,11 +439,11 @@ export interface InnovationInput {
     type: string;
     deck: string;
     market_deck: string;
-    products: Array<
-      Partial<Product> & {
-        currency: string;
-      }
-    >;
+    products: Array<{
+      irc: string;
+      currency: string;
+      price: number;
+    }>;
   }[];
 }
 
@@ -451,8 +453,10 @@ export interface InnovationForm {
   year: Date;
   format: string;
   launch_name: string;
-  other_name: string;
-  document: string;
+  reference_name: string[];
+  internal_offering_deck?: string;
+  customer_offering_deck?: string;
+  status: string;
   forecast_deadline: Date;
   offerings?: {
     number: string;
@@ -461,11 +465,11 @@ export interface InnovationForm {
     type: string;
     deck: string;
     market_deck: string;
-    products: Array<
-      Partial<Product> & {
-        currency: string;
-      }
-    >;
+    products: Array<{
+      irc: string;
+      currency: string;
+      price: number;
+    }>;
   }[];
 }
 
