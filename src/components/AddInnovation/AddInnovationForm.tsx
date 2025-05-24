@@ -3,38 +3,19 @@ import { getBrands } from "@/api/get-brands";
 import { useAddInnovation } from "@/api/innovations/add-innovation";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
 import { useFileUpload } from "@/api/products/upload-document";
-import { dateToLocalString } from "@/lib/utils";
-import { queryClient } from "@/main";
-import { Innovation, Product } from "@/types";
-import {
-  Button,
-  Grid,
-  Group,
-  Select,
-  Table,
-  TextInput,
-  CloseButton,
-  Modal,
-  Collapse,
-} from "@mantine/core";
+import { Innovation } from "@/types";
+import { Button, Grid, Group, Select, TextInput } from "@mantine/core";
 import { YearPickerInput, DateInput } from "@mantine/dates";
 import { useForm, UseFormReturnType, zodResolver } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X, Upload, Save } from "lucide-react";
-import React, {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { z } from "zod";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import { FormField } from "../Shared/Form/Field";
-import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import OfferingTable from "./OfferingTable";
@@ -46,7 +27,7 @@ type FormValues = {
   year: Date;
   format: string;
   launch_name: string;
-  reference_name: string[];
+  reference_names: string[];
   internal_offering_deck: string;
   customer_offering_deck: string;
   forecast_deadline: Date;
@@ -143,7 +124,7 @@ const AddInnovationForm = forwardRef<
       year: new Date(),
       format: "",
       launch_name: "",
-      reference_name: [],
+      reference_names: [],
       internal_offering_deck: "",
       customer_offering_deck: "",
       forecast_deadline: new Date(),
@@ -256,12 +237,12 @@ const AddInnovationForm = forwardRef<
 
     setIsSubmitting(true);
     const values = form.getValues();
-    const { year, forecast_deadline, offerings, reference_name, ...toSubmit } =
+    const { year, forecast_deadline, offerings, reference_names, ...toSubmit } =
       values;
 
     const submitData = {
       ...toSubmit,
-      reference_name,
+      reference_names,
       // Use uploaded URLs from state, fallback to form values
       internal_offering_deck:
         uploadedFiles.internal_offering_deck || values.internal_offering_deck,
@@ -303,7 +284,7 @@ const AddInnovationForm = forwardRef<
         year: new Date(parseInt(formData.year), 0, 1),
         format: formData.format,
         launch_name: formData.launch_name,
-        reference_name: existingReferenceNames,
+        reference_names: existingReferenceNames,
         internal_offering_deck: "",
         customer_offering_deck: "",
         forecast_deadline: new Date(formData.forecast_deadline),
@@ -331,7 +312,7 @@ const AddInnovationForm = forwardRef<
         form.values.year.getFullYear() !== parseInt(formData.year) ||
         form.values.format !== formData.format ||
         form.values.launch_name !== formData.launch_name ||
-        JSON.stringify(form.values.reference_name) !==
+        JSON.stringify(form.values.reference_names) !==
           JSON.stringify(formData.launch_ref ? [formData.launch_ref] : []) ||
         form.values.forecast_deadline.toISOString().split("T")[0] !==
           formData.forecast_deadline;
@@ -354,7 +335,7 @@ const AddInnovationForm = forwardRef<
         year: new Date(parseInt(formData.year), 0, 1),
         format: formData.format,
         launch_name: formData.launch_name,
-        reference_name: existingReferenceNames,
+        reference_names: existingReferenceNames,
         internal_offering_deck: "",
         customer_offering_deck: "",
         forecast_deadline: new Date(formData.forecast_deadline),
@@ -388,7 +369,7 @@ const AddInnovationForm = forwardRef<
     if (referenceNameInput.trim()) {
       const newNames = [...referenceNames, referenceNameInput.trim()];
       setReferenceNames(newNames);
-      form.setFieldValue("reference_name", newNames);
+      form.setFieldValue("reference_names", newNames);
       setReferenceNameInput("");
       console.log("Added reference name:", referenceNameInput.trim());
     }
@@ -398,7 +379,7 @@ const AddInnovationForm = forwardRef<
   const handleRemoveReferenceName = (index: number) => {
     const newNames = referenceNames.filter((_, i) => i !== index);
     setReferenceNames(newNames);
-    form.setFieldValue("reference_name", newNames);
+    form.setFieldValue("reference_names", newNames);
   };
 
   // Offering management handlers

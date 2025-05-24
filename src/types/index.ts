@@ -427,7 +427,7 @@ export interface InnovationInput {
   year: string;
   format: string;
   launch_name: string;
-  reference_name: string[];
+  reference_names: string[];
   internal_offering_deck?: string;
   customer_offering_deck?: string;
   status: string;

@@ -188,7 +188,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
       <FormSection title="Offerings">
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-end ">
           <Button
             type="button"
             variant="outline"
