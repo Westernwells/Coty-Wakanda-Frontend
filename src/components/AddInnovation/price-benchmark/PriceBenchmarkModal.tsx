@@ -64,6 +64,12 @@ export function PriceBenchmarkModal({
             ...productData,
             irc: productData.irc ?? "",
             icp_cost: productData.icp_cost ?? 0,
+            price: productData.price ?? 0,
+            currency: productData.currency ?? "USD",
+            brand_id: productData.brand_id ?? "",
+            product_type: productData.product_type ?? "saleable",
+            pref: productData.pref ?? "pref",
+            grouping: productData.grouping ?? "1",
             price_benchmark: localValue,
           },
         },
@@ -101,9 +107,9 @@ export function PriceBenchmarkModal({
             <PriceBenchmarkSection
               value={localValue}
               onChange={setLocalValue}
-              brandsData={{ data: brandsData }}
-              productsListData={{ data: productsListData }}
-              categoriesData={{ data: categoriesData }}
+              brandsData={{ data: brandsData as any }}
+              productsListData={{ data: productsListData as any }}
+              categoriesData={{ data: categoriesData as any }}
             />
             <div className="flex justify-end gap-4 mt-8">
               <Button

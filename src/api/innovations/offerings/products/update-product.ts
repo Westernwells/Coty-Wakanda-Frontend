@@ -17,11 +17,35 @@ export const updateOfferingProduct = ({
   console.log(
     `/innovations/${innovationId}/offerings/${offeringId}/products/${id}`
   );
-  console.log("updating product-------", data);
-  return axios.put(
-    `/innovations/${innovationId}/offerings/${offeringId}/products/${id}`,
-    data
-  );
+  console.log("updating product with DTO:", data);
+  return axios
+    .put(
+      `/innovations/${innovationId}/offerings/${offeringId}/products/${id}`,
+      data
+    )
+    .catch((error) => {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error(
+          "Update Product API Error - Status:",
+          error.response.status
+        );
+        console.error("Update Product API Error - Data:", error.response.data);
+        console.error(
+          "Update Product API Error - Headers:",
+          error.response.headers
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Update Product API Error - No response:", error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Update Product API Error - Message:", error.message);
+      }
+      console.error("Update Product API Error - Config:", error.config);
+      throw error; // Re-throw the error to be caught by react-query
+    });
 };
 
 type UseUpdateOfferingProductOptions = {
