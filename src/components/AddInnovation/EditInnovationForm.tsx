@@ -2,11 +2,11 @@ import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
 import { useFileUpload } from "@/api/products/upload-document";
-import { Innovation, ProductListResponse } from "@/types";
+import { Innovation } from "@/types";
 import { Button, Grid, Select, TextInput } from "@mantine/core";
 import { YearPickerInput, DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
-import { useInfiniteQuery, useQueries } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X, Upload } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
@@ -17,10 +17,6 @@ import { FormField } from "../Shared/Form/Field";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import OfferingTable from "./OfferingTable";
-import {
-  getOfferingProducts,
-  OfferingProduct,
-} from "@/api/products/get-offering-products";
 
 // Extended Innovation type for API response
 interface ExtendedInnovation extends Innovation {
@@ -342,7 +338,7 @@ const EditInnovationForm = forwardRef<
           .filter((name) => name !== "");
 
         // Transform offerings data
-        let transformedOfferings =
+        const transformedOfferings =
           innovationData.offerings?.map((offering) => ({
             id: offering.id,
             number: offering.number || "",
@@ -366,43 +362,6 @@ const EditInnovationForm = forwardRef<
           })) || [];
 
         // Fetch products for each offering if editing
-        if (innovationData.offerings && innovationData.offerings.length > 0) {
-          const productsResults = await Promise.all(
-            innovationData.offerings.map(async (offering) => {
-              try {
-                const res = await getOfferingProducts(
-                  innovationId,
-                  offering.id
-                );
-                // console.log("res----", res);
-                // console.log("innovationId----", innovationId);
-                // console.log("offering.id----", offering.id);
-                // Map API product to local product shape
-                return (res.data || []).map((p) => ({
-                  irc: p.irc,
-                  currency: p.icp_eur ? "EUR" : "USD", // fallback logic, adjust as needed
-                  price: Number(p.icp_eur || p.icp_usd || 0),
-                  icp_cost: Number(p.icp_eur || p.icp_usd || 0),
-                  product_type: p.product_type,
-                  pref: p.pref,
-                  grouping: String(p.grouping ?? ""),
-                  material_description: p.material_description,
-                  brand_id: p.brand?.id ? String(p.brand.id) : "",
-                  sub_brand_id: p.brand_pillar?.id
-                    ? String(p.brand_pillar.id)
-                    : "",
-                }));
-              } catch {
-                return [];
-              }
-            })
-          );
-          // Map products to each offering
-          transformedOfferings = transformedOfferings.map((off, idx) => ({
-            ...off,
-            products: productsResults[idx] || [],
-          }));
-        }
 
         if (isMounted) {
           form.setValues({
@@ -421,7 +380,6 @@ const EditInnovationForm = forwardRef<
 
           setSelectedBrandId(brandId);
           setReferenceNames(initialFormReferenceNames);
-          setHasChanges(false);
 
           // Reset uploaded file states
           setUploadedFiles({

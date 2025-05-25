@@ -48,58 +48,45 @@ export interface Segment {
   created_at: string;
 }
 
-export interface OfferingProduct {
+export interface OfferingProductData {
   id: number;
-  pref: string;
-  product_type: string;
-  grouping: number | null;
-  price: number;
-  launch_date: string | null;
-  discontinue_date: string | null;
-  offering_number: string | null;
-  sku: string;
+  house: string | null;
+  description: string | null;
+  brand: string | null;
+  brand_line: string | null;
+  article_type: string | null;
   irc: string;
-  material_description: string;
-  material_tr: string;
-  ean_upc: string;
-  house: string;
-  line: string;
-  line_id: string;
-  article_type: string;
-  article_sub_type: string;
-  division: string;
-  icp_eur: string;
-  icp_usd: string;
-  factory: string;
-  commodity_id: string;
-  gender: string;
-  size: string;
-  length: string;
-  height: string;
-  width: string;
-  volume: string;
-  gross_weight: string;
-  net_weight: string;
-  units: string;
-  cssp_trex_eur: string | null;
-  cssp_trex_usd: string | null;
-  shade: string;
-  is_innovation_product: boolean;
-  created_at: string;
-  brand: Brand;
-  brand_pillar: BrandPillar;
-  category: Category;
-  country: Country;
-  market: Market;
-  subcategory: Subcategory;
-  segment: Segment;
-  price_benchmark: unknown;
+  icp_eur: number | null;
+  icp_usd: number | null;
+  group: string | null;
+}
+
+export interface DistributorData {
+  product: Record<string, unknown> | null;
+  irc: string;
+  billing_price: number | null;
+  rrsp: number | null;
+  icp_eur: number | null;
+  icp_usd: number | null;
+  french_eur: number | null;
+  french_usd: number | null;
+  c1: number | null;
+}
+
+export interface Distributor {
+  id: number;
+  name: string;
+  currency: string | null;
+  data: DistributorData[];
 }
 
 export interface GetOfferingProductsResponse {
   message: string;
-  data: OfferingProduct[];
-  meta: {
+  data: {
+    products: OfferingProductData[];
+    distributors: Distributor[];
+  };
+  meta?: {
     cursor: number;
     page_size: number;
     has_previous: boolean;
