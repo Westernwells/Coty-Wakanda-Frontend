@@ -69,8 +69,6 @@ function ProductsTable({
     error: bulkUpdateError,
   } = useBulkUpdateProduct({});
 
-  console.log({ bulkUpdateError });
-
   function handleNumberInputChange(path: string, value: number | "") {
     form.setFieldValue(path, value);
     // Parse index and field from path, e.g., "products.2.icp_eur"
@@ -107,8 +105,6 @@ function ProductsTable({
       });
     }
   }
-
-  console.log({ initialData });
 
   // ✅ Reset product list when filters change
   useEffect(() => {
@@ -528,7 +524,6 @@ function ProductsTable({
                 disabled={isBulkUpdating}
                 onClick={() => {
                   const changed = getChangedProducts();
-                  console.log({ changed });
                   bulkUpdate(
                     { data: { products: changed.products } },
                     {

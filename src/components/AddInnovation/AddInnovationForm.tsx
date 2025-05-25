@@ -287,7 +287,6 @@ const AddInnovationForm = forwardRef<
           ocd: offering.ocd.toISOString().split("T")[0],
         };
       }),
-      products,
     };
 
     if (isEdit && innovationId) {

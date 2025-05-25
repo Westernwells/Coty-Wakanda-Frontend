@@ -158,8 +158,6 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
     );
   }
 
-  console.log({ distributors });
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-20">
