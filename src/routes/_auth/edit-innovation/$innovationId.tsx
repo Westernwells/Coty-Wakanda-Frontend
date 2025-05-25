@@ -23,8 +23,6 @@ function RouteComponent() {
     queryFn: () => getInnovation(innovationId),
   });
 
-  console.log({ innovationById: data?.data });
-
   if (isLoading) {
     return <LoadingSpinner />;
   }

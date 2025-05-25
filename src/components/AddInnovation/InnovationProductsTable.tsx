@@ -1,6 +1,6 @@
 import { useUserStore } from "@/stores/userStore";
 import { Product } from "@/types";
-import { Loader, NumberInput, Table, TextInput } from "@mantine/core";
+import { Loader, NumberInput, Table, TextInput, Checkbox } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect, useState, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -16,6 +16,9 @@ interface InnovationProductsTableProps {
   brandOptions: { value: string; label: string }[];
   brandPillarOptions: { value: string; label: string }[];
   onBulkUpdate?: (products: Product[]) => void;
+  onDeleteProducts?: (productIds: number[]) => void;
+  selectedProducts?: number[];
+  onSelectedProductsChange?: (productIds: number[]) => void;
 }
 
 function InnovationProductsTable({
@@ -26,6 +29,9 @@ function InnovationProductsTable({
   brandOptions,
   brandPillarOptions,
   onBulkUpdate,
+  onDeleteProducts,
+  selectedProducts = [],
+  onSelectedProductsChange,
 }: InnovationProductsTableProps) {
   const role = useUserStore((state) => state.user)?.role;
   const [currentProducts, setCurrentProducts] = useState<Product[]>(products);
@@ -122,6 +128,40 @@ function InnovationProductsTable({
     return changedProducts;
   }
 
+  // Handle checkbox selection
+  const handleCheckboxChange = (
+    e: React.MouseEvent | React.ChangeEvent<HTMLInputElement>,
+    productId: number
+  ) => {
+    e.stopPropagation();
+    if (!onSelectedProductsChange) return;
+
+    const newSelectedProducts = selectedProducts.includes(productId)
+      ? selectedProducts.filter((id) => id !== productId)
+      : [...selectedProducts, productId];
+
+    onSelectedProductsChange(newSelectedProducts);
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    if (!onSelectedProductsChange) return;
+
+    const newSelectedProducts = e.currentTarget.checked
+      ? currentProducts.map((product) => product.id)
+      : [];
+
+    onSelectedProductsChange(newSelectedProducts);
+  };
+
+  const handleRowClick = (e: React.MouseEvent, product: Product) => {
+    // If clicking on the checkbox cell, don't trigger row selection
+    if ((e.target as HTMLElement).closest(".checkbox-cell")) {
+      return;
+    }
+    onProductSelect?.(product);
+  };
+
   if (!products.length) {
     return <p>No products available</p>;
   }
@@ -148,7 +188,32 @@ function InnovationProductsTable({
             >
               <Table.Thead>
                 <Table.Tr className="bg-primary text-white">
-                  <Table.Th className="rounded-ss-xl">Brand</Table.Th>
+                  <Table.Th className="rounded-ss-xl checkbox-cell w-[40px]">
+                    <Checkbox
+                      color="white"
+                      checked={
+                        selectedProducts.length === currentProducts.length &&
+                        currentProducts.length > 0
+                      }
+                      indeterminate={
+                        selectedProducts.length > 0 &&
+                        selectedProducts.length < currentProducts.length
+                      }
+                      onChange={handleSelectAll}
+                      styles={{
+                        input: {
+                          backgroundColor: "transparent",
+                          borderColor: "white",
+                          "&:checked": {
+                            backgroundColor: "white",
+                            borderColor: "white",
+                          },
+                          cursor: "pointer",
+                        },
+                      }}
+                    />
+                  </Table.Th>
+                  <Table.Th>Brand</Table.Th>
                   <Table.Th>Brand Type</Table.Th>
                   <Table.Th>Brand Pillar</Table.Th>
                   <Table.Th>Description</Table.Th>
@@ -164,9 +229,22 @@ function InnovationProductsTable({
                 {currentProducts.map((product, index) => (
                   <Table.Tr
                     key={product.id}
-                    onClick={() => onProductSelect?.(product)}
-                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={(e) => handleRowClick(e, product)}
+                    className="hover:bg-gray-50"
                   >
+                    <Table.Td className="checkbox-cell w-[40px]">
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedProducts.includes(product.id)}
+                          onChange={(e) => handleCheckboxChange(e, product.id)}
+                          styles={{
+                            input: {
+                              cursor: "pointer",
+                            },
+                          }}
+                        />
+                      </div>
+                    </Table.Td>
                     <Table.Td className="first:rounded-es-xl">
                       {isEdit ? (
                         brandOptions.length > 0 ? (

@@ -29,6 +29,7 @@ import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { MasterDistributor } from "@/types";
 import { getOfferingProducts } from "@/api/products/get-offering-products";
+import { deleteOfferingProducts } from "@/api/products/delete-offering-product";
 
 // Placeholder imports - actual components might have different props/structure
 import InnovationProductsTable from "./InnovationProductsTable";
@@ -214,6 +215,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     Array<{ value: string; label: string }>
   >([]);
 
+  // Add state for selected products
+  const [selectedProducts, setSelectedProducts] = useState<
+    Record<number, number[]>
+  >({});
+  const [isDeletingProducts, setIsDeletingProducts] = useState(false);
+
   // Initialize states when offerings change
   useEffect(() => {
     setProductsTableStates(offerings.map(() => ({ isEdit: false })));
@@ -296,6 +303,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
 
   const handleSubmitOffering = () => {
     const newOffering: Offering = {
+      id:
+        modalMode === "add"
+          ? Date.now()
+          : editingIndex !== null
+            ? offerings[editingIndex].id
+            : Date.now(), // Temporary ID for new offerings
       number: offeringForm.number,
       icw: offeringForm.icw,
       ocd: offeringForm.ocd,
@@ -341,11 +354,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     setIsProductModalOpen(true);
   }
 
-  // Handler to add product to the correct offering
+  // Update the handleAddProductToOffering function
   function handleAddProductToOffering(
     product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
   ) {
     if (targetOfferingIndex === null) return;
+
     // Map modal product to OfferingProductData shape
     const productWithPrice: OfferingProductData = {
       irc: product.irc,
@@ -359,16 +373,31 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       pref: product.pref,
       grouping: product.grouping,
     };
-    const updatedOfferings = offerings.map((offering, idx) => {
-      if (idx === targetOfferingIndex) {
-        return {
-          ...offering,
-          products: [...(offering.products || []), productWithPrice],
-        };
-      }
-      return offering;
-    });
-    onEdit(targetOfferingIndex, updatedOfferings[targetOfferingIndex]);
+
+    // Get the current offering
+    const currentOffering = offerings[targetOfferingIndex];
+
+    if (!currentOffering || !currentOffering.id) return;
+
+    // Update the offeringProducts state
+    setOfferingProducts((prev) => ({
+      ...prev,
+      [currentOffering.id as number]: [
+        ...(prev[currentOffering.id as number] || []),
+        productWithPrice,
+      ],
+    }));
+
+    // Update the offerings array with the new product
+    const updatedOffering = {
+      ...currentOffering,
+      products: [...(currentOffering.products || []), productWithPrice],
+    };
+
+    // Call onEdit to update the parent component's state
+    onEdit(targetOfferingIndex, updatedOffering);
+
+    // Close the modal and reset the target index
     setIsProductModalOpen(false);
     setTargetOfferingIndex(null);
   }
@@ -376,10 +405,27 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   // Update toggleRow to fetch products if not already fetched
   async function handleExpandRow(index: number, offeringId: number) {
     toggleRow(index);
-    if (!offeringProducts[offeringId] && innovationId && offeringId) {
+
+    // Initialize empty arrays for new offerings
+    if (!offeringProducts[offeringId]) {
+      setOfferingProducts((prev) => ({
+        ...prev,
+        [offeringId]: [],
+      }));
+      setOfferingDistributors((prev) => ({
+        ...prev,
+        [offeringId]: [],
+      }));
+    }
+
+    // Only fetch from API if we have an innovationId and it's not a temporary ID
+    if (innovationId && offeringId) {
       setLoadingOfferings((prev) => new Set(prev).add(offeringId));
       try {
         const response = await getOfferingProducts(innovationId, offeringId);
+        console.log("response", response);
+        console.log("innovationId", innovationId);
+        console.log("offeringId", offeringId);
         const { products, distributors } = response.data;
 
         // Map products to the format expected by the component
@@ -389,11 +435,11 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
           price: Number(p.icp_eur || p.icp_usd || 0),
           icp_cost: Number(p.icp_eur || p.icp_usd || 0),
           product_type: p.article_type || "",
-          pref: "non-pref", // Default value since it's not in the API response
+          pref: "non-pref",
           grouping: p.group || "1",
           material_description: p.description || "",
-          brand_id: "", // Not available in the API response
-          sub_brand_id: "", // Not available in the API response
+          brand_id: "",
+          sub_brand_id: "",
         }));
 
         // Map distributors to the format expected by the component
@@ -442,7 +488,8 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     productsTableStates,
     setProductsTableStates,
     index,
-  }: OfferingProductsTableProps) {
+    offeringId,
+  }: OfferingProductsTableProps & { offeringId: number }) {
     // Map OfferingMappedProduct[] to Product[]
     const mappedProducts = products.map((p, i) => ({
       id: i + 1,
@@ -546,6 +593,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
         onBulkUpdate={(products) => {
           console.log("Bulk update:", products);
         }}
+        selectedProducts={selectedProducts[offeringId] || []}
+        onSelectedProductsChange={(productIds) => {
+          setSelectedProducts((prev) => ({
+            ...prev,
+            [offeringId]: productIds,
+          }));
+        }}
       />
     );
   }
@@ -615,23 +669,36 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   }, [distributorPricesStates, currentIndex, setDistributorPricesStates]);
 
   // On scroll, update parent if source is not distributor
-  function handleScroll() {
-    if (scrollableRef.current && !scrolling.current) {
-      setDistributorPricesStates((prev) => {
-        const newStates = [...prev];
-        if (newStates[currentIndex]) {
-          newStates[currentIndex].scrollTop =
-            scrollableRef.current?.scrollTop ?? 0;
-          newStates[currentIndex].scrollSource = "distributor";
-        }
-        return newStates;
-      });
-    }
-  }
 
   // Add onProductSelect handler
   const handleProductSelect = (product: Product) => {
     console.log("Product selected:", product);
+  };
+
+  const handleDeleteProducts = async (offeringId: number, index: number) => {
+    if (!innovationId || !selectedProducts[offeringId]?.length) return;
+
+    try {
+      setIsDeletingProducts(true);
+      await deleteOfferingProducts({
+        innovationId,
+        offeringId,
+        productIds: selectedProducts[offeringId],
+      });
+
+      // Refresh the products list after deletion
+      handleExpandRow(index, offeringId);
+
+      // Clear selection for this offering
+      setSelectedProducts((prev) => ({
+        ...prev,
+        [offeringId]: [],
+      }));
+    } catch (error) {
+      console.error("Failed to delete products:", error);
+    } finally {
+      setIsDeletingProducts(false);
+    }
   };
 
   return (
@@ -734,10 +801,8 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                           <Table.Td colSpan={7} className="p-0">
                             <Collapse in={expandedRows.has(index)}>
                               <div className="p-4 bg-gray-50 border-t">
-                                {expandedRows.has(index) &&
-                                typeof offering.id === "number" &&
-                                innovationId ? (
-                                  loadingOfferings.has(offering.id) ? (
+                                {expandedRows.has(index) ? (
+                                  loadingOfferings.has(offering.id || 0) ? (
                                     <div>Loading products...</div>
                                   ) : (
                                     <>
@@ -757,104 +822,127 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                         >
                                           Add single product
                                         </Button>
-                                        {/* <Button
+                                        <Button
                                           variant="outline"
                                           className="border-primary text-primary hover:bg-primary/10 rounded-lg"
+                                          onClick={() =>
+                                            offering.id &&
+                                            handleDeleteProducts(
+                                              offering.id as number,
+                                              index
+                                            )
+                                          }
+                                          disabled={
+                                            !selectedProducts[
+                                              offering.id as number
+                                            ]?.length || isDeletingProducts
+                                          }
                                         >
-                                          Delete product list
-                                        </Button> */}
+                                          {isDeletingProducts
+                                            ? "Deleting..."
+                                            : "Delete product list"}
+                                        </Button>
                                       </Group>
                                       <Grid gutter="lg">
                                         <Grid.Col span={{ base: 16, md: 8 }}>
                                           <h3 className="text-lg font-semibold text-primary mb-2">
                                             Product list
                                           </h3>
-                                          <OfferingProductsTable
-                                            products={
-                                              offeringProducts[offering.id] ||
-                                              []
-                                            }
-                                            productsTableStates={
-                                              productsTableStates
-                                            }
-                                            setProductsTableStates={
-                                              setProductsTableStates
-                                            }
-                                            index={index}
-                                          />
+                                          {offering.id && (
+                                            <OfferingProductsTable
+                                              products={
+                                                offeringProducts[offering.id] ||
+                                                []
+                                              }
+                                              productsTableStates={
+                                                productsTableStates
+                                              }
+                                              setProductsTableStates={
+                                                setProductsTableStates
+                                              }
+                                              index={index}
+                                              offeringId={offering.id}
+                                            />
+                                          )}
                                         </Grid.Col>
                                         <Grid.Col span={{ base: 8, md: 4 }}>
-                                          <InnovationDistributorPrices
-                                            distributors={
-                                              offeringDistributors[
-                                                offering.id
-                                              ] || []
-                                            }
-                                            selectedRow={
-                                              distributorPricesStates[index]
-                                                ?.selectedRow || null
-                                            }
-                                            setSelectedRow={(
-                                              selectedRowValue
-                                            ) => {
-                                              const newStates = [
-                                                ...distributorPricesStates,
-                                              ];
-                                              if (newStates[index]) {
-                                                newStates[index].selectedRow =
-                                                  selectedRowValue;
-                                                setDistributorPricesStates(
-                                                  newStates
-                                                );
+                                          {offering.id && (
+                                            <InnovationDistributorPrices
+                                              distributors={
+                                                offeringDistributors[
+                                                  offering.id
+                                                ] || []
                                               }
-                                            }}
-                                            tableHeader={[
-                                              "Distributor IRC",
-                                              "Price",
-                                              "RRSP",
-                                            ]}
-                                            tableFields={[
-                                              "irc",
-                                              "billing_price",
-                                              "rrsp",
-                                            ]}
-                                            scrollTop={
-                                              distributorPricesStates[index]
-                                                ?.scrollTop || 0
-                                            }
-                                            setScrollTop={(scrollTopValue) => {
-                                              const newStates = [
-                                                ...distributorPricesStates,
-                                              ];
-                                              if (newStates[index]) {
-                                                newStates[index].scrollTop =
-                                                  scrollTopValue;
-                                                newStates[index].scrollSource =
-                                                  "distributor";
-                                                setDistributorPricesStates(
-                                                  newStates
-                                                );
+                                              selectedRow={
+                                                distributorPricesStates[index]
+                                                  ?.selectedRow || null
                                               }
-                                            }}
-                                            scrollSource={
-                                              distributorPricesStates[index]
-                                                ?.scrollSource || null
-                                            }
-                                            onPriceEdit={(irc, price) => {
-                                              console.log(
-                                                "Price edit:",
-                                                irc,
-                                                price
-                                              );
-                                            }}
-                                            onRRSPEdit={(irc, rrsp) => {
-                                              console.log(
-                                                "RRSP edit:",
-                                                irc,
-                                                rrsp
-                                              );
-                                            }}
-                                          />
+                                              setSelectedRow={(
+                                                selectedRowValue
+                                              ) => {
+                                                const newStates = [
+                                                  ...distributorPricesStates,
+                                                ];
+                                                if (newStates[index]) {
+                                                  newStates[index].selectedRow =
+                                                    selectedRowValue;
+                                                  setDistributorPricesStates(
+                                                    newStates
+                                                  );
+                                                }
+                                              }}
+                                              tableHeader={[
+                                                "Distributor IRC",
+                                                "Price",
+                                                "RRSP",
+                                              ]}
+                                              tableFields={[
+                                                "irc",
+                                                "billing_price",
+                                                "rrsp",
+                                              ]}
+                                              scrollTop={
+                                                distributorPricesStates[index]
+                                                  ?.scrollTop || 0
+                                              }
+                                              setScrollTop={(
+                                                scrollTopValue
+                                              ) => {
+                                                const newStates = [
+                                                  ...distributorPricesStates,
+                                                ];
+                                                if (newStates[index]) {
+                                                  newStates[index].scrollTop =
+                                                    scrollTopValue;
+                                                  newStates[
+                                                    index
+                                                  ].scrollSource =
+                                                    "distributor";
+                                                  setDistributorPricesStates(
+                                                    newStates
+                                                  );
+                                                }
+                                              }}
+                                              scrollSource={
+                                                distributorPricesStates[index]
+                                                  ?.scrollSource || null
+                                              }
+                                              onPriceEdit={(irc, price) => {
+                                                console.log(
+                                                  "Price edit:",
+                                                  irc,
+                                                  price
+                                                );
+                                              }}
+                                              onRRSPEdit={(irc, rrsp) => {
+                                                console.log(
+                                                  "RRSP edit:",
+                                                  irc,
+                                                  rrsp
+                                                );
+                                              }}
+                                            />
+                                          )}
                                         </Grid.Col>
                                       </Grid>
                                     </>
