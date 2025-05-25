@@ -672,6 +672,11 @@ function CombinedInnovationTables({
           isEditMode={true}
           productData={{
             ...benchmarkProduct,
+            product_type: benchmarkProduct.product_type as
+              | "saleable"
+              | "non-saleable",
+            pref: benchmarkProduct.pref as "pref" | "non-pref",
+            grouping: benchmarkProduct.grouping as unknown as "1" | "2" | "3",
             price: benchmarkProduct.price ? Number(benchmarkProduct.price) : 0,
           }}
         />
