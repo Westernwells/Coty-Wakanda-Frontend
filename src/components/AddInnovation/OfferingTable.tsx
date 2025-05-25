@@ -68,8 +68,8 @@ interface Offering {
   market_deck: string;
   products: Array<{
     irc: string;
-    price: number;
     currency: string;
+    price: number;
     icp_cost: number;
     product_type: string;
     pref: string;
@@ -89,8 +89,7 @@ interface OfferingTableProps {
   onAdd: (offering: Offering) => void;
   onEdit: (index: number, offering: Offering) => void;
   onDelete: (index: number) => void;
-  onOpenProductModal?: (offeringIndex: number) => void;
-  innovationId?: string | number;
+  innovationId: string;
 }
 
 // Define interface for mapped product (from EditInnovationForm mapping)
@@ -151,14 +150,13 @@ interface DistributorPricing {
   rrsp: string;
 }
 
-const OfferingTable: React.FC<OfferingTableProps> = ({
+export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
   onAdd,
   onEdit,
   onDelete,
-  onOpenProductModal,
   innovationId,
-}): JSX.Element => {
+}) => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -202,10 +200,8 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   >([]);
 
   // State for product modal and which offering is targeted
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [targetOfferingIndex, setTargetOfferingIndex] = useState<number | null>(
-    null
-  );
+  const [selectedOffering, setSelectedOffering] = useState<number | null>(null);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
   // Add state for fetched products per offering
   const [offeringProducts, setOfferingProducts] = useState<
@@ -313,27 +309,14 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   const [isEditingOffering, setIsEditingOffering] = useState(false);
   const [isDeletingOffering, setIsDeletingOffering] = useState(false);
 
-  const handleSubmitOffering = async () => {
-    setIsSubmitted(true);
-
-    // Validate required fields
+  const handleSubmit = async () => {
+    // Since offeringForm doesn't have a validate method, let's do manual validation
     if (!offeringForm.number.trim() || !offeringForm.type) {
+      setIsSubmitted(true);
       return;
     }
 
-    // Check for duplicate offering numbers
-    const isDuplicate = offerings.some(
-      (offering, idx) =>
-        offering.number === offeringForm.number.trim() &&
-        (modalMode === "add" || (modalMode === "edit" && idx !== editingIndex))
-    );
-
-    if (isDuplicate) {
-      console.error("An offering with this number already exists");
-      return;
-    }
-
-    const newOffering: Offering = {
+    const newOffering = {
       id:
         modalMode === "add"
           ? undefined
@@ -346,10 +329,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       type: offeringForm.type,
       deck: offeringForm.deck,
       market_deck: offeringForm.market_deck,
-      products:
-        modalMode === "edit" && editingIndex !== null
-          ? offerings[editingIndex].products || []
-          : [],
+      products: [],
     };
 
     try {
@@ -407,8 +387,8 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
 
   // Handler to open product modal for a specific offering
   function handleOpenProductModal(index: number) {
-    setTargetOfferingIndex(index);
-    setIsProductModalOpen(true);
+    setSelectedOffering(index);
+    setIsAddProductModalOpen(true);
   }
 
   // Update the handleAddProductToOffering function
@@ -479,8 +459,8 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       });
 
       // Close the modal
-      setIsProductModalOpen(false);
-      setTargetOfferingIndex(null);
+      setIsAddProductModalOpen(false);
+      setSelectedOffering(null);
 
       // Refresh the products list for this offering
       if (expandedRows.has(offerings.findIndex((o) => o.id === offeringId))) {
@@ -532,9 +512,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     }
   };
 
-  // Update toggleRow to fetch products if not already fetched
-  async function handleExpandRow(index: number, offeringId: number) {
-    toggleRow(index);
+  // Update handleExpandRow to be callable from other functions
+  const handleExpandRow = async (index: number, offeringId: number) => {
+    // If not already expanded, expand it
+    if (!expandedRows.has(index)) {
+      toggleRow(index);
+    }
 
     // Initialize empty arrays for new offerings
     if (!offeringProducts[offeringId]) {
@@ -553,9 +536,6 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       setLoadingOfferings((prev) => new Set(prev).add(offeringId));
       try {
         const response = await getOfferingProducts(innovationId, offeringId);
-        console.log("response", response);
-        console.log("innovationId", innovationId);
-        console.log("offeringId", offeringId);
         const { products, distributors } = response.data;
 
         // Map products to the format expected by the component
@@ -602,7 +582,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
         });
       }
     }
-  }
+  };
+
+  // Handler for after product addition
+  const handleProductAdded = async (index: number, offeringId: number) => {
+    await handleExpandRow(index, offeringId);
+  };
 
   // Update OfferingProductsTable to accept products as a prop
   interface OfferingProductsTableProps {
@@ -1451,7 +1436,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     type="button"
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                    onClick={handleSubmitOffering}
+                    onClick={handleSubmit}
                     disabled={isAddingOffering || isEditingOffering}
                   >
                     {isAddingOffering || isEditingOffering
@@ -1517,19 +1502,28 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       </Modal.Root>
 
       {/* Add Product To Offering Modal */}
-      <AddProductToOfferingModal
-        opened={isProductModalOpen}
-        onClose={() => setIsProductModalOpen(false)}
-        onSubmit={(product) => {
-          if (targetOfferingIndex !== null) {
-            const offering = offerings[targetOfferingIndex];
-            if (offering?.id) {
-              handleAddProductToOffering(product, offering.id);
+      {selectedOffering !== null && offerings[selectedOffering]?.id && (
+        <AddProductToOfferingModal
+          opened={isAddProductModalOpen}
+          onClose={() => {
+            setIsAddProductModalOpen(false);
+            setSelectedOffering(null);
+          }}
+          onSubmit={async (product) => {
+            // After successful product addition, refresh the offering data
+            if (selectedOffering !== null && offerings[selectedOffering]?.id) {
+              await handleProductAdded(
+                selectedOffering,
+                offerings[selectedOffering].id!
+              );
             }
-          }
-        }}
-        isLoading={isAddingProduct}
-      />
+            setIsAddProductModalOpen(false);
+            setSelectedOffering(null);
+          }}
+          innovationId={innovationId}
+          offeringId={offerings[selectedOffering].id!.toString()}
+        />
+      )}
     </div>
   );
 };

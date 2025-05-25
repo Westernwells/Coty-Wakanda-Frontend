@@ -313,7 +313,6 @@ const EditInnovationForm = forwardRef<
       {
         onSuccess: () => {
           setIsSubmitting(false);
-          navigate({ to: "/innovations" });
         },
         onError: () => {
           setIsSubmitting(false);

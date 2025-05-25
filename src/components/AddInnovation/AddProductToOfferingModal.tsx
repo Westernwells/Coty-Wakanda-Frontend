@@ -12,11 +12,12 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { z } from "zod";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import { useQuery } from "@tanstack/react-query"; // Added for data fetching
+import { useQuery, useQueryClient } from "@tanstack/react-query"; // Added for data fetching and query client
 import { getBrands } from "@/api/get-brands"; // Assuming API path
 import { getBrandPillars } from "@/api/get-brandPillars"; // Assuming API path
 import { useEffect } from "react";
 import { DateInput } from "@mantine/dates";
+import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
 
 // Updated interface for the product details in the modal
 export interface OfferingProductFormValues {
@@ -66,6 +67,8 @@ export interface AddProductToOfferingModalProps {
     product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
   ) => void;
   isLoading?: boolean;
+  innovationId: string;
+  offeringId: string;
 }
 
 // Updated Zod schema for validation
@@ -122,13 +125,21 @@ const productSchema = z.object({
 
 export const AddProductToOfferingModal: React.FC<
   AddProductToOfferingModalProps
-> = ({ opened, onClose, onSubmit, isLoading = false }) => {
+> = ({
+  opened,
+  onClose,
+  onSubmit,
+  isLoading = false,
+  innovationId,
+  offeringId,
+}) => {
+  const queryClient = useQueryClient();
+
   const form = useForm<OfferingProductFormValues>({
-    mode: "uncontrolled",
     initialValues: {
       irc: "",
       material_description: "",
-      icp_cost: "", // Initialize as empty string for NumberInput behavior
+      icp_cost: "",
       currency: "EUR",
       brand_id: "",
       sub_brand_id: "",
@@ -200,6 +211,38 @@ export const AddProductToOfferingModal: React.FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedBrandId, brandPillarsData, brandPillarsLoading]); // form instance is stable
 
+  const createProductMutation = useCreateOfferingProduct({
+    mutationConfig: {
+      onSuccess: async (data) => {
+        // Invalidate relevant queries to trigger a refresh
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["offering-products", innovationId, offeringId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["innovations", innovationId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["offerings", offeringId],
+          }),
+        ]);
+
+        // Call the parent onSubmit to update local state if needed
+        await onSubmit({
+          ...form.values,
+          icp_cost: Number(form.values.icp_cost),
+        });
+
+        // Reset form and close modal
+        form.reset();
+        onClose();
+      },
+      onError: (error) => {
+        console.error("Failed to create product:", error);
+      },
+    },
+  });
+
   const handleSubmit = (values: OfferingProductFormValues) => {
     const validation = form.validate();
     if (validation.hasErrors) {
@@ -215,17 +258,24 @@ export const AddProductToOfferingModal: React.FC<
 
     // Create the submission object with required fields
     const submissionValues = {
-      ...values,
+      irc: values.irc.trim(),
+      material_description: values.material_description?.trim(),
       icp_cost,
-      // Ensure required fields are present
-      brand_id: values.brand_id,
-      product_type: values.product_type as "saleable" | "non-saleable",
-      pref: values.pref as "pref" | "non-pref",
-      grouping: values.grouping as "1" | "2" | "3",
+      price: icp_cost,
       currency: values.currency as "EUR" | "USD",
+      brand_id: values.brand_id || "",
+      sub_brand_id: values.sub_brand_id,
+      product_type: values.product_type || "saleable",
+      pref: values.pref || "pref",
+      grouping: values.grouping || "1",
     };
 
-    onSubmit(submissionValues);
+    // Call the create product mutation
+    createProductMutation.mutate({
+      innovationId,
+      offeringId,
+      data: submissionValues,
+    });
   };
 
   return (
@@ -250,455 +300,389 @@ export const AddProductToOfferingModal: React.FC<
             <h2 className="text-xl font-semibold mb-6 text-primary">
               Add Product to Offering
             </h2>
-            <Grid gutter={{ sm: 20, base: 16 }}>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Radio.Group
-                  name="product_type"
-                  label="Product Type"
-                  required
-                  {...form.getInputProps("product_type")}
-                  classNames={{ label: "text-primary font-medium text-sm" }}
+            <div>
+              <Grid gutter={{ sm: 20, base: 16 }}>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="IRC Number"
+                    placeholder="Enter IRC Number"
+                    required
+                    {...form.getInputProps("irc")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Material Description"
+                    placeholder="Enter material description"
+                    {...form.getInputProps("material_description")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 4 }}>
+                  <NumberInput
+                    label="ICP Cost"
+                    placeholder="Enter ICP Cost"
+                    required
+                    min={0}
+                    decimalScale={2}
+                    {...form.getInputProps("icp_cost")}
+                    classNames={textInputStyles}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, sm: 2 }}>
+                  <Select
+                    name="currency"
+                    label="Currency"
+                    placeholder="Select currency"
+                    required
+                    data={[
+                      { value: "EUR", label: "EUR" },
+                      { value: "USD", label: "USD" },
+                    ]}
+                    {...form.getInputProps("currency")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="division"
+                    label="Division"
+                    placeholder="Select division"
+                    data={[
+                      { value: "mass", label: "Mass" },
+                      { value: "luxury", label: "Luxury" },
+                    ]}
+                    {...form.getInputProps("division")}
+                    classNames={selectStyles}
+                    clearable
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="brand_category"
+                    label="Brand Category"
+                    placeholder="Select brand category"
+                    data={[
+                      { value: "formal", label: "Formal" },
+                      { value: "informal", label: "Informal" },
+                    ]}
+                    {...form.getInputProps("brand_category")}
+                    classNames={selectStyles}
+                    clearable
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="EAN/UPC"
+                    placeholder="Enter EAN/UPC"
+                    {...form.getInputProps("ean_upc")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="House"
+                    placeholder="Enter House"
+                    {...form.getInputProps("house")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Line"
+                    placeholder="Enter Line"
+                    {...form.getInputProps("line")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Line ID"
+                    placeholder="Enter Line ID"
+                    {...form.getInputProps("line_id")}
+                    classNames={textInputStyles}
+                    hideControls
+                    allowDecimal={false}
+                    allowNegative={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Article Type"
+                    placeholder="Enter Article Type"
+                    {...form.getInputProps("article_type")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Offering Number (optional)"
+                    placeholder="Enter Offering Number"
+                    {...form.getInputProps("offering_number")}
+                    classNames={textInputStyles}
+                    hideControls
+                    allowDecimal={false}
+                    allowNegative={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <DateInput
+                    label="Launch Date"
+                    placeholder="Select Launch Date"
+                    {...form.getInputProps("launch_date")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <DateInput
+                    label="Discontinue Date"
+                    placeholder="Select Discontinue Date"
+                    {...form.getInputProps("discontinue_date")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="category_id"
+                    label="Core Category"
+                    placeholder="Select Core Category"
+                    data={[] /* TODO: fetch categories */}
+                    {...form.getInputProps("category_id")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="subcategory_id"
+                    label="Sub Category"
+                    placeholder="Select Sub Category"
+                    data={[] /* TODO: fetch subcategories */}
+                    {...form.getInputProps("subcategory_id")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="market_id"
+                    label="Market"
+                    placeholder="Select Market"
+                    data={[] /* TODO: fetch markets */}
+                    {...form.getInputProps("market_id")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="segment_id"
+                    label="Segment"
+                    placeholder="Select Segment"
+                    data={[] /* TODO: fetch segments */}
+                    {...form.getInputProps("segment_id")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Factory"
+                    placeholder="Enter Factory"
+                    {...form.getInputProps("factory")}
+                    classNames={textInputStyles}
+                    hideControls
+                    allowDecimal={false}
+                    allowNegative={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Commodity ID"
+                    placeholder="Enter Commodity ID"
+                    {...form.getInputProps("commodity_id")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="country_id"
+                    label="Country of Origin"
+                    placeholder="Select Country"
+                    data={[] /* TODO: fetch countries */}
+                    {...form.getInputProps("country_id")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="gender"
+                    label="Gender"
+                    placeholder="Select Gender"
+                    data={[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                    ]}
+                    {...form.getInputProps("gender")}
+                    classNames={selectStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Size & Dimension"
+                    placeholder="Enter Size & Dimension"
+                    {...form.getInputProps("size")}
+                    classNames={textInputStyles}
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Length"
+                    placeholder="Enter Length"
+                    {...form.getInputProps("length")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Height"
+                    placeholder="Enter Height"
+                    {...form.getInputProps("height")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Width"
+                    placeholder="Enter Width"
+                    {...form.getInputProps("width")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Volume"
+                    placeholder="Enter Volume"
+                    {...form.getInputProps("volume")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Gross Weight"
+                    placeholder="Enter Gross Weight"
+                    {...form.getInputProps("gross_weight")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Net Weight"
+                    placeholder="Enter Net Weight"
+                    {...form.getInputProps("net_weight")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <NumberInput
+                    label="Units"
+                    placeholder="Enter Units"
+                    {...form.getInputProps("units")}
+                    classNames={textInputStyles}
+                    allowDecimal={false}
+                    allowNegative={false}
+                    hideControls
+                  />
+                </Grid.Col>
+
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="brand_id"
+                    label="Brand"
+                    placeholder="Select brand"
+                    data={
+                      brandsData?.data?.map(
+                        (brand: { id: number; name: string }) => ({
+                          value: brand.id.toString(),
+                          label: brand.name,
+                        })
+                      ) || []
+                    }
+                    {...form.getInputProps("brand_id")}
+                    classNames={selectStyles}
+                    disabled={brandsLoading}
+                    searchable
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="sub_brand_id"
+                    label="Brand Pillar (Sub Brand)"
+                    placeholder="Select brand pillar"
+                    data={
+                      brandPillarsData?.data?.map(
+                        (pillar: { id: number; name: string }) => ({
+                          value: pillar.id.toString(),
+                          label: pillar.name,
+                        })
+                      ) || []
+                    }
+                    {...form.getInputProps("sub_brand_id")}
+                    classNames={selectStyles}
+                    disabled={brandPillarsLoading || !selectedBrandId}
+                    searchable
+                    clearable
+                  />
+                </Grid.Col>
+              </Grid>
+
+              {(brandsLoading || (brandPillarsLoading && selectedBrandId)) && (
+                <Loader />
+              )}
+
+              <Group justify="flex-end" mt="xl" gap={10}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                  onClick={() => {
+                    form.reset();
+                    onClose();
+                  }}
+                  disabled={isLoading || createProductMutation.isPending}
                 >
-                  <Group mt="xs">
-                    <Radio
-                      value="saleable"
-                      label="Saleable"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                    <Radio
-                      value="non-saleable"
-                      label="Non-Saleable"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                  </Group>
-                </Radio.Group>
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Radio.Group
-                  name="pref"
-                  label="Pref/Non-Pref"
-                  {...form.getInputProps("pref")}
-                  classNames={{ label: "text-primary font-medium text-sm" }}
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  disabled={isLoading || createProductMutation.isPending}
+                  variant="filled"
+                  className="bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
+                  onClick={() => handleSubmit(form.values)}
                 >
-                  <Group mt="xs">
-                    <Radio
-                      value="pref"
-                      label="Pref"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                    <Radio
-                      value="non-pref"
-                      label="Non-Pref"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                  </Group>
-                </Radio.Group>
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 4 }}>
-                <Radio.Group
-                  name="grouping"
-                  label="Grouping"
-                  {...form.getInputProps("grouping")}
-                  classNames={{ label: "text-primary font-medium text-sm" }}
-                >
-                  <Group mt="xs">
-                    <Radio
-                      value="1"
-                      label="Group 1"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                    <Radio
-                      value="2"
-                      label="Group 2"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                    <Radio
-                      value="3"
-                      label="Group 3 (TR Excl.)"
-                      classNames={{ label: "text-primary text-sm" }}
-                    />
-                  </Group>
-                </Radio.Group>
-              </Grid.Col>
-            </Grid>
-
-            <Grid gutter={{ sm: 20, base: 16 }}>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="IRC Number"
-                  placeholder="Enter IRC Number"
-                  required
-                  {...form.getInputProps("irc")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Material Description"
-                  placeholder="Enter material description"
-                  {...form.getInputProps("material_description")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 4 }}>
-                <NumberInput
-                  label="ICP Cost"
-                  placeholder="Enter ICP Cost"
-                  required
-                  min={0}
-                  decimalScale={2}
-                  {...form.getInputProps("icp_cost")}
-                  classNames={textInputStyles}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, sm: 2 }}>
-                <Select
-                  name="currency"
-                  label="Currency"
-                  placeholder="Select currency"
-                  required
-                  data={[
-                    { value: "EUR", label: "EUR" },
-                    { value: "USD", label: "USD" },
-                  ]}
-                  {...form.getInputProps("currency")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="division"
-                  label="Division"
-                  placeholder="Select division"
-                  data={[
-                    { value: "mass", label: "Mass" },
-                    { value: "luxury", label: "Luxury" },
-                  ]}
-                  {...form.getInputProps("division")}
-                  classNames={selectStyles}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="brand_category"
-                  label="Brand Category"
-                  placeholder="Select brand category"
-                  data={[
-                    { value: "formal", label: "Formal" },
-                    { value: "informal", label: "Informal" },
-                  ]}
-                  {...form.getInputProps("brand_category")}
-                  classNames={selectStyles}
-                  clearable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="EAN/UPC"
-                  placeholder="Enter EAN/UPC"
-                  {...form.getInputProps("ean_upc")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="House"
-                  placeholder="Enter House"
-                  {...form.getInputProps("house")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Line"
-                  placeholder="Enter Line"
-                  {...form.getInputProps("line")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Line ID"
-                  placeholder="Enter Line ID"
-                  {...form.getInputProps("line_id")}
-                  classNames={textInputStyles}
-                  hideControls
-                  allowDecimal={false}
-                  allowNegative={false}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Article Type"
-                  placeholder="Enter Article Type"
-                  {...form.getInputProps("article_type")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Offering Number (optional)"
-                  placeholder="Enter Offering Number"
-                  {...form.getInputProps("offering_number")}
-                  classNames={textInputStyles}
-                  hideControls
-                  allowDecimal={false}
-                  allowNegative={false}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <DateInput
-                  label="Launch Date"
-                  placeholder="Select Launch Date"
-                  {...form.getInputProps("launch_date")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <DateInput
-                  label="Discontinue Date"
-                  placeholder="Select Discontinue Date"
-                  {...form.getInputProps("discontinue_date")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="category_id"
-                  label="Core Category"
-                  placeholder="Select Core Category"
-                  data={[] /* TODO: fetch categories */}
-                  {...form.getInputProps("category_id")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="subcategory_id"
-                  label="Sub Category"
-                  placeholder="Select Sub Category"
-                  data={[] /* TODO: fetch subcategories */}
-                  {...form.getInputProps("subcategory_id")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="market_id"
-                  label="Market"
-                  placeholder="Select Market"
-                  data={[] /* TODO: fetch markets */}
-                  {...form.getInputProps("market_id")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="segment_id"
-                  label="Segment"
-                  placeholder="Select Segment"
-                  data={[] /* TODO: fetch segments */}
-                  {...form.getInputProps("segment_id")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Factory"
-                  placeholder="Enter Factory"
-                  {...form.getInputProps("factory")}
-                  classNames={textInputStyles}
-                  hideControls
-                  allowDecimal={false}
-                  allowNegative={false}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Commodity ID"
-                  placeholder="Enter Commodity ID"
-                  {...form.getInputProps("commodity_id")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="country_id"
-                  label="Country of Origin"
-                  placeholder="Select Country"
-                  data={[] /* TODO: fetch countries */}
-                  {...form.getInputProps("country_id")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="gender"
-                  label="Gender"
-                  placeholder="Select Gender"
-                  data={[
-                    { value: "male", label: "Male" },
-                    { value: "female", label: "Female" },
-                  ]}
-                  {...form.getInputProps("gender")}
-                  classNames={selectStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <TextInput
-                  label="Size & Dimension"
-                  placeholder="Enter Size & Dimension"
-                  {...form.getInputProps("size")}
-                  classNames={textInputStyles}
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Length"
-                  placeholder="Enter Length"
-                  {...form.getInputProps("length")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Height"
-                  placeholder="Enter Height"
-                  {...form.getInputProps("height")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Width"
-                  placeholder="Enter Width"
-                  {...form.getInputProps("width")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Volume"
-                  placeholder="Enter Volume"
-                  {...form.getInputProps("volume")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Gross Weight"
-                  placeholder="Enter Gross Weight"
-                  {...form.getInputProps("gross_weight")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Net Weight"
-                  placeholder="Enter Net Weight"
-                  {...form.getInputProps("net_weight")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <NumberInput
-                  label="Units"
-                  placeholder="Enter Units"
-                  {...form.getInputProps("units")}
-                  classNames={textInputStyles}
-                  allowDecimal={false}
-                  allowNegative={false}
-                  hideControls
-                />
-              </Grid.Col>
-
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="brand_id"
-                  label="Brand"
-                  placeholder="Select brand"
-                  data={
-                    brandsData?.data?.map(
-                      (brand: { id: number; name: string }) => ({
-                        value: brand.id.toString(),
-                        label: brand.name,
-                      })
-                    ) || []
-                  }
-                  {...form.getInputProps("brand_id")}
-                  classNames={selectStyles}
-                  disabled={brandsLoading}
-                  searchable
-                />
-              </Grid.Col>
-              <Grid.Col span={{ base: 12, md: 6 }}>
-                <Select
-                  name="sub_brand_id"
-                  label="Brand Pillar (Sub Brand)"
-                  placeholder="Select brand pillar"
-                  data={
-                    brandPillarsData?.data?.map(
-                      (pillar: { id: number; name: string }) => ({
-                        value: pillar.id.toString(),
-                        label: pillar.name,
-                      })
-                    ) || []
-                  }
-                  {...form.getInputProps("sub_brand_id")}
-                  classNames={selectStyles}
-                  disabled={brandPillarsLoading || !selectedBrandId}
-                  searchable
-                  clearable
-                />
-              </Grid.Col>
-            </Grid>
-
-            {(brandsLoading || (brandPillarsLoading && selectedBrandId)) && (
-              <Loader />
-            )}
-
-            <Group justify="flex-end" mt="xl" gap={10}>
-              <Button
-                type="button"
-                variant="outline"
-                className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                onClick={() => {
-                  form.reset();
-                  onClose();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading}
-                variant="filled"
-                className="bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
-              >
-                {isLoading ? "Adding..." : "Add Product"}
-              </Button>
-            </Group>
+                  {isLoading || createProductMutation.isPending
+                    ? "Adding..."
+                    : "Add Product"}
+                </Button>
+              </Group>
+            </div>
           </div>
         </Modal.Body>
       </Modal.Content>
