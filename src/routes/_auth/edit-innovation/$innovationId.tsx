@@ -36,6 +36,16 @@ function RouteComponent() {
   return (
     <div className="w-full">
       <Headline title="Edit innovation" />
+      <div className="mt-2 text-sm text-gray-500">
+        <div className="flex items-center gap-x-2">
+          <span className="text-primary font-bold">Launch ID:</span>
+          <span className="text-gray-700 truncate">{data.data.launch_id}</span>
+        </div>
+        <div className="flex items-center gap-x-2">
+          <span className="text-primary font-bold">Launch Reference:</span>
+          <span className="text-gray-700">{data.data.launch_ref}</span>
+        </div>
+      </div>
       <section className="mt-3 sm:mt-8 flex justify-between items-center">
         <Button
           leftSection={
