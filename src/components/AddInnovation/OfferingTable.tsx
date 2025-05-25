@@ -94,6 +94,84 @@ interface OfferingMappedProduct {
   material_description?: string;
   brand_id: string;
   sub_brand_id?: string;
+  brand_type?: string | null;
+  brand_category?: string | null;
+  launch_date?: Date | null;
+  discontinue_date?: Date | null;
+  offering_number?: string | null;
+  sku?: string;
+  material_tr?: string | null;
+  ean_upc?: string | null;
+  house?: string | null;
+  line?: string | null;
+  line_id?: string | null;
+  article_sub_type?: string | null;
+  division?: string | null;
+  icp_eur?: string | null;
+  icp_usd?: string | null;
+  factory?: string | null;
+  commodity_id?: string | null;
+  gender?: string | null;
+  size?: string | null;
+  length?: string | null;
+  height?: string | null;
+  width?: string | null;
+  volume?: string | null;
+  gross_weight?: string | null;
+  net_weight?: string | null;
+  units?: string | null;
+  cssp_trex_eur?: string | null;
+  cssp_trex_usd?: string | null;
+  shade?: string | null;
+  is_innovation_product?: boolean;
+  created_at?: string;
+  brand?: {
+    id: number;
+    name: string;
+    type: string;
+    created_at: string;
+  } | null;
+  brand_pillar?: {
+    id: number;
+    name: string;
+    created_at: string;
+    brand: {
+      id: number;
+      name: string;
+      type: string;
+      created_at: string;
+    };
+  } | null;
+  category?: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  country?: {
+    id: number;
+    name: string;
+    official_name: string;
+    iso2: string;
+    iso3: string;
+    flag_url: string;
+    created_at: string;
+  } | null;
+  market?: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  subcategory?: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  segment?: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  price_benchmark?: import("@/types").PriceBenchmark | null;
 }
 
 const BRAND_TYPE_MASS = "Mass" as const;
@@ -180,6 +258,8 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   const [loadingOfferings, setLoadingOfferings] = useState<Set<number>>(
     new Set()
   );
+
+  console.log("offeringProducts", offeringProducts);
 
   // Add state for brand options
   const [brandOptions, setBrandOptions] = useState<
@@ -381,6 +461,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       onSuccess: (response, variables) => {
         // Add the new product to the current offering's products
         const newProduct = response.data;
+        console.log("newProduct", newProduct);
 
         if (newProduct) {
           setOfferingProducts((prev) => ({
@@ -514,39 +595,89 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       toggleRow(index);
     }
 
-    // Initialize empty arrays for new offerings
-    if (!offeringProducts[offeringId]) {
-      setOfferingProducts((prev) => ({
-        ...prev,
-        [offeringId]: [],
-      }));
-      setOfferingDistributors((prev) => ({
-        ...prev,
-        [offeringId]: [],
-      }));
-    }
+    // // Initialize empty arrays for new offerings
+    // if (!offeringProducts[offeringId]) {
+    //   setOfferingProducts((prev) => ({
+    //     ...prev,
+    //     [offeringId]: [],
+    //   }));
+    //   setOfferingDistributors((prev) => ({
+    //     ...prev,
+    //     [offeringId]: [],
+    //   }));
+    // }
 
     // Only fetch from API if we have an innovationId and it's not a temporary ID
     if (innovationId && offeringId) {
       setLoadingOfferings((prev) => new Set(prev).add(offeringId));
       try {
         const response = await getOfferingProducts(innovationId, offeringId);
+        console.log("response", response);
         const { products, distributors } = response.data;
         console.log("products from offering table", products);
 
         // Map products to the format expected by the component
         const mappedProducts: OfferingMappedProduct[] = products.map((p) => ({
+          id: p.id,
           irc: p.irc || "",
           currency: p.icp_eur ? "EUR" : p.icp_usd ? "USD" : "EUR",
-          price: Number(p.icp_eur || p.icp_usd || 0),
-          icp_cost: Number(p.icp_eur || p.icp_usd || 0),
-          product_type: p.article_type || "",
-          pref: "non-pref",
-          grouping: p.group || "1",
-          material_description: p.description || "",
-          brand_id: "",
-          sub_brand_id: "",
-          id: p.id,
+          price:
+            typeof p.price === "number"
+              ? p.price
+              : Number(p.icp_eur || p.icp_usd || 0),
+          icp_cost: p.icp_eur
+            ? Number(p.icp_eur)
+            : p.icp_usd
+              ? Number(p.icp_usd)
+              : 0,
+          product_type: p.product_type || p.article_type || "",
+          pref: p.pref || "non-pref",
+          grouping: p.grouping ? String(p.grouping) : "1",
+          material_description: p.material_description || "",
+          brand_id: p.brand?.id ? String(p.brand.id) : "",
+          sub_brand_id: p.brand_pillar?.id ? String(p.brand_pillar.id) : "",
+          // Include all other fields for downstream consumers
+          brand_type: p.brand_type || null,
+          brand_category: p.brand_category || null,
+          launch_date: p.launch_date ? new Date(p.launch_date) : null,
+          discontinue_date: p.discontinue_date
+            ? new Date(p.discontinue_date)
+            : null,
+          offering_number: p.offering_number || null,
+          sku: p.sku || "",
+          material_tr: p.material_tr || null,
+          ean_upc: p.ean_upc || null,
+          house: p.house || null,
+          line: p.line || null,
+          line_id: p.line_id || null,
+          article_sub_type: p.article_sub_type || null,
+          division: p.division || null,
+          icp_eur: p.icp_eur || null,
+          icp_usd: p.icp_usd || null,
+          factory: p.factory || null,
+          commodity_id: p.commodity_id || null,
+          gender: p.gender || null,
+          size: p.size || null,
+          length: p.length || null,
+          height: p.height || null,
+          width: p.width || null,
+          volume: p.volume || null,
+          gross_weight: p.gross_weight || null,
+          net_weight: p.net_weight || null,
+          units: p.units || null,
+          cssp_trex_eur: p.cssp_trex_eur || null,
+          cssp_trex_usd: p.cssp_trex_usd || null,
+          shade: p.shade || null,
+          is_innovation_product: p.is_innovation_product,
+          created_at: p.created_at,
+          brand: p.brand,
+          brand_pillar: p.brand_pillar,
+          category: p.category,
+          country: p.country,
+          market: p.market,
+          subcategory: p.subcategory,
+          segment: p.segment,
+          price_benchmark: p.price_benchmark,
         }));
 
         // Map distributors to the format expected by the component
@@ -587,141 +718,6 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   };
 
   // Update OfferingProductsTable to accept products as a prop
-  interface OfferingProductsTableProps {
-    products: OfferingMappedProduct[];
-    productsTableStates: Array<{ isEdit: boolean }>;
-    setProductsTableStates: React.Dispatch<
-      React.SetStateAction<Array<{ isEdit: boolean }>>
-    >;
-    index: number;
-  }
-  function OfferingProductsTable({
-    products,
-    productsTableStates,
-    setProductsTableStates,
-    index,
-    offeringId,
-  }: OfferingProductsTableProps & { offeringId: number }) {
-    // Map OfferingMappedProduct[] to Product[]
-    const mappedProducts = products.map((p, i) => ({
-      id: i + 1,
-      pref: p.pref,
-      product_type: p.product_type,
-      brand_pillar: { id: 0, name: "" },
-      grouping: Number(p.grouping),
-      price: String(p.price),
-      launch_date: new Date(),
-      discontinue_date: new Date(),
-      offering_number: "",
-      irc: p.irc,
-      sku: p.irc,
-      material_description: p.material_description || "",
-      ean_upc: "",
-      house: "",
-      line: "",
-      line_id: "",
-      line_number: "",
-      article_type: p.product_type,
-      article_sub_type: "",
-      division: "",
-      segment: { id: 0, name: "", created_at: "" },
-      icp_eur: p.currency === "EUR" ? String(p.icp_cost) : "0",
-      icp_usd: p.currency === "USD" ? String(p.icp_cost) : "0",
-      factory: "",
-      commodity_id: "",
-      gender: "",
-      size: "",
-      length: "",
-      height: "",
-      width: "",
-      volume: "",
-      gross_weight: "",
-      net_weight: "",
-      units: "",
-      created_at: "",
-      brand: {
-        id: Number(p.brand_id) || 0,
-        brand_type_id: 0,
-        name: "",
-        active: true,
-        type: BRAND_TYPE_MASS,
-        created_at: "",
-        updated_at: "",
-        deleted_at: null,
-        pivot: {
-          distributor_id: 0,
-          brand_id: Number(p.brand_id) || 0,
-        },
-      },
-      pricing: {
-        distributor_id: 0,
-        icp_usd: p.currency === "USD" ? p.icp_cost : 0,
-        icp_eur: p.currency === "EUR" ? p.icp_cost : 0,
-        french_usd: null,
-        french_eur: null,
-        rrsp: null,
-        regional_billing_price: null,
-        c1: null,
-        cssp: null,
-        status: "",
-      },
-      category: { id: 0, name: "", created_at: "" },
-      country: {
-        id: 0,
-        name: "",
-        official_name: "",
-        iso2: "",
-        iso3: "",
-        flag_url: "",
-        created_at: "",
-      },
-      market: null,
-      subcategory: { id: 0, name: "", created_at: "" },
-      price_benchmark: null,
-      documents: [],
-      distributor_pricing: [],
-      gmm_category: { id: 0, name: "", created_at: "" },
-      gmm_subCategory: { id: 0, name: "", created_at: "" },
-      gmm_market: { id: 0, name: "", created_at: "" },
-      gmm_segment: { id: 0, name: "", created_at: "" },
-    }));
-    return (
-      <InnovationProductsTable
-        products={mappedProducts}
-        isEdit={productsTableStates[index]?.isEdit || false}
-        setIsEdit={(isEditValue) => {
-          const newStates = [...productsTableStates];
-          if (newStates[index]) {
-            newStates[index].isEdit =
-              typeof isEditValue === "function"
-                ? isEditValue(newStates[index].isEdit)
-                : isEditValue;
-            setProductsTableStates(newStates);
-          }
-        }}
-        onProductSelect={handleProductSelect}
-        brandOptions={brandOptions}
-        brandPillarOptions={brandPillarOptions}
-        onBulkUpdate={(products) => {
-          if (offeringId) {
-            Promise.all(
-              products.map((product) =>
-                handleUpdateProduct(product, offeringId as number)
-              )
-            );
-          }
-        }}
-        selectedProducts={selectedProducts[offeringId] || []}
-        onSelectedProductsChange={(productIds) => {
-          setSelectedProducts((prev) => ({
-            ...prev,
-            [offeringId]: productIds,
-          }));
-        }}
-        isUpdating={isUpdatingProduct}
-      />
-    );
-  }
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -825,7 +821,6 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       setIsDeletingProduct(false);
     }
   };
-  console.log("offerings", offerings);
 
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
@@ -1236,85 +1231,6 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                             />
                                           )}
                                         </Grid.Col>
-                                        {/* <Grid.Col span={{ base: 8, md: 4 }}>
-                                          {offering.id && (
-                                            <InnovationDistributorPrices
-                                              distributors={
-                                                offeringDistributors[
-                                                  offering.id
-                                                ] || []
-                                              }
-                                              selectedRow={
-                                                distributorPricesStates[index]
-                                                  ?.selectedRow || null
-                                              }
-                                              setSelectedRow={(
-                                                selectedRowValue
-                                              ) => {
-                                                const newStates = [
-                                                  ...distributorPricesStates,
-                                                ];
-                                                if (newStates[index]) {
-                                                  newStates[index].selectedRow =
-                                                    selectedRowValue;
-                                                  setDistributorPricesStates(
-                                                    newStates
-                                                  );
-                                                }
-                                              }}
-                                              tableHeader={[
-                                                "Distributor IRC",
-                                                "Price",
-                                                "RRSP",
-                                              ]}
-                                              tableFields={[
-                                                "irc",
-                                                "billing_price",
-                                                "rrsp",
-                                              ]}
-                                              scrollTop={
-                                                distributorPricesStates[index]
-                                                  ?.scrollTop || 0
-                                              }
-                                              setScrollTop={(
-                                                scrollTopValue
-                                              ) => {
-                                                const newStates = [
-                                                  ...distributorPricesStates,
-                                                ];
-                                                if (newStates[index]) {
-                                                  newStates[index].scrollTop =
-                                                    scrollTopValue;
-                                                  newStates[
-                                                    index
-                                                  ].scrollSource =
-                                                    "distributor";
-                                                  setDistributorPricesStates(
-                                                    newStates
-                                                  );
-                                                }
-                                              }}
-                                              scrollSource={
-                                                distributorPricesStates[index]
-                                                  ?.scrollSource || null
-                                              }
-                                              onPriceEdit={(irc, price) => {
-                                                console.log(
-                                                  "Price edit:",
-                                                  irc,
-                                                  price
-                                                );
-                                              }}
-                                              onRRSPEdit={(irc, rrsp) => {
-                                                console.log(
-                                                  "RRSP edit:",
-                                                  irc,
-                                                  rrsp
-                                                );
-                                              }}
-                                            />
-                                          )}
-                                        </Grid.Col> */}
                                       </Grid>
                                     </>
                                   )

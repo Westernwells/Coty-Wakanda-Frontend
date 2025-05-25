@@ -50,15 +50,91 @@ export interface Segment {
 
 export interface OfferingProductData {
   id: number;
-  house: string | null;
-  description: string | null;
-  brand: string | null;
-  brand_line: string | null;
-  article_type: string | null;
+  pref: string;
+  brand_type: string | null;
+  brand_category: string | null;
+  product_type: string;
+  grouping: number;
+  price: number;
+  launch_date: string | null;
+  discontinue_date: string | null;
+  offering_number: string | null;
+  sku: string;
   irc: string;
-  icp_eur: number | null;
-  icp_usd: number | null;
-  group: string | null;
+  material_description: string | null;
+  material_tr: string | null;
+  ean_upc: string | null;
+  house: string | null;
+  line: string | null;
+  line_id: string | null;
+  article_type: string | null;
+  article_sub_type: string | null;
+  division: string | null;
+  icp_eur: string | null;
+  icp_usd: string | null;
+  factory: string | null;
+  commodity_id: string | null;
+  gender: string | null;
+  size: string | null;
+  length: string | null;
+  height: string | null;
+  width: string | null;
+  volume: string | null;
+  gross_weight: string | null;
+  net_weight: string | null;
+  units: string | null;
+  cssp_trex_eur: string | null;
+  cssp_trex_usd: string | null;
+  shade: string | null;
+  is_innovation_product: boolean;
+  created_at: string;
+  brand: {
+    id: number;
+    name: string;
+    type: string;
+    created_at: string;
+  } | null;
+  brand_pillar: {
+    id: number;
+    name: string;
+    created_at: string;
+    brand: {
+      id: number;
+      name: string;
+      type: string;
+      created_at: string;
+    };
+  } | null;
+  category: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  country: {
+    id: number;
+    name: string;
+    official_name: string;
+    iso2: string;
+    iso3: string;
+    flag_url: string;
+    created_at: string;
+  } | null;
+  market: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  subcategory: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  segment: {
+    id: number;
+    name: string;
+    created_at: string;
+  } | null;
+  price_benchmark: import("@/types").PriceBenchmark | null;
 }
 
 export interface DistributorData {
