@@ -185,8 +185,21 @@ function CombinedInnovationTables({
         },
       });
     } else {
-      // Local edit
-      onLocalEdit?.(product);
+      // Local edit - Pass the product data to parent component
+      const editData = {
+        ...product,
+        // Keep original numeric values
+        icp_eur: product.icp_eur,
+        icp_usd: product.icp_usd,
+        grouping: product.grouping,
+        // Add additional fields for editing
+        currency: product.icp_eur ? "EUR" : "USD",
+        brand_id: product.brand.id.toString(),
+        sub_brand_id: product.brand_pillar?.id.toString(),
+        product_type: product.product_type as "saleable" | "non-saleable",
+        pref: product.pref as "pref" | "non-pref",
+      };
+      onLocalEdit?.(editData);
     }
   };
 

@@ -32,6 +32,7 @@ import { getOfferingProducts } from "@/api/products/get-offering-products";
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
 import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
+import { CreateOfferingProductDTO } from "@/api/innovations/offerings/products/create-product";
 
 // Placeholder imports - actual components might have different props/structure
 import InnovationProductsTable from "./InnovationProductsTable";
@@ -150,6 +151,17 @@ interface DistributorPricing {
   rrsp: string;
 }
 
+// Update the AddProductToOfferingModal props interface to include editMode and initialData
+interface AddProductToOfferingModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onSubmit: (product: OfferingProductFormValues) => void;
+  innovationId: string;
+  offeringId: string;
+  editMode?: boolean;
+  initialData?: Product;
+}
+
 export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
   onAdd,
@@ -227,6 +239,10 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     Record<number, number[]>
   >({});
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+
+  // Add state for edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [editInitialData, setEditInitialData] = useState<Product | null>(null);
 
   // Initialize states when offerings change
   useEffect(() => {
@@ -385,9 +401,16 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     fileUploadMutation.mutate({ data: formData });
   };
 
-  // Handler to open product modal for a specific offering
-  function handleOpenProductModal(index: number) {
+  // Update the handleOpenProductModal function
+  function handleOpenProductModal(index: number, editData?: Product) {
     setSelectedOffering(index);
+    if (editData) {
+      setEditMode(true);
+      setEditInitialData(editData);
+    } else {
+      setEditMode(false);
+      setEditInitialData(null);
+    }
     setIsAddProductModalOpen(true);
   }
 
@@ -482,22 +505,35 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
 
     try {
       setIsUpdatingProduct(true);
+
+      // Convert the product data to match the API's expected format
+      const submissionData: CreateOfferingProductDTO = {
+        irc: product.irc,
+        material_description: product.material_description,
+        icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+        price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+        currency: (product.icp_eur ? "EUR" : "USD") as "EUR" | "USD",
+        brand_id: String(product.brand.id),
+        sub_brand_id: product.brand_pillar?.id
+          ? String(product.brand_pillar.id)
+          : undefined,
+        product_type:
+          product.product_type === "saleable" ||
+          product.product_type === "non-saleable"
+            ? product.product_type
+            : "saleable",
+        pref:
+          product.pref === "pref" || product.pref === "non-pref"
+            ? product.pref
+            : "pref",
+        grouping: "1",
+      };
+
       await updateProductMutation.mutateAsync({
         innovationId,
         offeringId,
         productId: product.id,
-        data: {
-          irc: product.irc,
-          material_description: product.material_description,
-          icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
-          price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
-          currency: product.icp_eur ? "EUR" : "USD",
-          brand_id: product.brand.id.toString(),
-          sub_brand_id: product.brand_pillar?.id.toString(),
-          product_type: product.product_type as "saleable" | "non-saleable",
-          pref: product.pref as "pref" | "non-pref",
-          grouping: product.grouping.toString() as "1" | "2" | "3",
-        },
+        data: submissionData,
       });
 
       // Refresh the products list
@@ -828,6 +864,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       setIsDeletingProduct(false);
     }
   };
+  console.log("offerings", offerings);
 
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
@@ -1185,10 +1222,15 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                               innovationId={innovationId}
                                               offeringId={offering.id.toString()}
                                               onLocalEdit={(product) => {
-                                                // Open the edit product modal with the current product data
-                                                setSelectedOffering(index);
-                                                setIsAddProductModalOpen(true);
-                                                // You can add logic here to pre-fill the modal with product data
+                                                if (
+                                                  typeof offering.id ===
+                                                  "number"
+                                                ) {
+                                                  handleOpenProductModal(
+                                                    index,
+                                                    product
+                                                  );
+                                                }
                                               }}
                                               onLocalDelete={(product) => {
                                                 // Handle local deletion
@@ -1550,9 +1592,46 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
           onClose={() => {
             setIsAddProductModalOpen(false);
             setSelectedOffering(null);
+            setEditMode(false);
+            setEditInitialData(null);
           }}
           onSubmit={async (product) => {
-            // After successful product addition, refresh the offering data
+            if (editMode && editInitialData) {
+              // Handle edit submission
+              const updatedProduct = {
+                ...editInitialData,
+                grouping: Number(product.grouping),
+                product_type: product.product_type as
+                  | "saleable"
+                  | "non-saleable",
+                pref: product.pref as "pref" | "non-pref",
+                irc: product.irc,
+                material_description: product.material_description,
+                brand: {
+                  ...editInitialData.brand,
+                  id: Number(product.brand_id),
+                },
+                brand_pillar: {
+                  id: Number(product.sub_brand_id || 0),
+                  name: editInitialData.brand_pillar?.name || "",
+                },
+              };
+
+              await handleUpdateProduct(
+                updatedProduct as Product, // Force type assertion since we know the structure matches
+                offerings[selectedOffering].id!
+              );
+            } else {
+              // Handle add submission
+              await handleAddProductToOffering(
+                {
+                  ...product,
+                  icp_cost: Number(product.icp_cost) || 0,
+                },
+                offerings[selectedOffering].id!
+              );
+            }
+            // After successful submission
             if (selectedOffering !== null && offerings[selectedOffering]?.id) {
               await handleProductAdded(
                 selectedOffering,
@@ -1561,9 +1640,13 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
             }
             setIsAddProductModalOpen(false);
             setSelectedOffering(null);
+            setEditMode(false);
+            setEditInitialData(null);
           }}
           innovationId={innovationId}
           offeringId={offerings[selectedOffering].id!.toString()}
+          editMode={editMode}
+          initialData={editInitialData || undefined}
         />
       )}
     </div>

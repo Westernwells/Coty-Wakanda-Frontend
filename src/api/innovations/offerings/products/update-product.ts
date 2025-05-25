@@ -14,6 +14,9 @@ export const updateOfferingProduct = ({
   productId: number | string;
   data: CreateOfferingProductDTO;
 }): Promise<{ data: { id: number } }> => {
+  console.log(
+    `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`
+  );
   return axios.put(
     `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`,
     data

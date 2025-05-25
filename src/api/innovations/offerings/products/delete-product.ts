@@ -11,6 +11,9 @@ export const deleteOfferingProduct = ({
   offeringId: number | string;
   productId: number | string;
 }): Promise<void> => {
+  console.log(
+    `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`
+  );
   return axios.delete(
     `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`
   );

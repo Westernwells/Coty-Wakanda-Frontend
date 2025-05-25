@@ -18,6 +18,8 @@ import { getBrandPillars } from "@/api/get-brandPillars"; // Assuming API path
 import { useEffect } from "react";
 import { DateInput } from "@mantine/dates";
 import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
+import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
+import { Product } from "@/types";
 
 // Updated interface for the product details in the modal
 export interface OfferingProductFormValues {
@@ -35,50 +37,50 @@ export interface OfferingProductFormValues {
   ean_upc: string;
   house: string;
   line: string;
-  line_id: number | "" | undefined;
+  line_id: string | number | undefined;
   article_type: string;
-  offering_number: number | "" | undefined;
+  offering_number: string | number | undefined;
   launch_date: Date | null;
   discontinue_date: Date | null;
   category_id: string;
   subcategory_id: string;
   market_id: string;
   segment_id: string;
-  icp_eur: number | "" | undefined;
-  icp_usd: number | "" | undefined;
-  factory: number | "" | undefined;
+  icp_eur: string | number | undefined;
+  icp_usd: string | number | undefined;
+  factory: string | number | undefined;
   commodity_id: string;
   country_id: string;
   gender: string;
   size: string;
-  length: number | "" | undefined;
-  height: number | "" | undefined;
-  width: number | "" | undefined;
-  volume: number | "" | undefined;
-  gross_weight: number | "" | undefined;
-  net_weight: number | "" | undefined;
-  units: number | "" | undefined;
+  length: string | number | undefined;
+  height: string | number | undefined;
+  width: string | number | undefined;
+  volume: string | number | undefined;
+  gross_weight: string | number | undefined;
+  net_weight: string | number | undefined;
+  units: string | number | undefined;
 }
 
-export interface AddProductToOfferingModalProps {
+interface AddProductToOfferingModalProps {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (
-    product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
-  ) => void;
-  isLoading?: boolean;
+  onSubmit: (product: OfferingProductFormValues) => void;
   innovationId: string;
   offeringId: string;
+  editMode?: boolean;
+  initialData?: Product;
 }
 
 // Updated Zod schema for validation
 const productSchema = z.object({
   irc: z.string().min(1, "IRC Number is required"),
   material_description: z.string().optional(),
-  icp_cost: z
-    .number({ required_error: "ICP Cost is required" })
-    .min(0, "ICP Cost must be a positive number"),
-  currency: z.enum(["EUR", "USD"], { required_error: "Currency is required" }),
+  icp_cost: z.union([z.number(), z.string()]).transform((val) => {
+    if (typeof val === "string" && val === "") return 0;
+    return Number(val);
+  }),
+  currency: z.enum(["EUR", "USD"]),
   brand_id: z.string().optional(),
   sub_brand_id: z.string().optional(),
   product_type: z.enum(["saleable", "non-saleable"]).optional(),
@@ -89,92 +91,131 @@ const productSchema = z.object({
   ean_upc: z.string().optional(),
   house: z.string().optional(),
   line: z.string().optional(),
-  line_id: z.number().min(0, "Line ID must be a positive number").optional(),
+  line_id: z.union([z.number(), z.string()]).optional(),
   article_type: z.string().optional(),
-  offering_number: z
-    .number()
-    .min(0, "Offering Number must be a positive number")
-    .optional(),
+  offering_number: z.union([z.number(), z.string()]).optional(),
   launch_date: z.date().nullable().optional(),
   discontinue_date: z.date().nullable().optional(),
   category_id: z.string().optional(),
   subcategory_id: z.string().optional(),
   market_id: z.string().optional(),
   segment_id: z.string().optional(),
-  icp_eur: z.number().min(0, "ICP EUR must be a positive number").optional(),
-  icp_usd: z.number().min(0, "ICP USD must be a positive number").optional(),
-  factory: z.number().min(0, "Factory must be a positive number").optional(),
+  icp_eur: z.union([z.number(), z.string()]).optional(),
+  icp_usd: z.union([z.number(), z.string()]).optional(),
+  factory: z.union([z.number(), z.string()]).optional(),
   commodity_id: z.string().optional(),
   country_id: z.string().optional(),
   gender: z.string().optional(),
   size: z.string().optional(),
-  length: z.number().min(0, "Length must be a positive number").optional(),
-  height: z.number().min(0, "Height must be a positive number").optional(),
-  width: z.number().min(0, "Width must be a positive number").optional(),
-  volume: z.number().min(0, "Volume must be a positive number").optional(),
-  gross_weight: z
-    .number()
-    .min(0, "Gross Weight must be a positive number")
-    .optional(),
-  net_weight: z
-    .number()
-    .min(0, "Net Weight must be a positive number")
-    .optional(),
-  units: z.number().min(0, "Units must be a positive number").optional(),
+  length: z.union([z.number(), z.string()]).optional(),
+  height: z.union([z.number(), z.string()]).optional(),
+  width: z.union([z.number(), z.string()]).optional(),
+  volume: z.union([z.number(), z.string()]).optional(),
+  gross_weight: z.union([z.number(), z.string()]).optional(),
+  net_weight: z.union([z.number(), z.string()]).optional(),
+  units: z.union([z.number(), z.string()]).optional(),
 });
 
-export const AddProductToOfferingModal: React.FC<
-  AddProductToOfferingModalProps
-> = ({
+export function AddProductToOfferingModal({
   opened,
   onClose,
   onSubmit,
-  isLoading = false,
   innovationId,
   offeringId,
-}) => {
+  editMode = false,
+  initialData,
+}: AddProductToOfferingModalProps) {
   const queryClient = useQueryClient();
 
   const form = useForm<OfferingProductFormValues>({
-    initialValues: {
-      irc: "",
-      material_description: "",
-      icp_cost: "",
-      currency: "EUR",
-      brand_id: "",
-      sub_brand_id: "",
-      product_type: "saleable",
-      pref: "pref",
-      grouping: "1",
-      division: "",
-      brand_category: "",
-      ean_upc: "",
-      house: "",
-      line: "",
-      line_id: undefined,
-      article_type: "",
-      offering_number: undefined,
-      launch_date: null,
-      discontinue_date: null,
-      category_id: "",
-      subcategory_id: "",
-      market_id: "",
-      segment_id: "",
-      icp_eur: undefined,
-      icp_usd: undefined,
-      factory: undefined,
-      commodity_id: "",
-      country_id: "",
-      gender: "",
-      size: "",
-      length: undefined,
-      height: undefined,
-      width: undefined,
-      volume: undefined,
-      gross_weight: undefined,
-      net_weight: undefined,
-      units: undefined,
-    },
+    initialValues:
+      editMode && initialData
+        ? {
+            irc: initialData.irc || "",
+            material_description: initialData.material_description || "",
+            icp_cost:
+              Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
+            currency: initialData.icp_eur ? "EUR" : "USD",
+            brand_id: initialData.brand?.id?.toString() || "",
+            sub_brand_id: initialData.brand_pillar?.id?.toString() || "",
+            product_type:
+              (initialData.product_type as "saleable" | "non-saleable") ||
+              "saleable",
+            pref: (initialData.pref as "pref" | "non-pref") || "pref",
+            grouping:
+              (initialData.grouping?.toString() as "1" | "2" | "3") || "1",
+            division: initialData.division || "",
+            brand_category: "",
+            ean_upc: initialData.ean_upc || "",
+            house: initialData.house || "",
+            line: initialData.line || "",
+            line_id: initialData.line_id || "",
+            article_type: initialData.article_type || "",
+            offering_number: initialData.offering_number || "",
+            launch_date: initialData.launch_date
+              ? new Date(initialData.launch_date)
+              : null,
+            discontinue_date: initialData.discontinue_date
+              ? new Date(initialData.discontinue_date)
+              : null,
+            category_id: initialData.category?.id?.toString() || "",
+            subcategory_id: initialData.subcategory?.id?.toString() || "",
+            market_id: initialData.market?.id?.toString() || "",
+            segment_id: initialData.segment?.id?.toString() || "",
+            icp_eur: initialData.icp_eur || "",
+            icp_usd: initialData.icp_usd || "",
+            factory: initialData.factory || "",
+            commodity_id: initialData.commodity_id || "",
+            country_id: initialData.country?.id?.toString() || "",
+            gender: initialData.gender || "",
+            size: initialData.size || "",
+            length: initialData.length || "",
+            height: initialData.height || "",
+            width: initialData.width || "",
+            volume: initialData.volume || "",
+            gross_weight: initialData.gross_weight || "",
+            net_weight: initialData.net_weight || "",
+            units: initialData.units || "",
+          }
+        : {
+            irc: "",
+            material_description: "",
+            icp_cost: "",
+            currency: "EUR",
+            brand_id: "",
+            sub_brand_id: "",
+            product_type: "saleable",
+            pref: "pref",
+            grouping: "1",
+            division: "",
+            brand_category: "",
+            ean_upc: "",
+            house: "",
+            line: "",
+            line_id: undefined,
+            article_type: "",
+            offering_number: undefined,
+            launch_date: null,
+            discontinue_date: null,
+            category_id: "",
+            subcategory_id: "",
+            market_id: "",
+            segment_id: "",
+            icp_eur: undefined,
+            icp_usd: undefined,
+            factory: undefined,
+            commodity_id: "",
+            country_id: "",
+            gender: "",
+            size: "",
+            length: undefined,
+            height: undefined,
+            width: undefined,
+            volume: undefined,
+            gross_weight: undefined,
+            net_weight: undefined,
+            units: undefined,
+          },
     validate: zodResolver(productSchema),
   });
 
@@ -214,26 +255,8 @@ export const AddProductToOfferingModal: React.FC<
   const createProductMutation = useCreateOfferingProduct({
     mutationConfig: {
       onSuccess: async (data) => {
-        // Invalidate relevant queries to trigger a refresh
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: ["offering-products", innovationId, offeringId],
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["innovations", innovationId],
-          }),
-          queryClient.invalidateQueries({
-            queryKey: ["offerings", offeringId],
-          }),
-        ]);
-
-        // Call the parent onSubmit to update local state if needed
-        await onSubmit({
-          ...form.values,
-          icp_cost: Number(form.values.icp_cost),
-        });
-
-        // Reset form and close modal
+        await invalidateQueries();
+        await onSubmit(form.values);
         form.reset();
         onClose();
       },
@@ -243,9 +266,39 @@ export const AddProductToOfferingModal: React.FC<
     },
   });
 
+  const updateProductMutation = useUpdateOfferingProduct({
+    mutationConfig: {
+      onSuccess: async (data) => {
+        await invalidateQueries();
+        await onSubmit(form.values);
+        form.reset();
+        onClose();
+      },
+      onError: (error) => {
+        console.error("Failed to update product:", error);
+      },
+    },
+  });
+
+  // Helper function to invalidate queries
+  const invalidateQueries = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["offering-products", innovationId, offeringId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["innovations", innovationId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["offerings", offeringId],
+      }),
+    ]);
+  };
+
   const handleSubmit = (values: OfferingProductFormValues) => {
     const validation = form.validate();
     if (validation.hasErrors) {
+      console.error("Form validation errors:", validation.errors);
       return;
     }
 
@@ -262,20 +315,59 @@ export const AddProductToOfferingModal: React.FC<
       material_description: values.material_description?.trim(),
       icp_cost,
       price: icp_cost,
-      currency: values.currency as "EUR" | "USD",
-      brand_id: values.brand_id || "",
+      currency: values.currency,
+      brand_id: values.brand_id,
       sub_brand_id: values.sub_brand_id,
-      product_type: values.product_type || "saleable",
-      pref: values.pref || "pref",
-      grouping: values.grouping || "1",
+      product_type: values.product_type,
+      pref: values.pref,
+      grouping: values.grouping,
     };
 
-    // Call the create product mutation
-    createProductMutation.mutate({
-      innovationId,
-      offeringId,
-      data: submissionValues,
-    });
+    if (editMode && initialData) {
+      console.log("Updating product:", {
+        innovationId,
+        offeringId,
+        productId: initialData.id,
+        data: submissionValues,
+      });
+
+      updateProductMutation.mutate(
+        {
+          innovationId,
+          offeringId,
+          productId: initialData.id,
+          data: submissionValues,
+        },
+        {
+          onSuccess: () => {
+            onSubmit(values);
+            form.reset();
+            onClose();
+          },
+          onError: (error) => {
+            console.error("Failed to update product:", error);
+          },
+        }
+      );
+    } else {
+      createProductMutation.mutate(
+        {
+          innovationId,
+          offeringId,
+          data: submissionValues,
+        },
+        {
+          onSuccess: () => {
+            onSubmit(values);
+            form.reset();
+            onClose();
+          },
+          onError: (error) => {
+            console.error("Failed to create product:", error);
+          },
+        }
+      );
+    }
   };
 
   return (
@@ -298,7 +390,7 @@ export const AddProductToOfferingModal: React.FC<
         <Modal.Body>
           <div className="bg-white rounded-b-2xl px-6 py-6 space-y-6">
             <h2 className="text-xl font-semibold mb-6 text-primary">
-              Add Product to Offering
+              {editMode ? "Edit Product" : "Add New Product"}
             </h2>
             <div>
               <Grid gutter={{ sm: 20, base: 16 }}>
@@ -666,20 +758,31 @@ export const AddProductToOfferingModal: React.FC<
                     form.reset();
                     onClose();
                   }}
-                  disabled={isLoading || createProductMutation.isPending}
+                  disabled={
+                    createProductMutation.isPending ||
+                    updateProductMutation.isPending
+                  }
                 >
                   Cancel
                 </Button>
                 <Button
                   type="button"
-                  disabled={isLoading || createProductMutation.isPending}
+                  disabled={
+                    createProductMutation.isPending ||
+                    updateProductMutation.isPending
+                  }
                   variant="filled"
                   className="bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
                   onClick={() => handleSubmit(form.values)}
                 >
-                  {isLoading || createProductMutation.isPending
-                    ? "Adding..."
-                    : "Add Product"}
+                  {createProductMutation.isPending ||
+                  updateProductMutation.isPending
+                    ? editMode
+                      ? "Updating..."
+                      : "Adding..."
+                    : editMode
+                      ? "Update Product"
+                      : "Add Product"}
                 </Button>
               </Group>
             </div>
@@ -688,4 +791,4 @@ export const AddProductToOfferingModal: React.FC<
       </Modal.Content>
     </Modal.Root>
   );
-};
+}
