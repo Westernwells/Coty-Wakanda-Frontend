@@ -40,6 +40,7 @@ import {
   OfferingProductFormValues,
 } from "./AddProductToOfferingModal"; // Import the new modal
 import { PriceBenchmark as ImportedPriceBenchmark } from "@/types";
+import CombinedInnovationTables from "./CombinedInnovationTables";
 
 // Updated to match OfferingProductFormValues in the modal
 interface OfferingProductData {
@@ -175,6 +176,14 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     deck: "",
     market_deck: "",
   });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<{
+    number: boolean;
+    type: boolean;
+  }>({
+    number: false,
+    type: false,
+  });
 
   // State for nested tables - we need an array of states, one for each offering row
   // This approach might get complex if offerings can be reordered or many are expanded.
@@ -263,6 +272,11 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       deck: "",
       market_deck: "",
     });
+    setIsSubmitted(false);
+    setTouchedFields({
+      number: false,
+      type: false,
+    });
   };
 
   const handleAddOffering = () => {
@@ -302,6 +316,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   };
 
   const handleSubmitOffering = () => {
+    setIsSubmitted(true);
+
+    // Validate required fields
+    if (!offeringForm.number.trim() || !offeringForm.type) {
+      return; // Stop submission if required fields are empty
+    }
+
     const newOffering: Offering = {
       id:
         modalMode === "add"
@@ -844,28 +865,220 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                         </Button>
                                       </Group>
                                       <Grid gutter="lg">
-                                        <Grid.Col span={{ base: 16, md: 8 }}>
-                                          <h3 className="text-lg font-semibold text-primary mb-2">
-                                            Product list
-                                          </h3>
+                                        <Grid.Col>
                                           {offering.id && (
-                                            <OfferingProductsTable
-                                              products={
+                                            <CombinedInnovationTables
+                                              products={(
                                                 offeringProducts[offering.id] ||
                                                 []
+                                              ).map((p, i) => ({
+                                                id: i + 1,
+                                                pref: p.pref,
+                                                product_type: p.product_type,
+                                                brand_pillar: {
+                                                  id: 0,
+                                                  name: "",
+                                                },
+                                                grouping: Number(p.grouping),
+                                                price: String(p.price),
+                                                launch_date: new Date(),
+                                                discontinue_date: new Date(),
+                                                offering_number: "",
+                                                irc: p.irc,
+                                                sku: p.irc,
+                                                material_description:
+                                                  p.material_description || "",
+                                                ean_upc: "",
+                                                house: "",
+                                                line: "",
+                                                line_id: "",
+                                                line_number: "",
+                                                article_type: p.product_type,
+                                                article_sub_type: "",
+                                                division: "",
+                                                segment: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                icp_eur:
+                                                  p.currency === "EUR"
+                                                    ? String(p.icp_cost)
+                                                    : "0",
+                                                icp_usd:
+                                                  p.currency === "USD"
+                                                    ? String(p.icp_cost)
+                                                    : "0",
+                                                factory: "",
+                                                commodity_id: "",
+                                                gender: "",
+                                                size: "",
+                                                length: "",
+                                                height: "",
+                                                width: "",
+                                                volume: "",
+                                                gross_weight: "",
+                                                net_weight: "",
+                                                units: "",
+                                                created_at: "",
+                                                brand: {
+                                                  id: Number(p.brand_id) || 0,
+                                                  brand_type_id: 0,
+                                                  name: "",
+                                                  active: true,
+                                                  type: BRAND_TYPE_MASS,
+                                                  created_at: "",
+                                                  updated_at: "",
+                                                  deleted_at: null,
+                                                  pivot: {
+                                                    distributor_id: 0,
+                                                    brand_id:
+                                                      Number(p.brand_id) || 0,
+                                                  },
+                                                },
+                                                pricing: {
+                                                  distributor_id: 0,
+                                                  icp_usd:
+                                                    p.currency === "USD"
+                                                      ? p.icp_cost
+                                                      : 0,
+                                                  icp_eur:
+                                                    p.currency === "EUR"
+                                                      ? p.icp_cost
+                                                      : 0,
+                                                  french_usd: null,
+                                                  french_eur: null,
+                                                  rrsp: null,
+                                                  regional_billing_price: null,
+                                                  c1: null,
+                                                  cssp: null,
+                                                  status: "",
+                                                },
+                                                category: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                country: {
+                                                  id: 0,
+                                                  name: "",
+                                                  official_name: "",
+                                                  iso2: "",
+                                                  iso3: "",
+                                                  flag_url: "",
+                                                  created_at: "",
+                                                },
+                                                market: null,
+                                                subcategory: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                price_benchmark: null,
+                                                documents: [],
+                                                distributor_pricing: [],
+                                                gmm_category: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_subCategory: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_market: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_segment: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                              }))}
+                                              isEdit={
+                                                productsTableStates[index]
+                                                  ?.isEdit || false
                                               }
-                                              productsTableStates={
-                                                productsTableStates
+                                              setIsEdit={(isEditValue) => {
+                                                const newStates = [
+                                                  ...productsTableStates,
+                                                ];
+                                                if (newStates[index]) {
+                                                  newStates[index].isEdit =
+                                                    typeof isEditValue ===
+                                                    "function"
+                                                      ? isEditValue(
+                                                          newStates[index]
+                                                            .isEdit
+                                                        )
+                                                      : isEditValue;
+                                                  setProductsTableStates(
+                                                    newStates
+                                                  );
+                                                }
+                                              }}
+                                              onProductSelect={
+                                                handleProductSelect
                                               }
-                                              setProductsTableStates={
-                                                setProductsTableStates
+                                              brandOptions={brandOptions}
+                                              brandPillarOptions={
+                                                brandPillarOptions
                                               }
-                                              index={index}
-                                              offeringId={offering.id}
+                                              onBulkUpdate={(products) => {
+                                                console.log(
+                                                  "Bulk update:",
+                                                  products
+                                                );
+                                              }}
+                                              selectedProducts={
+                                                selectedProducts[offering.id] ||
+                                                []
+                                              }
+                                              onSelectedProductsChange={(
+                                                productIds
+                                              ) => {
+                                                setSelectedProducts((prev) => ({
+                                                  ...prev,
+                                                  [offering.id as number]:
+                                                    productIds,
+                                                }));
+                                              }}
+                                              distributors={
+                                                offeringDistributors[
+                                                  offering.id
+                                                ] || []
+                                              }
+                                              tableHeader={[
+                                                "Distributor IRC",
+                                                "Price",
+                                                "RRSP",
+                                              ]}
+                                              tableFields={[
+                                                "irc",
+                                                "billing_price",
+                                                "rrsp",
+                                              ]}
+                                              onPriceEdit={(irc, price) => {
+                                                console.log(
+                                                  "Price edit:",
+                                                  irc,
+                                                  price
+                                                );
+                                              }}
+                                              onRRSPEdit={(irc, rrsp) => {
+                                                console.log(
+                                                  "RRSP edit:",
+                                                  irc,
+                                                  rrsp
+                                                );
+                                              }}
                                             />
                                           )}
                                         </Grid.Col>
-                                        <Grid.Col span={{ base: 8, md: 4 }}>
+                                        {/* <Grid.Col span={{ base: 8, md: 4 }}>
                                           {offering.id && (
                                             <InnovationDistributorPrices
                                               distributors={
@@ -943,7 +1156,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                               }}
                                             />
                                           )}
-                                        </Grid.Col>
+                                        </Grid.Col> */}
                                       </Grid>
                                     </>
                                   )
@@ -998,15 +1211,26 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     <Grid.Col span={{ sm: 6, base: 12 }}>
                       <TextInput
                         value={offeringForm.number}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setOfferingForm((prev) => ({
                             ...prev,
                             number: e.target.value,
-                          }))
-                        }
+                          }));
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            number: true,
+                          }));
+                        }}
                         placeholder="Offering Number"
                         label="Offering number"
                         classNames={textInputStyles}
+                        required
+                        error={
+                          (isSubmitted || touchedFields.number) &&
+                          offeringForm.number.trim() === ""
+                            ? "Offering number is required"
+                            : null
+                        }
                       />
                     </Grid.Col>
                     <Grid.Col span={{ sm: 6, base: 12 }}>
@@ -1060,12 +1284,16 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     <Grid.Col span={{ sm: 4, base: 12 }}>
                       <Select
                         value={offeringForm.type}
-                        onChange={(value) =>
+                        onChange={(value) => {
                           setOfferingForm((prev) => ({
                             ...prev,
                             type: value || "",
-                          }))
-                        }
+                          }));
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            type: true,
+                          }));
+                        }}
                         label="Type"
                         placeholder="Select type"
                         data={[
@@ -1074,108 +1302,15 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                         ]}
                         rightSection={<ChevronDownIcon />}
                         classNames={selectStyles}
+                        required
+                        error={
+                          (isSubmitted || touchedFields.type) &&
+                          offeringForm.type === ""
+                            ? "Type is required"
+                            : null
+                        }
                         clearable
                       />
-                    </Grid.Col>
-                    <Grid.Col span={{ sm: 6, base: 12 }}>
-                      <FormField label="Deck file">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="file"
-                              accept=".pdf,.ppt,.pptx"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  handleFileUpload(file, "deck");
-                                }
-                              }}
-                              style={{ display: "none" }}
-                              id="offering_deck_input"
-                            />
-                            <Button
-                              type="button"
-                              variant="filled"
-                              className="bg-primary hover:bg-primary/90 text-white"
-                              onClick={() =>
-                                document
-                                  .getElementById("offering_deck_input")
-                                  ?.click()
-                              }
-                              leftSection={<Upload size={16} />}
-                            >
-                              Upload Deck
-                            </Button>
-                          </div>
-                          {offeringForm.deck && (
-                            <div className="flex items-center gap-2 text-sm text-blue-600">
-                              <span>deck-file.pdf</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOfferingForm((prev) => ({
-                                    ...prev,
-                                    deck: "",
-                                  }))
-                                }
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </FormField>
-                    </Grid.Col>
-                    <Grid.Col span={{ sm: 6, base: 12 }}>
-                      <FormField label="Market deck file">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="file"
-                              accept=".pdf,.ppt,.pptx"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  handleFileUpload(file, "market_deck");
-                                }
-                              }}
-                              style={{ display: "none" }}
-                              id="offering_market_deck_input"
-                            />
-                            <Button
-                              type="button"
-                              variant="filled"
-                              className="bg-primary hover:bg-primary/90 text-white"
-                              onClick={() =>
-                                document
-                                  .getElementById("offering_market_deck_input")
-                                  ?.click()
-                              }
-                              leftSection={<Upload size={16} />}
-                            >
-                              Upload Market Deck
-                            </Button>
-                          </div>
-                          {offeringForm.market_deck && (
-                            <div className="flex items-center gap-2 text-sm text-blue-600">
-                              <span>market-deck-file.pdf</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOfferingForm((prev) => ({
-                                    ...prev,
-                                    market_deck: "",
-                                  }))
-                                }
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </FormField>
                     </Grid.Col>
                   </Grid>
                 </FormSection>

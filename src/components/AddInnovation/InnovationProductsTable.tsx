@@ -167,8 +167,12 @@ function InnovationProductsTable({
   }
 
   return (
-    <div className="bg-white shadow-md rounded-lg mt-5">
-      <div className="relative border border-primary rounded-xl border-t-0">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-20">
+        <h2 className="text-xl font-semibold text-gray-800">Products</h2>
+      </div>
+
+      <div className="relative flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]">
         <InfiniteScroll
           dataLength={currentProducts.length}
           next={() => {}}
@@ -178,6 +182,7 @@ function InnovationProductsTable({
               <Loader size="md" />
             </div>
           }
+          scrollableTarget="products-scroll-container"
         >
           <Table.ScrollContainer minWidth={768}>
             <Table
