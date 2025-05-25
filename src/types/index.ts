@@ -176,6 +176,7 @@ export interface Product {
   gmm_subCategory: Subcategory;
   gmm_market: Market;
   gmm_segment: Segment;
+  status?: string;
 }
 
 export interface Country {

@@ -1,169 +1,144 @@
-import { Table, NumberInput, TextInput, Button } from "@mantine/core";
+import { useUserStore } from "@/stores/userStore";
+import { Product } from "@/types";
+import { Loader, NumberInput, Table, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useRef, useState, useImperativeHandle, forwardRef } from "react";
-import { Product, Brand, Category } from "@/types";
+import { useEffect, useState, useRef } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
+import EyeIcon from "../Icons/EyeIcon";
+import PencilIcon from "../Icons/PencilIcon";
 import { CustomSelect } from "../HomePage/CustomSelect";
-import { PriceBenchmarkModal } from "@/components/AddProduct/PriceBenchmarkModal";
 
 interface InnovationProductsTableProps {
   products: Product[];
   isEdit: boolean;
-  setIsEdit: (edit: boolean) => void;
-  onBulkSave: (changed: { products: Partial<Product>[] }) => void;
-  onOpenBenchmarkModal?: (product: Product) => void;
+  setIsEdit: React.Dispatch<React.SetStateAction<boolean>>;
+  onProductSelect?: (product: Product) => void;
+  brandOptions: { value: string; label: string }[];
+  brandPillarOptions: { value: string; label: string }[];
+  onBulkUpdate?: (products: Product[]) => void;
 }
 
-export const InnovationProductsTable = forwardRef(
-  function InnovationProductsTable(
-    {
-      products,
-      isEdit,
-      setIsEdit,
-      onBulkSave,
-      onOpenBenchmarkModal,
-    }: InnovationProductsTableProps,
-    ref
-  ) {
-    const initialValues = products.map((product) => ({
-      product_id: product.id,
-      icp_eur: product.icp_eur,
-      icp_usd: product.icp_usd,
-      brand_id: product.brand.id.toString(),
-      brand_type: product.brand.type,
-      brand_pillar_id: product.brand_pillar?.id || "",
-      sub_brand_id: product.subcategory?.id || "",
-      material_description: product.material_description ?? "",
-      irc: product.irc ?? "",
-    }));
+function InnovationProductsTable({
+  products,
+  isEdit,
+  setIsEdit,
+  onProductSelect,
+  brandOptions,
+  brandPillarOptions,
+  onBulkUpdate,
+}: InnovationProductsTableProps) {
+  const role = useUserStore((state) => state.user)?.role;
+  const [currentProducts, setCurrentProducts] = useState<Product[]>(products);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [isBulkUpdateSuccess, setIsBulkUpdateSuccess] = useState(false);
+  const [isBulkUpdateError, setIsBulkUpdateError] = useState(false);
+  const [bulkUpdateError, setBulkUpdateError] = useState<string | null>(null);
 
-    const form = useForm({
-      initialValues: {
-        products: initialValues,
-      },
+  const initialValues = currentProducts.map((product) => ({
+    product_id: product.id,
+    icp_eur: product.icp_eur,
+    icp_usd: product.icp_usd,
+    brand_id: product.brand.id.toString(),
+    brand_type: product.brand.type,
+    brand_pillar_id: product.brand_pillar?.id || "",
+    sub_brand_id: product.subcategory?.id || "",
+    material_description: product.material_description ?? "",
+    irc: product.irc ?? "",
+  }));
+
+  const form = useForm({
+    initialValues: {
+      products: initialValues,
+    },
+  });
+
+  // Track edited fields as a set of keys like "products.2.icp_eur"
+  const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
+  const initialValuesRef = useRef(initialValues);
+
+  function handleNumberInputChange(path: string, value: number | "") {
+    form.setFieldValue(path, value);
+    const parts = path.split(".");
+    const idx = Number(parts[1]);
+    const field = parts[2] as "icp_eur" | "icp_usd";
+    const initial = initialValuesRef.current?.[idx]?.[field];
+    const valueStr = value === "" ? "" : String(value);
+    if (valueStr !== initial) {
+      setEditedFields((prev) => new Set(prev).add(path));
+    } else {
+      setEditedFields((prev) => {
+        const next = new Set(prev);
+        next.delete(path);
+        return next;
+      });
+    }
+  }
+
+  function handleTextInputChange(path: string, value: string) {
+    form.setFieldValue(path, value);
+    const parts = path.split(".");
+    const idx = Number(parts[1]);
+    const field = parts[2] as "material_description" | "irc";
+    const initial = initialValuesRef.current?.[idx]?.[field];
+    if (value !== initial) {
+      setEditedFields((prev) => new Set(prev).add(path));
+    } else {
+      setEditedFields((prev) => {
+        const next = new Set(prev);
+        next.delete(path);
+        return next;
+      });
+    }
+  }
+
+  useEffect(() => {
+    setCurrentProducts(products);
+    form.reset();
+  }, [products]);
+
+  function getChangedProducts() {
+    const changedIndices = Array.from(editedFields)
+      .map((path) => Number(path.split(".")[1]))
+      .filter((v, i, a) => a.indexOf(v) === i);
+
+    const changedProducts = changedIndices.map((idx) => {
+      const original = currentProducts[idx];
+      const edited = form.values.products[idx];
+
+      return {
+        product_id: Number(edited.product_id),
+        brand_id: Number(edited.brand_id),
+        sub_brand_id: edited.sub_brand_id
+          ? Number(edited.sub_brand_id)
+          : undefined,
+        division: original.division,
+        material_description: edited.material_description,
+        irc: edited.irc,
+        icp_eur: edited.icp_eur !== "" ? String(edited.icp_eur) : undefined,
+        icp_usd: edited.icp_usd !== "" ? String(edited.icp_usd) : undefined,
+      };
     });
 
-    // Track edited fields as a set of keys like "products.2.icp_eur"
-    const [editedFields, setEditedFields] = useState<Set<string>>(new Set());
-    const initialValuesRef = useRef(initialValues);
+    return changedProducts;
+  }
 
-    // Dummy options for selects (since no API fetch)
-    const brandOptions = products.map((p) => ({
-      value: p.brand.id.toString(),
-      label: p.brand.name,
-    }));
-    const brandPillarOptions = products
-      .map((p) =>
-        p.brand_pillar
-          ? {
-              value: p.brand_pillar.id.toString(),
-              label: p.brand_pillar.name || "-",
-            }
-          : null
-      )
-      .filter(Boolean) as { value: string; label: string }[];
+  if (!products.length) {
+    return <p>No products available</p>;
+  }
 
-    // Add modal state and selected product
-    const [isBenchmarkModalOpen, setBenchmarkModalOpen] = useState(false);
-
-    // Dummy data for brands, products, categories, and form
-    // Replace with your actual data/fetching logic
-    const brandsData: Brand[] = products.map((p) => p.brand);
-    const productsListData: Product[] = products;
-    const categoriesData: Category[] = products.map((p) => p.category);
-
-    function handleNumberInputChange(path: string, value: number | "") {
-      form.setFieldValue(path, value);
-      const parts = path.split(".");
-      const idx = Number(parts[1]);
-      const field = parts[2] as "icp_eur" | "icp_usd";
-      const initial = initialValuesRef.current?.[idx]?.[field];
-      const valueStr = value === "" ? "" : String(value);
-      if (valueStr !== initial) {
-        setEditedFields((prev) => new Set(prev).add(path));
-      } else {
-        setEditedFields((prev) => {
-          const next = new Set(prev);
-          next.delete(path);
-          return next;
-        });
-      }
-    }
-
-    function handleTextInputChange(path: string, value: string) {
-      form.setFieldValue(path, value);
-      const parts = path.split(".");
-      const idx = Number(parts[1]);
-      const field = parts[2] as "material_description" | "irc";
-      const initial = initialValuesRef.current?.[idx]?.[field];
-      if (value !== initial) {
-        setEditedFields((prev) => new Set(prev).add(path));
-      } else {
-        setEditedFields((prev) => {
-          const next = new Set(prev);
-          next.delete(path);
-          return next;
-        });
-      }
-    }
-
-    function getChangedProducts() {
-      const changedIndices = Array.from(editedFields)
-        .map((path) => Number(path.split(".")[1]))
-        .filter((v, i, a) => a.indexOf(v) === i);
-
-      const changedProducts = changedIndices.map((idx) => {
-        const original = products[idx];
-        const edited = form.values.products[idx];
-        return {
-          product_id: Number(edited.product_id),
-          brand_id: Number(edited.brand_id),
-          sub_brand_id: edited.sub_brand_id
-            ? Number(edited.sub_brand_id)
-            : undefined,
-          division: original.division,
-          material_description: edited.material_description,
-          irc: edited.irc,
-          icp_eur: edited.icp_eur !== "" ? String(edited.icp_eur) : undefined,
-          icp_usd: edited.icp_usd !== "" ? String(edited.icp_usd) : undefined,
-        };
-      });
-      return { products: changedProducts };
-    }
-
-    useImperativeHandle(ref, () => ({ getChangedProducts }), [
-      editedFields,
-      form.values.products,
-    ]);
-
-    function handleOpenBenchmarkModal() {
-      setBenchmarkModalOpen(true);
-    }
-
-    function handleCloseBenchmarkModal() {
-      setBenchmarkModalOpen(false);
-    }
-
-    function handleSaveBenchmark() {
-      // Implement your save logic here
-      setBenchmarkModalOpen(false);
-    }
-
-    if (!products.length) {
-      return <p>No products available.</p>;
-    }
-
-    return (
-      <div className="bg-white shadow-md rounded-lg p-6 mt-5">
-        {!isEdit && (
-          <Button
-            className="border-none bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300 mb-6"
-            onClick={() => setIsEdit(true)}
-            variant="outline"
-          >
-            Edit Products
-          </Button>
-        )}
-        <div className="relative border border-primary rounded-xl border-t-0">
+  return (
+    <div className="bg-white shadow-md rounded-lg mt-5">
+      <div className="relative border border-primary rounded-xl border-t-0">
+        <InfiniteScroll
+          dataLength={currentProducts.length}
+          next={() => {}}
+          hasMore={false}
+          loader={
+            <div className="text-center py-4">
+              <Loader size="md" />
+            </div>
+          }
+        >
           <Table.ScrollContainer minWidth={768}>
             <Table
               verticalSpacing="sm"
@@ -180,36 +155,44 @@ export const InnovationProductsTable = forwardRef(
                   <Table.Th>IRC</Table.Th>
                   <Table.Th>ICP EU</Table.Th>
                   <Table.Th>ICP USD</Table.Th>
+                  <Table.Th>Pref Value</Table.Th>
                   <Table.Th>Status</Table.Th>
-                  <Table.Th>Status</Table.Th>
-                  <Table.Th />
+                  <Table.Th className="rounded-se-xl"></Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {products.map((product, index) => (
-                  <Table.Tr key={product.id}>
+                {currentProducts.map((product, index) => (
+                  <Table.Tr
+                    key={product.id}
+                    onClick={() => onProductSelect?.(product)}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
                     <Table.Td className="first:rounded-es-xl">
                       {isEdit ? (
-                        <CustomSelect
-                          value={String(
-                            form.values.products[index].brand_id ?? ""
-                          )}
-                          options={brandOptions}
-                          onChange={(val) => {
-                            form.setFieldValue(
-                              `products.${index}.brand_id`,
-                              val
-                            );
-                            setEditedFields((prev) => {
-                              const next = new Set(prev);
-                              next.add(`products.${index}.brand_id`);
-                              return next;
-                            });
-                          }}
-                          isChanged={editedFields.has(
-                            `products.${index}.brand_id`
-                          )}
-                        />
+                        brandOptions.length > 0 ? (
+                          <CustomSelect
+                            value={String(
+                              form.values.products[index].brand_id ?? ""
+                            )}
+                            options={brandOptions}
+                            onChange={(val) => {
+                              form.setFieldValue(
+                                `products.${index}.brand_id`,
+                                val
+                              );
+                              setEditedFields((prev) => {
+                                const next = new Set(prev);
+                                next.add(`products.${index}.brand_id`);
+                                return next;
+                              });
+                            }}
+                            isChanged={editedFields.has(
+                              `products.${index}.brand_id`
+                            )}
+                          />
+                        ) : (
+                          <div className="w-full h-10 bg-gray-100 rounded animate-pulse" />
+                        )
                       ) : (
                         product.brand.name
                       )}
@@ -245,26 +228,30 @@ export const InnovationProductsTable = forwardRef(
                     </Table.Td>
                     <Table.Td>
                       {isEdit ? (
-                        <CustomSelect
-                          value={String(
-                            form.values.products[index].brand_pillar_id ?? ""
-                          )}
-                          options={brandPillarOptions}
-                          onChange={(val) => {
-                            form.setFieldValue(
-                              `products.${index}.brand_pillar_id`,
-                              val
-                            );
-                            setEditedFields((prev) => {
-                              const next = new Set(prev);
-                              next.add(`products.${index}.brand_pillar_id`);
-                              return next;
-                            });
-                          }}
-                          isChanged={editedFields.has(
-                            `products.${index}.brand_pillar_id`
-                          )}
-                        />
+                        brandPillarOptions.length > 0 ? (
+                          <CustomSelect
+                            value={String(
+                              form.values.products[index].brand_pillar_id ?? ""
+                            )}
+                            options={brandPillarOptions}
+                            onChange={(val) => {
+                              form.setFieldValue(
+                                `products.${index}.brand_pillar_id`,
+                                val
+                              );
+                              setEditedFields((prev) => {
+                                const next = new Set(prev);
+                                next.add(`products.${index}.brand_pillar_id`);
+                                return next;
+                              });
+                            }}
+                            isChanged={editedFields.has(
+                              `products.${index}.brand_pillar_id`
+                            )}
+                          />
+                        ) : (
+                          <div className="w-full h-10 bg-gray-100 rounded animate-pulse" />
+                        )
                       ) : (
                         product.brand_pillar?.name || "-"
                       )}
@@ -400,65 +387,77 @@ export const InnovationProductsTable = forwardRef(
                         {product.pref}
                       </span>
                     </Table.Td>
+
                     <Table.Td>
-                      <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
-                        {product.product_type}
-                      </span>
+                      {product.status ? (
+                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
+                          {product.status}
+                        </span>
+                      ) : null}
                     </Table.Td>
-                    <Table.Td>
-                      <Button
-                        variant="default"
-                        className="border-primary w-fit bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-3 hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                        onClick={() => {
-                          if (onOpenBenchmarkModal)
-                            onOpenBenchmarkModal(product);
-                          else handleOpenBenchmarkModal();
-                        }}
-                      >
-                        Set price benchmark
-                      </Button>
-                    </Table.Td>
+                    {/* <Table.Td className="last:rounded-ee-xl text-center !pr-2">
+                      {role === "admin" ? <PencilIcon /> : <EyeIcon />}
+                    </Table.Td> */}
                   </Table.Tr>
                 ))}
               </Table.Tbody>
             </Table>
           </Table.ScrollContainer>
-          {isEdit && (
-            <div
-              className="sticky left-1/2 z-10 -translate-x-1/2 flex items-center bg-primary rounded-2xl px-8 py-3  shadow-lg mt-4 mx-auto gap-4 w-full max-w-xl"
-              style={{ position: "sticky", bottom: 30 }}
-            >
-              <Button
+        </InfiniteScroll>
+        {isEdit && (
+          <div className="fixed left-1/2 bottom-3 z-10 pl-40 -translate-x-1/2">
+            <div className="flex items-center bg-primary rounded-2xl px-8 py-3 shadow-lg w-max">
+              <button
                 type="button"
-                className="flex-1 text-white text-base font-medium px-6 py-2 focus:outline-none transition-colors hover:bg-white hover:text-primary rounded-xl"
-                onClick={() => setIsEdit(false)}
+                className="text-white text-base font-medium px-6 py-2 focus:outline-none transition-colors hover:bg-white hover:text-primary rounded-xl"
+                onClick={() => {
+                  setIsEdit(false);
+                  setEditedFields(new Set());
+                  form.reset();
+                }}
               >
                 Cancel editing
-              </Button>
+              </button>
               <div className="h-6 w-px bg-gray-500 mx-4" />
-              <Button
-                type="button"
-                className="flex-1 text-black text-base font-medium px-6 py-2 focus:outline-none transition-colors hover:bg-white hover:text-primary rounded-xl disabled:opacity-60"
-                onClick={() => onBulkSave(getChangedProducts())}
-                disabled={editedFields.size === 0}
+              <button
+                type="submit"
+                className="text-white text-base font-medium px-6 py-2 focus:outline-none transition-colors hover:bg-white hover:text-primary rounded-xl disabled:opacity-60"
+                disabled={isBulkUpdating}
+                onClick={() => {
+                  const changed = getChangedProducts();
+                  if (onBulkUpdate) {
+                    setIsBulkUpdating(true);
+                    try {
+                      onBulkUpdate(changed as unknown as Product[]);
+                      setIsBulkUpdateSuccess(true);
+                      setIsEdit(false);
+                    } catch (error) {
+                      setIsBulkUpdateError(true);
+                      setBulkUpdateError((error as Error).message);
+                    } finally {
+                      setIsBulkUpdating(false);
+                    }
+                  }
+                }}
               >
-                Save & done edit
-              </Button>
+                {isBulkUpdating ? "Saving..." : "Save & done edit"}
+              </button>
             </div>
-          )}
-        </div>
-        {/* Render the modal at the root */}
-        <PriceBenchmarkModal
-          opened={isBenchmarkModalOpen}
-          onClose={handleCloseBenchmarkModal}
-          onSave={handleSaveBenchmark}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          form={form as any}
-          brandsData={brandsData}
-          productsListData={productsListData}
-          categoriesData={categoriesData}
-        />
+          </div>
+        )}
+        {isBulkUpdateError && (
+          <div className="text-red-500 text-sm mt-2">
+            {bulkUpdateError || "Failed to update products."}
+          </div>
+        )}
+        {isBulkUpdateSuccess && (
+          <div className="text-green-600 text-sm mt-2">
+            Products updated successfully!
+          </div>
+        )}
       </div>
-    );
-  }
-);
+    </div>
+  );
+}
+
+export default InnovationProductsTable;

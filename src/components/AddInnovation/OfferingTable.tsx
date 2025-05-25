@@ -9,7 +9,6 @@ import {
   TextInput,
   Select,
   Group,
-  Box,
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
@@ -25,22 +24,21 @@ import {
 import React, { useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
-import PencilIcon from "../Icons/PencilIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
+import { MasterDistributor } from "@/types";
+import { getOfferingProducts } from "@/api/products/get-offering-products";
 
 // Placeholder imports - actual components might have different props/structure
-import ProductsTable from "../HomePage/ProductsTable";
-import DistributorPrices from "../Distributors/DistributorPrices";
-import { Product, Meta, Filters, MasterDistributor } from "@/types"; // Assuming these types are needed
+import InnovationProductsTable from "./InnovationProductsTable";
+import InnovationDistributorPrices from "./InnovationDistributorPrices";
+import { Product, Meta, Filters } from "@/types";
 import {
   AddProductToOfferingModal,
   OfferingProductFormValues,
 } from "./AddProductToOfferingModal"; // Import the new modal
-import { getOfferingProducts } from "@/api/products/get-offering-products";
-import { useQuery } from "@tanstack/react-query";
-import type { PriceBenchmark } from "@/types";
+import { PriceBenchmark as ImportedPriceBenchmark } from "@/types";
 
 // Updated to match OfferingProductFormValues in the modal
 interface OfferingProductData {
@@ -91,35 +89,62 @@ interface OfferingTableProps {
   innovationId?: string | number;
 }
 
-// Mock data for ProductsTable and DistributorPrices (replace with actual data fetching/props)
-const mockProducts: Product[] = []; // Populate with mock Product data if needed for initial render
-const mockMeta: Meta = {
-  page: 1,
-  total: 0,
-  page_size: 10,
-  cursor: 1,
-  has_next: false,
-};
-const mockFilters: Filters = {
-  search: "",
-  brand_id: "",
-  sub_brand_id: "",
-  distributor_id: "",
-  region_id: "",
-  market_id: "",
-};
-const mockDistributors: MasterDistributor[] = []; // Populate with mock MasterDistributor data
+// Define interface for mapped product (from EditInnovationForm mapping)
+interface OfferingMappedProduct {
+  irc: string;
+  currency: string;
+  price: number;
+  icp_cost: number;
+  product_type: string;
+  pref: string;
+  grouping: string;
+  material_description?: string;
+  brand_id: string;
+  sub_brand_id?: string;
+}
 
-// Helper to check if an object is a valid PriceBenchmark
-function isValidPriceBenchmark(obj: unknown): obj is PriceBenchmark {
-  return (
-    !!obj &&
-    typeof obj === "object" &&
-    typeof (obj as any).brand_id !== "undefined" &&
-    typeof (obj as any).product_id !== "undefined" &&
-    typeof (obj as any).index_value !== "undefined" &&
-    typeof (obj as any).comment !== "undefined"
-  );
+const BRAND_TYPE_MASS = "Mass" as const;
+
+interface PriceBenchmark {
+  brand_id: string;
+  product_id: string;
+  index_value: number;
+  comment: string;
+}
+
+interface DistributorPrice {
+  irc: string;
+  billing_price: number;
+  rrsp: number;
+}
+
+interface DistributorData {
+  id: number;
+  name: string;
+  data: DistributorPrice[];
+}
+
+interface OfferingProductResponse {
+  id: number;
+  name: string;
+  irc: string;
+  pref: string;
+  product_type: string;
+  brand_id: string;
+  currency: "EUR" | "USD";
+  icp_cost: number;
+  material_description?: string;
+  distributor_pricing: Array<{
+    irc: string;
+    billing_price: string;
+    rrsp: string;
+  }>;
+}
+
+interface DistributorPricing {
+  irc: string;
+  billing_price: string;
+  rrsp: string;
 }
 
 const OfferingTable: React.FC<OfferingTableProps> = ({
@@ -129,7 +154,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   onDelete,
   onOpenProductModal,
   innovationId,
-}) => {
+}): JSX.Element => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -150,8 +175,6 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     market_deck: "",
   });
 
-  console.log("offerings", offerings);
-
   // State for nested tables - we need an array of states, one for each offering row
   // This approach might get complex if offerings can be reordered or many are expanded.
   // Consider a more robust state management if needed.
@@ -171,6 +194,25 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   const [targetOfferingIndex, setTargetOfferingIndex] = useState<number | null>(
     null
   );
+
+  // Add state for fetched products per offering
+  const [offeringProducts, setOfferingProducts] = useState<
+    Record<number, OfferingMappedProduct[]>
+  >({});
+  const [offeringDistributors, setOfferingDistributors] = useState<
+    Record<number, DistributorData[]>
+  >({});
+  const [loadingOfferings, setLoadingOfferings] = useState<Set<number>>(
+    new Set()
+  );
+
+  // Add state for brand options
+  const [brandOptions, setBrandOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [brandPillarOptions, setBrandPillarOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
   // Initialize states when offerings change
   useEffect(() => {
@@ -331,10 +373,64 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     setTargetOfferingIndex(null);
   }
 
-  // Create a new component for the products table
+  // Update toggleRow to fetch products if not already fetched
+  async function handleExpandRow(index: number, offeringId: number) {
+    toggleRow(index);
+    if (!offeringProducts[offeringId] && innovationId && offeringId) {
+      setLoadingOfferings((prev) => new Set(prev).add(offeringId));
+      try {
+        const response = await getOfferingProducts(innovationId, offeringId);
+        const { products, distributors } = response.data;
+
+        // Map products to the format expected by the component
+        const mappedProducts: OfferingMappedProduct[] = products.map((p) => ({
+          irc: p.irc || "",
+          currency: p.icp_eur ? "EUR" : p.icp_usd ? "USD" : "EUR",
+          price: Number(p.icp_eur || p.icp_usd || 0),
+          icp_cost: Number(p.icp_eur || p.icp_usd || 0),
+          product_type: p.article_type || "",
+          pref: "non-pref", // Default value since it's not in the API response
+          grouping: p.group || "1",
+          material_description: p.description || "",
+          brand_id: "", // Not available in the API response
+          sub_brand_id: "", // Not available in the API response
+        }));
+
+        // Map distributors to the format expected by the component
+        const distributorsData = distributors.map((d) => ({
+          id: d.id,
+          name: d.name,
+          data: d.data.map((pricing) => ({
+            irc: pricing.irc,
+            billing_price: Number(pricing.billing_price || 0),
+            rrsp: Number(pricing.rrsp || 0),
+          })),
+        }));
+
+        setOfferingProducts((prev) => ({
+          ...prev,
+          [offeringId]: mappedProducts,
+        }));
+
+        setOfferingDistributors((prev) => ({
+          ...prev,
+          [offeringId]: distributorsData,
+        }));
+      } catch (error) {
+        console.error("Error fetching offering products:", error);
+      } finally {
+        setLoadingOfferings((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(offeringId);
+          return newSet;
+        });
+      }
+    }
+  }
+
+  // Update OfferingProductsTable to accept products as a prop
   interface OfferingProductsTableProps {
-    innovationId: string | number;
-    offeringId: string | number;
+    products: OfferingMappedProduct[];
     productsTableStates: Array<{ isEdit: boolean }>;
     setProductsTableStates: React.Dispatch<
       React.SetStateAction<Array<{ isEdit: boolean }>>
@@ -342,120 +438,97 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     index: number;
   }
   function OfferingProductsTable({
-    innovationId,
-    offeringId,
+    products,
     productsTableStates,
     setProductsTableStates,
     index,
   }: OfferingProductsTableProps) {
-    const { data: products, isLoading } = useQuery({
-      queryKey: ["offering-products", innovationId, offeringId],
-      queryFn: () => getOfferingProducts(innovationId, offeringId),
-      select: (res) =>
-        (res.data || []).map((p, i) => ({
-          id: p.id || i + 1,
-          pref: p.pref,
-          product_type: p.product_type,
-          brand_pillar: p.brand_pillar || { id: 0, name: "" },
-          grouping: Number(p.grouping),
-          price: String(p.icp_eur || p.icp_usd || 0),
-          launch_date: p.launch_date ? new Date(p.launch_date) : new Date(),
-          discontinue_date: p.discontinue_date
-            ? new Date(p.discontinue_date)
-            : new Date(),
-          offering_number: p.offering_number || "",
-          irc: p.irc,
-          sku: p.irc,
-          material_description: p.material_description || "",
-          ean_upc: p.ean_upc || "",
-          house: p.house || "",
-          line: p.line || "",
-          line_id: p.line_id || "",
-          line_number: "",
-          article_type: p.article_type || "",
-          article_sub_type: p.article_sub_type || "",
-          division: p.division || "",
-          segment: p.segment || { id: 0, name: "", created_at: "" },
-          icp_eur: String(p.icp_eur || 0),
-          icp_usd: String(p.icp_usd || 0),
-          factory: p.factory || "",
-          commodity_id: p.commodity_id || "",
-          gender: p.gender || "",
-          size: p.size || "",
-          length: p.length || "",
-          height: p.height || "",
-          width: p.width || "",
-          volume: p.volume || "",
-          gross_weight: p.gross_weight || "",
-          net_weight: p.net_weight || "",
-          units: p.units || "",
-          created_at: p.created_at || "",
-          brand: {
-            id: p.brand?.id || 0,
-            brand_type_id: 0,
-            name: p.brand?.name || "",
-            active: true,
-            type: (p.brand?.type as "Luxury" | "Mass") || "Mass",
-            created_at: p.brand?.created_at || "",
-            updated_at: "",
-            deleted_at: null,
-            pivot: {
-              distributor_id: 0,
-              brand_id: p.brand?.id || 0,
-            },
-          },
-          pricing: {
-            distributor_id: 0,
-            icp_usd: Number(p.icp_usd || 0),
-            icp_eur: Number(p.icp_eur || 0),
-            french_usd: null,
-            french_eur: null,
-            rrsp: null,
-            regional_billing_price: null,
-            c1: null,
-            cssp: null,
-            status: "",
-          },
-          category: p.category || { id: 0, name: "", created_at: "" },
-          country: p.country || {
-            id: 0,
-            name: "",
-            official_name: "",
-            iso2: "",
-            iso3: "",
-            flag_url: "",
-            created_at: "",
-          },
-          market: p.market || null,
-          subcategory: p.subcategory || { id: 0, name: "", created_at: "" },
-          price_benchmark: isValidPriceBenchmark(p.price_benchmark)
-            ? p.price_benchmark
-            : null,
-          documents: [],
-          distributor_pricing: [],
-          gmm_category: { id: 0, name: "", created_at: "" },
-          gmm_subCategory: { id: 0, name: "", created_at: "" },
-          gmm_market: { id: 0, name: "", created_at: "" },
-          gmm_segment: { id: 0, name: "", created_at: "" },
-        })),
-      enabled: !!innovationId && !!offeringId,
-    });
-
-    console.log("products", products);
-
-    if (isLoading) return <div>Loading products...</div>;
-
+    // Map OfferingMappedProduct[] to Product[]
+    const mappedProducts = products.map((p, i) => ({
+      id: i + 1,
+      pref: p.pref,
+      product_type: p.product_type,
+      brand_pillar: { id: 0, name: "" },
+      grouping: Number(p.grouping),
+      price: String(p.price),
+      launch_date: new Date(),
+      discontinue_date: new Date(),
+      offering_number: "",
+      irc: p.irc,
+      sku: p.irc,
+      material_description: p.material_description || "",
+      ean_upc: "",
+      house: "",
+      line: "",
+      line_id: "",
+      line_number: "",
+      article_type: p.product_type,
+      article_sub_type: "",
+      division: "",
+      segment: { id: 0, name: "", created_at: "" },
+      icp_eur: p.currency === "EUR" ? String(p.icp_cost) : "0",
+      icp_usd: p.currency === "USD" ? String(p.icp_cost) : "0",
+      factory: "",
+      commodity_id: "",
+      gender: "",
+      size: "",
+      length: "",
+      height: "",
+      width: "",
+      volume: "",
+      gross_weight: "",
+      net_weight: "",
+      units: "",
+      created_at: "",
+      brand: {
+        id: Number(p.brand_id) || 0,
+        brand_type_id: 0,
+        name: "",
+        active: true,
+        type: BRAND_TYPE_MASS,
+        created_at: "",
+        updated_at: "",
+        deleted_at: null,
+        pivot: {
+          distributor_id: 0,
+          brand_id: Number(p.brand_id) || 0,
+        },
+      },
+      pricing: {
+        distributor_id: 0,
+        icp_usd: p.currency === "USD" ? p.icp_cost : 0,
+        icp_eur: p.currency === "EUR" ? p.icp_cost : 0,
+        french_usd: null,
+        french_eur: null,
+        rrsp: null,
+        regional_billing_price: null,
+        c1: null,
+        cssp: null,
+        status: "",
+      },
+      category: { id: 0, name: "", created_at: "" },
+      country: {
+        id: 0,
+        name: "",
+        official_name: "",
+        iso2: "",
+        iso3: "",
+        flag_url: "",
+        created_at: "",
+      },
+      market: null,
+      subcategory: { id: 0, name: "", created_at: "" },
+      price_benchmark: null,
+      documents: [],
+      distributor_pricing: [],
+      gmm_category: { id: 0, name: "", created_at: "" },
+      gmm_subCategory: { id: 0, name: "", created_at: "" },
+      gmm_market: { id: 0, name: "", created_at: "" },
+      gmm_segment: { id: 0, name: "", created_at: "" },
+    }));
     return (
-      <ProductsTable
-        initialData={products || []}
-        initialMeta={{
-          page: 1,
-          total: products?.length || 0,
-          page_size: 10,
-          cursor: 1,
-          has_next: false,
-        }}
-        filters={mockFilters}
+      <InnovationProductsTable
+        products={mappedProducts}
         isEdit={productsTableStates[index]?.isEdit || false}
         setIsEdit={(isEditValue) => {
           const newStates = [...productsTableStates];
@@ -467,9 +540,99 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
             setProductsTableStates(newStates);
           }
         }}
+        onProductSelect={handleProductSelect}
+        brandOptions={brandOptions}
+        brandPillarOptions={brandPillarOptions}
+        onBulkUpdate={(products) => {
+          console.log("Bulk update:", products);
+        }}
       />
     );
   }
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Infinite scroll state for distributor prices
+  const PAGE_SIZE = 20;
+  const [currentDistributorPrices, setCurrentDistributorPrices] = useState<
+    DistributorPrice[]
+  >([]);
+
+  // Update prices when distributor changes
+  useEffect(() => {
+    if (distributorPricesStates[currentIndex]?.selectedRow) {
+      setCurrentDistributorPrices(
+        distributorPricesStates[currentIndex].selectedRow
+          .split(",")
+          .map((irc) => ({
+            irc,
+            billing_price: 0,
+            rrsp: 0,
+          }))
+      );
+    }
+  }, [currentIndex, distributorPricesStates]);
+
+  const scrollableRef = React.useRef<HTMLDivElement>(null);
+  const scrolling = React.useRef(false);
+
+  // Sync scroll position from parent
+  React.useEffect(() => {
+    if (
+      distributorPricesStates[currentIndex]?.scrollSource !== "distributor" &&
+      scrollableRef.current
+    ) {
+      if (
+        Math.abs(
+          scrollableRef.current.scrollTop -
+            distributorPricesStates[currentIndex]?.scrollTop
+        ) > 1
+      ) {
+        scrolling.current = true;
+        scrollableRef.current.scrollTop =
+          distributorPricesStates[currentIndex]?.scrollTop || 0;
+      }
+    }
+  }, [distributorPricesStates, currentIndex]);
+
+  // After setting scroll, reset scrollSource to null
+  React.useEffect(() => {
+    if (
+      scrolling.current &&
+      distributorPricesStates[currentIndex]?.scrollSource !== "distributor"
+    ) {
+      scrolling.current = false;
+      setDistributorPricesStates((prev) => {
+        const newStates = [...prev];
+        if (newStates[currentIndex]) {
+          newStates[currentIndex].scrollTop =
+            scrollableRef.current?.scrollTop || 0;
+          newStates[currentIndex].scrollSource = "distributor";
+        }
+        return newStates;
+      });
+    }
+  }, [distributorPricesStates, currentIndex, setDistributorPricesStates]);
+
+  // On scroll, update parent if source is not distributor
+  function handleScroll() {
+    if (scrollableRef.current && !scrolling.current) {
+      setDistributorPricesStates((prev) => {
+        const newStates = [...prev];
+        if (newStates[currentIndex]) {
+          newStates[currentIndex].scrollTop =
+            scrollableRef.current?.scrollTop ?? 0;
+          newStates[currentIndex].scrollSource = "distributor";
+        }
+        return newStates;
+      });
+    }
+  }
+
+  // Add onProductSelect handler
+  const handleProductSelect = (product: Product) => {
+    console.log("Product selected:", product);
+  };
 
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
@@ -552,7 +715,11 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => toggleRow(index)}
+                                onClick={() => {
+                                  if (typeof offering.id === "number") {
+                                    handleExpandRow(index, offering.id);
+                                  }
+                                }}
                               >
                                 {expandedRows.has(index) ? (
                                   <ChevronUp className="size-5" />
@@ -568,238 +735,131 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                             <Collapse in={expandedRows.has(index)}>
                               <div className="p-4 bg-gray-50 border-t">
                                 {expandedRows.has(index) &&
-                                offering.id &&
+                                typeof offering.id === "number" &&
                                 innovationId ? (
-                                  <OfferingProductsTable
-                                    innovationId={innovationId}
-                                    offeringId={offering.id}
-                                    productsTableStates={productsTableStates}
-                                    setProductsTableStates={
-                                      setProductsTableStates
-                                    }
-                                    index={index}
-                                  />
+                                  loadingOfferings.has(offering.id) ? (
+                                    <div>Loading products...</div>
+                                  ) : (
+                                    <>
+                                      <Group mt="md" mb="lg">
+                                        <Button
+                                          leftSection={<PlusIcon size={16} />}
+                                          className="bg-primary text-white hover:bg-primary/90 rounded-lg"
+                                        >
+                                          Bulk product upload
+                                        </Button>
+                                        <Button
+                                          leftSection={<PlusIcon size={16} />}
+                                          className="bg-primary text-white hover:bg-primary/90 rounded-lg"
+                                          onClick={() =>
+                                            handleOpenProductModal(index)
+                                          }
+                                        >
+                                          Add single product
+                                        </Button>
+                                        {/* <Button
+                                          variant="outline"
+                                          className="border-primary text-primary hover:bg-primary/10 rounded-lg"
+                                        >
+                                          Delete product list
+                                        </Button> */}
+                                      </Group>
+                                      <Grid gutter="lg">
+                                        <Grid.Col span={{ base: 16, md: 8 }}>
+                                          <h3 className="text-lg font-semibold text-primary mb-2">
+                                            Product list
+                                          </h3>
+                                          <OfferingProductsTable
+                                            products={
+                                              offeringProducts[offering.id] ||
+                                              []
+                                            }
+                                            productsTableStates={
+                                              productsTableStates
+                                            }
+                                            setProductsTableStates={
+                                              setProductsTableStates
+                                            }
+                                            index={index}
+                                          />
+                                        </Grid.Col>
+                                        <Grid.Col span={{ base: 8, md: 4 }}>
+                                          <InnovationDistributorPrices
+                                            distributors={
+                                              offeringDistributors[
+                                                offering.id
+                                              ] || []
+                                            }
+                                            selectedRow={
+                                              distributorPricesStates[index]
+                                                ?.selectedRow || null
+                                            }
+                                            setSelectedRow={(
+                                              selectedRowValue
+                                            ) => {
+                                              const newStates = [
+                                                ...distributorPricesStates,
+                                              ];
+                                              if (newStates[index]) {
+                                                newStates[index].selectedRow =
+                                                  selectedRowValue;
+                                                setDistributorPricesStates(
+                                                  newStates
+                                                );
+                                              }
+                                            }}
+                                            tableHeader={[
+                                              "Distributor IRC",
+                                              "Price",
+                                              "RRSP",
+                                            ]}
+                                            tableFields={[
+                                              "irc",
+                                              "billing_price",
+                                              "rrsp",
+                                            ]}
+                                            scrollTop={
+                                              distributorPricesStates[index]
+                                                ?.scrollTop || 0
+                                            }
+                                            setScrollTop={(scrollTopValue) => {
+                                              const newStates = [
+                                                ...distributorPricesStates,
+                                              ];
+                                              if (newStates[index]) {
+                                                newStates[index].scrollTop =
+                                                  scrollTopValue;
+                                                newStates[index].scrollSource =
+                                                  "distributor";
+                                                setDistributorPricesStates(
+                                                  newStates
+                                                );
+                                              }
+                                            }}
+                                            scrollSource={
+                                              distributorPricesStates[index]
+                                                ?.scrollSource || null
+                                            }
+                                            onPriceEdit={(irc, price) => {
+                                              console.log(
+                                                "Price edit:",
+                                                irc,
+                                                price
+                                              );
+                                            }}
+                                            onRRSPEdit={(irc, rrsp) => {
+                                              console.log(
+                                                "RRSP edit:",
+                                                irc,
+                                                rrsp
+                                              );
+                                            }}
+                                          />
+                                        </Grid.Col>
+                                      </Grid>
+                                    </>
+                                  )
                                 ) : null}
-                                <Group mt="md" mb="lg">
-                                  <Button
-                                    leftSection={<PlusIcon size={16} />}
-                                    className="bg-primary text-white hover:bg-primary/90 rounded-lg"
-                                  >
-                                    Bulk product upload
-                                  </Button>
-                                  <Button
-                                    leftSection={<PlusIcon size={16} />}
-                                    className="bg-primary text-white hover:bg-primary/90 rounded-lg"
-                                    onClick={() =>
-                                      handleOpenProductModal(index)
-                                    }
-                                  >
-                                    Add single product
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    className="border-primary text-primary hover:bg-primary/10 rounded-lg"
-                                  >
-                                    Delete product list
-                                  </Button>
-                                </Group>
-                                <Grid gutter="lg">
-                                  <Grid.Col span={{ base: 16, md: 8 }}>
-                                    <h3 className="text-lg font-semibold text-primary mb-2">
-                                      Product list
-                                    </h3>
-                                    <ProductsTable
-                                      initialData={(
-                                        offering.products || []
-                                      ).map((p, i) => ({
-                                        id: i + 1, // fallback id
-                                        pref: p.pref,
-                                        product_type: p.product_type,
-                                        brand_pillar: { id: 0, name: "" },
-                                        grouping: Number(p.grouping),
-                                        price: String(p.price),
-                                        launch_date: new Date(),
-                                        discontinue_date: new Date(),
-                                        offering_number: offering.number,
-                                        irc: p.irc,
-                                        sku: p.irc,
-                                        material_description:
-                                          p.material_description || "",
-                                        ean_upc: "",
-                                        house: "",
-                                        line: "",
-                                        line_id: "",
-                                        line_number: "",
-                                        article_type: p.product_type,
-                                        article_sub_type: "",
-                                        division: "",
-                                        segment: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        icp_eur: String(p.icp_cost),
-                                        icp_usd: String(p.icp_cost),
-                                        factory: "",
-                                        commodity_id: "",
-                                        gender: "",
-                                        size: "",
-                                        length: "",
-                                        height: "",
-                                        width: "",
-                                        volume: "",
-                                        gross_weight: "",
-                                        net_weight: "",
-                                        units: "",
-                                        created_at: "",
-                                        brand: {
-                                          id: 0,
-                                          brand_type_id: 0,
-                                          name: "",
-                                          active: true,
-                                          type: "Mass",
-                                          created_at: "",
-                                          updated_at: "",
-                                          deleted_at: null,
-                                          pivot: {
-                                            distributor_id: 0,
-                                            brand_id: 0,
-                                          },
-                                        },
-                                        pricing: {
-                                          distributor_id: 0,
-                                          icp_usd: Number(p.icp_cost),
-                                          icp_eur: Number(p.icp_cost),
-                                          french_usd: null,
-                                          french_eur: null,
-                                          rrsp: null,
-                                          regional_billing_price: null,
-                                          c1: null,
-                                          cssp: null,
-                                          status: "",
-                                        },
-                                        category: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        country: {
-                                          id: 0,
-                                          name: "",
-                                          official_name: "",
-                                          iso2: "",
-                                          iso3: "",
-                                          flag_url: "",
-                                          created_at: "",
-                                        },
-                                        market: null,
-                                        subcategory: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        price_benchmark: null,
-                                        documents: [],
-                                        distributor_pricing: [],
-                                        gmm_category: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        gmm_subCategory: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        gmm_market: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                        gmm_segment: {
-                                          id: 0,
-                                          name: "",
-                                          created_at: "",
-                                        },
-                                      }))}
-                                      initialMeta={{
-                                        page: 1,
-                                        total: offering.products?.length || 0,
-                                        page_size: 10,
-                                        cursor: 1,
-                                        has_next: false,
-                                      }}
-                                      filters={mockFilters}
-                                      isEdit={
-                                        productsTableStates[index]?.isEdit ||
-                                        false
-                                      }
-                                      setIsEdit={(isEditValue) => {
-                                        const newStates = [
-                                          ...productsTableStates,
-                                        ];
-                                        if (newStates[index]) {
-                                          newStates[index].isEdit =
-                                            typeof isEditValue === "function"
-                                              ? isEditValue(
-                                                  newStates[index].isEdit
-                                                )
-                                              : isEditValue;
-                                          setProductsTableStates(newStates);
-                                        }
-                                      }}
-                                    />
-                                  </Grid.Col>
-                                  <Grid.Col span={{ base: 8, md: 4 }}>
-                                    <DistributorPrices
-                                      distributors={mockDistributors}
-                                      selectedRow={
-                                        distributorPricesStates[index]
-                                          ?.selectedRow || null
-                                      }
-                                      setSelectedRow={(selectedRowValue) => {
-                                        const newStates = [
-                                          ...distributorPricesStates,
-                                        ];
-                                        if (newStates[index]) {
-                                          newStates[index].selectedRow =
-                                            selectedRowValue;
-                                          setDistributorPricesStates(newStates);
-                                        }
-                                      }}
-                                      tableHeader={[
-                                        "Distributor IRC",
-                                        "Price",
-                                        "RRSP",
-                                      ]}
-                                      tableFields={[
-                                        "irc",
-                                        "billing_price",
-                                        "rrsp",
-                                      ]}
-                                      scrollTop={
-                                        distributorPricesStates[index]
-                                          ?.scrollTop || 0
-                                      }
-                                      setScrollTop={(scrollTopValue) => {
-                                        const newStates = [
-                                          ...distributorPricesStates,
-                                        ];
-                                        if (newStates[index]) {
-                                          newStates[index].scrollTop =
-                                            scrollTopValue;
-                                          newStates[index].scrollSource =
-                                            "distributor";
-                                          setDistributorPricesStates(newStates);
-                                        }
-                                      }}
-                                      scrollSource={
-                                        distributorPricesStates[index]
-                                          ?.scrollSource || null
-                                      }
-                                    />
-                                  </Grid.Col>
-                                </Grid>
                               </div>
                             </Collapse>
                           </Table.Td>
