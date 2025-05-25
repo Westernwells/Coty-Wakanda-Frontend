@@ -191,7 +191,6 @@ const EditInnovationForm = forwardRef<
     mutationConfig: {
       onSuccess: () => {
         setIsSubmitting(false);
-        navigate({ to: "/innovations" });
       },
       onError: () => {
         setIsSubmitting(false);
@@ -200,7 +199,16 @@ const EditInnovationForm = forwardRef<
   });
 
   // Add new mutations for offerings
-  const createOfferingMutation = useCreateOffering({});
+  const createOfferingMutation = useCreateOffering({
+    mutationConfig: {
+      onSuccess: () => {
+        setIsSubmitting(false);
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      },
+    },
+  });
   const updateOfferingMutation = useUpdateOffering({});
   const deleteOfferingMutation = useDeleteOffering({});
 
@@ -297,10 +305,21 @@ const EditInnovationForm = forwardRef<
       year: year?.getFullYear().toString(),
     };
 
-    updateInnovationMutation.mutate({
-      innovationId: parseInt(innovationId),
-      data: submitData,
-    });
+    updateInnovationMutation.mutate(
+      {
+        innovationId: parseInt(innovationId),
+        data: submitData,
+      },
+      {
+        onSuccess: () => {
+          setIsSubmitting(false);
+          navigate({ to: "/innovations" });
+        },
+        onError: () => {
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   // Helper function to get filename from URL (used for initial data)

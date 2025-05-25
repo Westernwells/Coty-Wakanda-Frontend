@@ -59,12 +59,13 @@ export interface OfferingProductFormValues {
   units: number | "" | undefined;
 }
 
-interface AddProductToOfferingModalProps {
+export interface AddProductToOfferingModalProps {
   opened: boolean;
   onClose: () => void;
   onSubmit: (
     product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
   ) => void;
+  isLoading?: boolean;
 }
 
 // Updated Zod schema for validation
@@ -119,11 +120,9 @@ const productSchema = z.object({
   units: z.number().min(0, "Units must be a positive number").optional(),
 });
 
-export function AddProductToOfferingModal({
-  opened,
-  onClose,
-  onSubmit,
-}: AddProductToOfferingModalProps) {
+export const AddProductToOfferingModal: React.FC<
+  AddProductToOfferingModalProps
+> = ({ opened, onClose, onSubmit, isLoading = false }) => {
   const form = useForm<OfferingProductFormValues>({
     mode: "uncontrolled",
     initialValues: {
@@ -202,14 +201,31 @@ export function AddProductToOfferingModal({
   }, [selectedBrandId, brandPillarsData, brandPillarsLoading]); // form instance is stable
 
   const handleSubmit = (values: OfferingProductFormValues) => {
-    // Ensure icp_cost is a number before submitting
+    const validation = form.validate();
+    if (validation.hasErrors) {
+      return;
+    }
+
+    // Ensure icp_cost is a number
+    const icp_cost = Number(values.icp_cost);
+    if (isNaN(icp_cost)) {
+      form.setFieldError("icp_cost", "ICP Cost must be a valid number");
+      return;
+    }
+
+    // Create the submission object with required fields
     const submissionValues = {
       ...values,
-      icp_cost: Number(values.icp_cost), // Convert potentially empty string to number (or handle error if truly empty and required as number)
+      icp_cost,
+      // Ensure required fields are present
+      brand_id: values.brand_id,
+      product_type: values.product_type as "saleable" | "non-saleable",
+      pref: values.pref as "pref" | "non-pref",
+      grouping: values.grouping as "1" | "2" | "3",
+      currency: values.currency as "EUR" | "USD",
     };
+
     onSubmit(submissionValues);
-    form.reset();
-    onClose();
   };
 
   return (
@@ -675,30 +691,12 @@ export function AddProductToOfferingModal({
                 Cancel
               </Button>
               <Button
-                type="button"
+                type="submit"
+                disabled={isLoading}
                 variant="filled"
                 className="bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
-                onClick={() => {
-                  // Manual validation that allows null dates
-                  const values = form.getValues();
-                  const errors: Record<string, string> = {};
-
-                  // Only validate required fields
-                  if (!values.irc) errors.irc = "IRC Number is required";
-                  if (values.icp_cost === "")
-                    errors.icp_cost = "ICP Cost is required";
-                  if (!values.currency)
-                    errors.currency = "Currency is required";
-
-                  if (Object.keys(errors).length > 0) {
-                    form.setErrors(errors);
-                    return;
-                  }
-
-                  handleSubmit(values);
-                }}
               >
-                Add Product
+                {isLoading ? "Adding..." : "Add Product"}
               </Button>
             </Group>
           </div>
@@ -706,4 +704,4 @@ export function AddProductToOfferingModal({
       </Modal.Content>
     </Modal.Root>
   );
-}
+};

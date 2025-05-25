@@ -29,7 +29,9 @@ import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { MasterDistributor } from "@/types";
 import { getOfferingProducts } from "@/api/products/get-offering-products";
-import { deleteOfferingProducts } from "@/api/products/delete-offering-product";
+import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
+import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
+import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 
 // Placeholder imports - actual components might have different props/structure
 import InnovationProductsTable from "./InnovationProductsTable";
@@ -207,7 +209,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
 
   // Add state for fetched products per offering
   const [offeringProducts, setOfferingProducts] = useState<
-    Record<number, OfferingMappedProduct[]>
+    Record<string, OfferingMappedProduct[]>
   >({});
   const [offeringDistributors, setOfferingDistributors] = useState<
     Record<number, DistributorData[]>
@@ -228,7 +230,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   const [selectedProducts, setSelectedProducts] = useState<
     Record<number, number[]>
   >({});
-  const [isDeletingProducts, setIsDeletingProducts] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
 
   // Initialize states when offerings change
   useEffect(() => {
@@ -410,52 +412,125 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   }
 
   // Update the handleAddProductToOffering function
-  function handleAddProductToOffering(
-    product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
-  ) {
-    if (targetOfferingIndex === null) return;
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
 
-    // Map modal product to OfferingProductData shape
-    const productWithPrice: OfferingProductData = {
-      irc: product.irc,
-      material_description: product.material_description,
-      icp_cost: product.icp_cost,
-      price: product.icp_cost,
-      currency: product.currency,
-      brand_id: product.brand_id,
-      sub_brand_id: product.sub_brand_id,
-      product_type: product.product_type,
-      pref: product.pref,
-      grouping: product.grouping,
-    };
+  const createProductMutation = useCreateOfferingProduct({
+    mutationConfig: {
+      onSuccess: (response, variables) => {
+        // Add the new product to the current offering's products
+        const newProduct = response.data;
+        if (newProduct) {
+          setOfferingProducts((prev) => ({
+            ...prev,
+            [variables.offeringId.toString()]: [
+              ...(prev[variables.offeringId.toString()] || []),
+              {
+                irc: newProduct.irc,
+                currency: newProduct.currency,
+                price: newProduct.price,
+                icp_cost: newProduct.icp_cost,
+                product_type: newProduct.product_type,
+                pref: newProduct.pref,
+                grouping: newProduct.grouping,
+                material_description: newProduct.material_description,
+                brand_id: newProduct.brand_id,
+                sub_brand_id: newProduct.sub_brand_id,
+              },
+            ],
+          }));
+        }
+      },
+      onError: (error) => {
+        console.error("Failed to create product:", error);
+      },
+    },
+  });
 
-    // Get the current offering
-    const currentOffering = offerings[targetOfferingIndex];
+  const updateProductMutation = useUpdateOfferingProduct({});
+  const deleteProductMutation = useDeleteOfferingProduct({});
 
-    if (!currentOffering || !currentOffering.id) return;
+  // Add new function to handle product creation
+  const handleAddProductToOffering = async (
+    product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number },
+    offeringId: number
+  ) => {
+    if (!innovationId) return;
 
-    // Update the offeringProducts state
-    setOfferingProducts((prev) => ({
-      ...prev,
-      [currentOffering.id as number]: [
-        ...(prev[currentOffering.id as number] || []),
-        productWithPrice,
-      ],
-    }));
+    try {
+      setIsAddingProduct(true);
 
-    // Update the offerings array with the new product
-    const updatedOffering = {
-      ...currentOffering,
-      products: [...(currentOffering.products || []), productWithPrice],
-    };
+      // Call the create product endpoint
+      await createProductMutation.mutateAsync({
+        innovationId,
+        offeringId,
+        data: {
+          irc: product.irc,
+          material_description: product.material_description,
+          icp_cost: product.icp_cost,
+          price: product.icp_cost,
+          currency: product.currency,
+          brand_id: product.brand_id,
+          sub_brand_id: product.sub_brand_id,
+          product_type: product.product_type,
+          pref: product.pref,
+          grouping: product.grouping,
+        },
+      });
 
-    // Call onEdit to update the parent component's state
-    onEdit(targetOfferingIndex, updatedOffering);
+      // Close the modal
+      setIsProductModalOpen(false);
+      setTargetOfferingIndex(null);
 
-    // Close the modal and reset the target index
-    setIsProductModalOpen(false);
-    setTargetOfferingIndex(null);
-  }
+      // Refresh the products list for this offering
+      if (expandedRows.has(offerings.findIndex((o) => o.id === offeringId))) {
+        await handleExpandRow(
+          offerings.findIndex((o) => o.id === offeringId),
+          offeringId
+        );
+      }
+    } catch (error) {
+      console.error("Failed to add product:", error);
+    } finally {
+      setIsAddingProduct(false);
+    }
+  };
+
+  // Add new function to handle product update
+  const handleUpdateProduct = async (product: Product, offeringId: number) => {
+    if (!innovationId) return;
+
+    try {
+      setIsUpdatingProduct(true);
+      await updateProductMutation.mutateAsync({
+        innovationId,
+        offeringId,
+        productId: product.id,
+        data: {
+          irc: product.irc,
+          material_description: product.material_description,
+          icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+          price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+          currency: product.icp_eur ? "EUR" : "USD",
+          brand_id: product.brand.id.toString(),
+          sub_brand_id: product.brand_pillar?.id.toString(),
+          product_type: product.product_type as "saleable" | "non-saleable",
+          pref: product.pref as "pref" | "non-pref",
+          grouping: product.grouping.toString() as "1" | "2" | "3",
+        },
+      });
+
+      // Refresh the products list
+      handleExpandRow(
+        offerings.findIndex((o) => o.id === offeringId),
+        offeringId
+      );
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    } finally {
+      setIsUpdatingProduct(false);
+    }
+  };
 
   // Update toggleRow to fetch products if not already fetched
   async function handleExpandRow(index: number, offeringId: number) {
@@ -646,7 +721,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
         brandOptions={brandOptions}
         brandPillarOptions={brandPillarOptions}
         onBulkUpdate={(products) => {
-          console.log("Bulk update:", products);
+          if (offeringId) {
+            Promise.all(
+              products.map((product) =>
+                handleUpdateProduct(product, offeringId as number)
+              )
+            );
+          }
         }}
         selectedProducts={selectedProducts[offeringId] || []}
         onSelectedProductsChange={(productIds) => {
@@ -655,6 +736,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
             [offeringId]: productIds,
           }));
         }}
+        isUpdating={isUpdatingProduct}
       />
     );
   }
@@ -734,12 +816,18 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     if (!innovationId || !selectedProducts[offeringId]?.length) return;
 
     try {
-      setIsDeletingProducts(true);
-      await deleteOfferingProducts({
-        innovationId,
-        offeringId,
-        productIds: selectedProducts[offeringId],
-      });
+      setIsDeletingProduct(true);
+
+      // Delete each selected product one by one
+      await Promise.all(
+        selectedProducts[offeringId].map((productId) =>
+          deleteProductMutation.mutateAsync({
+            innovationId,
+            offeringId,
+            productId,
+          })
+        )
+      );
 
       // Refresh the products list after deletion
       handleExpandRow(index, offeringId);
@@ -752,7 +840,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     } catch (error) {
       console.error("Failed to delete products:", error);
     } finally {
-      setIsDeletingProducts(false);
+      setIsDeletingProduct(false);
     }
   };
 
@@ -890,10 +978,10 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                           disabled={
                                             !selectedProducts[
                                               offering.id as number
-                                            ]?.length || isDeletingProducts
+                                            ]?.length || isDeletingProduct
                                           }
                                         >
-                                          {isDeletingProducts
+                                          {isDeletingProduct
                                             ? "Deleting..."
                                             : "Delete product list"}
                                         </Button>
@@ -1432,7 +1520,15 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       <AddProductToOfferingModal
         opened={isProductModalOpen}
         onClose={() => setIsProductModalOpen(false)}
-        onSubmit={handleAddProductToOffering}
+        onSubmit={(product) => {
+          if (targetOfferingIndex !== null) {
+            const offering = offerings[targetOfferingIndex];
+            if (offering?.id) {
+              handleAddProductToOffering(product, offering.id);
+            }
+          }
+        }}
+        isLoading={isAddingProduct}
       />
     </div>
   );

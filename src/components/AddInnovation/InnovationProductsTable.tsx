@@ -1,6 +1,13 @@
 import { useUserStore } from "@/stores/userStore";
 import { Product } from "@/types";
-import { Loader, NumberInput, Table, TextInput, Checkbox } from "@mantine/core";
+import {
+  Loader,
+  NumberInput,
+  Table,
+  TextInput,
+  Checkbox,
+  Button,
+} from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useEffect, useState, useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -8,20 +15,22 @@ import EyeIcon from "../Icons/EyeIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import { CustomSelect } from "../HomePage/CustomSelect";
 
-interface InnovationProductsTableProps {
+export interface InnovationProductsTableProps {
   products: Product[];
   isEdit: boolean;
-  setIsEdit: React.Dispatch<React.SetStateAction<boolean>>;
-  onProductSelect?: (product: Product) => void;
-  brandOptions: { value: string; label: string }[];
-  brandPillarOptions: { value: string; label: string }[];
-  onBulkUpdate?: (products: Product[]) => void;
-  onDeleteProducts?: (productIds: number[]) => void;
-  selectedProducts?: number[];
-  onSelectedProductsChange?: (productIds: number[]) => void;
+  setIsEdit: (value: boolean | ((prevState: boolean) => boolean)) => void;
+  onProductSelect: (product: Product) => void;
+  brandOptions: Array<{ value: string; label: string }>;
+  brandPillarOptions: Array<{ value: string; label: string }>;
+  onBulkUpdate: (products: Product[]) => void;
+  selectedProducts: number[];
+  onSelectedProductsChange: (productIds: number[]) => void;
+  isUpdating?: boolean;
 }
 
-function InnovationProductsTable({
+export const InnovationProductsTable: React.FC<
+  InnovationProductsTableProps
+> = ({
   products,
   isEdit,
   setIsEdit,
@@ -29,10 +38,10 @@ function InnovationProductsTable({
   brandOptions,
   brandPillarOptions,
   onBulkUpdate,
-  onDeleteProducts,
-  selectedProducts = [],
+  selectedProducts,
   onSelectedProductsChange,
-}: InnovationProductsTableProps) {
+  isUpdating = false,
+}) => {
   const role = useUserStore((state) => state.user)?.role;
   const [currentProducts, setCurrentProducts] = useState<Product[]>(products);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
@@ -502,10 +511,7 @@ function InnovationProductsTable({
                 Cancel editing
               </button>
               <div className="h-6 w-px bg-gray-500 mx-4" />
-              <button
-                type="submit"
-                className="text-white text-base font-medium px-6 py-2 focus:outline-none transition-colors hover:bg-white hover:text-primary rounded-xl disabled:opacity-60"
-                disabled={isBulkUpdating}
+              <Button
                 onClick={() => {
                   const changed = getChangedProducts();
                   if (onBulkUpdate) {
@@ -522,9 +528,10 @@ function InnovationProductsTable({
                     }
                   }
                 }}
+                disabled={isUpdating}
               >
-                {isBulkUpdating ? "Saving..." : "Save & done edit"}
-              </button>
+                {isUpdating ? "Updating..." : "Save Changes"}
+              </Button>
             </div>
           </div>
         )}
@@ -541,6 +548,6 @@ function InnovationProductsTable({
       </div>
     </div>
   );
-}
+};
 
 export default InnovationProductsTable;
