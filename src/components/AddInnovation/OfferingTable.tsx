@@ -307,46 +307,80 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     openDeleteModal();
   };
 
-  const confirmDeleteOffering = () => {
-    if (deletingIndex !== null) {
-      onDelete(deletingIndex);
-      setDeletingIndex(null);
-      closeDeleteModal();
-    }
-  };
+  const [isAddingOffering, setIsAddingOffering] = useState(false);
+  const [isEditingOffering, setIsEditingOffering] = useState(false);
+  const [isDeletingOffering, setIsDeletingOffering] = useState(false);
 
-  const handleSubmitOffering = () => {
+  const handleSubmitOffering = async () => {
     setIsSubmitted(true);
 
     // Validate required fields
     if (!offeringForm.number.trim() || !offeringForm.type) {
-      return; // Stop submission if required fields are empty
+      return;
+    }
+
+    // Check for duplicate offering numbers
+    const isDuplicate = offerings.some(
+      (offering, idx) =>
+        offering.number === offeringForm.number.trim() &&
+        (modalMode === "add" || (modalMode === "edit" && idx !== editingIndex))
+    );
+
+    if (isDuplicate) {
+      console.error("An offering with this number already exists");
+      return;
     }
 
     const newOffering: Offering = {
       id:
         modalMode === "add"
-          ? Date.now()
+          ? undefined
           : editingIndex !== null
             ? offerings[editingIndex].id
-            : Date.now(), // Temporary ID for new offerings
-      number: offeringForm.number,
+            : undefined,
+      number: offeringForm.number.trim(),
       icw: offeringForm.icw,
       ocd: offeringForm.ocd,
       type: offeringForm.type,
       deck: offeringForm.deck,
       market_deck: offeringForm.market_deck,
-      products: [],
+      products:
+        modalMode === "edit" && editingIndex !== null
+          ? offerings[editingIndex].products || []
+          : [],
     };
 
-    if (modalMode === "edit" && editingIndex !== null) {
-      onEdit(editingIndex, newOffering);
-    } else {
-      onAdd(newOffering);
+    try {
+      if (modalMode === "add") {
+        setIsAddingOffering(true);
+        await onAdd(newOffering);
+      } else if (modalMode === "edit" && editingIndex !== null) {
+        setIsEditingOffering(true);
+        await onEdit(editingIndex, newOffering);
+      }
+      resetForm();
+      closeModal();
+    } catch (error) {
+      console.error("Failed to save offering:", error);
+    } finally {
+      setIsAddingOffering(false);
+      setIsEditingOffering(false);
     }
+  };
 
-    resetForm();
-    closeModal();
+  const confirmDeleteOffering = async () => {
+    if (deletingIndex !== null) {
+      try {
+        setIsDeletingOffering(true);
+        await onDelete(deletingIndex);
+        setDeletingIndex(null);
+        closeDeleteModal();
+      } catch (error) {
+        console.error("Failed to delete offering:", error);
+      } finally {
+        setIsDeletingOffering(false);
+      }
+    }
   };
 
   const toggleRow = (index: number) => {
@@ -1321,6 +1355,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={closeModal}
+                    disabled={isAddingOffering || isEditingOffering}
                   >
                     Cancel
                   </Button>
@@ -1329,8 +1364,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={handleSubmitOffering}
+                    disabled={isAddingOffering || isEditingOffering}
                   >
-                    {modalMode === "add" ? "Add Offering" : "Update Offering"}
+                    {isAddingOffering || isEditingOffering
+                      ? "Saving..."
+                      : modalMode === "add"
+                        ? "Add Offering"
+                        : "Update Offering"}
                   </Button>
                 </div>
               </div>
@@ -1369,6 +1409,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={closeDeleteModal}
+                    disabled={isDeletingOffering}
                   >
                     Cancel
                   </Button>
@@ -1376,8 +1417,9 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-red-500 bg-red-500 border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-red-600 transition-all ease-in-out duration-300"
                     onClick={confirmDeleteOffering}
+                    disabled={isDeletingOffering}
                   >
-                    Delete
+                    {isDeletingOffering ? "Deleting..." : "Delete"}
                   </Button>
                 </Group>
               </div>
