@@ -1182,6 +1182,48 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                                   rrsp
                                                 );
                                               }}
+                                              innovationId={innovationId}
+                                              offeringId={offering.id.toString()}
+                                              onLocalEdit={(product) => {
+                                                // Open the edit product modal with the current product data
+                                                setSelectedOffering(index);
+                                                setIsAddProductModalOpen(true);
+                                                // You can add logic here to pre-fill the modal with product data
+                                              }}
+                                              onLocalDelete={(product) => {
+                                                // Handle local deletion
+                                                const offeringId = offering.id;
+                                                if (
+                                                  offeringId &&
+                                                  typeof offeringId === "number"
+                                                ) {
+                                                  setOfferingProducts(
+                                                    (prev) => {
+                                                      const updatedProducts = {
+                                                        ...prev,
+                                                      };
+                                                      if (
+                                                        updatedProducts[
+                                                          offeringId
+                                                        ]
+                                                      ) {
+                                                        updatedProducts[
+                                                          offeringId
+                                                        ] = updatedProducts[
+                                                          offeringId
+                                                        ].filter(
+                                                          (
+                                                            p: OfferingMappedProduct
+                                                          ) =>
+                                                            p.irc !==
+                                                            product.irc
+                                                        );
+                                                      }
+                                                      return updatedProducts;
+                                                    }
+                                                  );
+                                                }
+                                              }}
                                             />
                                           )}
                                         </Grid.Col>

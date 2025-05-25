@@ -36,6 +36,7 @@ type FormValues = {
   customer_offering_deck: string;
   forecast_deadline: Date;
   offerings?: Array<{
+    id?: number;
     number: string;
     icw: Date;
     ocd: Date;
@@ -84,6 +85,7 @@ const formSchema = z.object({
 });
 
 type OfferingType = {
+  id?: number;
   number: string;
   icw: Date;
   ocd: Date;
@@ -854,24 +856,12 @@ const AddInnovationForm = forwardRef<
           onAdd={handleAddOffering}
           onEdit={handleEditOffering}
           onDelete={handleDeleteOffering}
-          onOpenProductModal={handleOpenOfferingProductModal}
-          innovationId={innovationId}
+          innovationId={innovationId || "0"}
         />
       </form>
 
       {/* Add Product Button and Modal */}
       <div className="my-6">
-        {/* <Button
-          type="button"
-          variant="outline"
-          className="border-primary bg-transparent border-2 text-primary text-sm font-medium px-4 py-2 hover:bg-primary hover:text-white transition-all duration-300"
-          onClick={() => {
-            setEditingProductIndex(null);
-            setIsProductModalOpen(true);
-          }}
-        >
-          Add Product
-        </Button> */}
         <AddProductToOfferingModal
           opened={isProductModalOpen}
           onClose={() => setIsProductModalOpen(false)}
@@ -881,11 +871,21 @@ const AddInnovationForm = forwardRef<
               : (product: OfferingProductFormValues) =>
                   handleEditProduct(editingProductIndex as number, product)
           }
+          innovationId={innovationId || "0"}
+          offeringId="0"
         />
         <AddProductToOfferingModal
           opened={isOfferingProductModalOpen}
           onClose={handleCloseOfferingProductModal}
           onSubmit={handleAddProductToOffering}
+          innovationId={innovationId || "0"}
+          offeringId={
+            (targetOfferingIndex !== null &&
+              form
+                .getValues()
+                .offerings?.[targetOfferingIndex]?.id?.toString()) ||
+            "0"
+          }
         />
         <ul>
           {products.map((product, idx) => (
