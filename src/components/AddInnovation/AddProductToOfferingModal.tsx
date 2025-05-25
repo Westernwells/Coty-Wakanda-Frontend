@@ -131,8 +131,6 @@ export function AddProductToOfferingModal({
 }: AddProductToOfferingModalProps) {
   const queryClient = useQueryClient();
 
-  console.log("initialData", initialData);
-
   const form = useForm<OfferingProductFormValues>({
     initialValues:
       editMode && initialData
