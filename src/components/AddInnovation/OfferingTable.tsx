@@ -176,6 +176,14 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     deck: "",
     market_deck: "",
   });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<{
+    number: boolean;
+    type: boolean;
+  }>({
+    number: false,
+    type: false,
+  });
 
   // State for nested tables - we need an array of states, one for each offering row
   // This approach might get complex if offerings can be reordered or many are expanded.
@@ -264,6 +272,11 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       deck: "",
       market_deck: "",
     });
+    setIsSubmitted(false);
+    setTouchedFields({
+      number: false,
+      type: false,
+    });
   };
 
   const handleAddOffering = () => {
@@ -303,6 +316,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   };
 
   const handleSubmitOffering = () => {
+    setIsSubmitted(true);
+
+    // Validate required fields
+    if (!offeringForm.number.trim() || !offeringForm.type) {
+      return; // Stop submission if required fields are empty
+    }
+
     const newOffering: Offering = {
       id:
         modalMode === "add"
@@ -1191,15 +1211,26 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     <Grid.Col span={{ sm: 6, base: 12 }}>
                       <TextInput
                         value={offeringForm.number}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setOfferingForm((prev) => ({
                             ...prev,
                             number: e.target.value,
-                          }))
-                        }
+                          }));
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            number: true,
+                          }));
+                        }}
                         placeholder="Offering Number"
                         label="Offering number"
                         classNames={textInputStyles}
+                        required
+                        error={
+                          (isSubmitted || touchedFields.number) &&
+                          offeringForm.number.trim() === ""
+                            ? "Offering number is required"
+                            : null
+                        }
                       />
                     </Grid.Col>
                     <Grid.Col span={{ sm: 6, base: 12 }}>
@@ -1253,12 +1284,16 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     <Grid.Col span={{ sm: 4, base: 12 }}>
                       <Select
                         value={offeringForm.type}
-                        onChange={(value) =>
+                        onChange={(value) => {
                           setOfferingForm((prev) => ({
                             ...prev,
                             type: value || "",
-                          }))
-                        }
+                          }));
+                          setTouchedFields((prev) => ({
+                            ...prev,
+                            type: true,
+                          }));
+                        }}
                         label="Type"
                         placeholder="Select type"
                         data={[
@@ -1267,108 +1302,15 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                         ]}
                         rightSection={<ChevronDownIcon />}
                         classNames={selectStyles}
+                        required
+                        error={
+                          (isSubmitted || touchedFields.type) &&
+                          offeringForm.type === ""
+                            ? "Type is required"
+                            : null
+                        }
                         clearable
                       />
-                    </Grid.Col>
-                    <Grid.Col span={{ sm: 6, base: 12 }}>
-                      <FormField label="Deck file">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="file"
-                              accept=".pdf,.ppt,.pptx"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  handleFileUpload(file, "deck");
-                                }
-                              }}
-                              style={{ display: "none" }}
-                              id="offering_deck_input"
-                            />
-                            <Button
-                              type="button"
-                              variant="filled"
-                              className="bg-primary hover:bg-primary/90 text-white"
-                              onClick={() =>
-                                document
-                                  .getElementById("offering_deck_input")
-                                  ?.click()
-                              }
-                              leftSection={<Upload size={16} />}
-                            >
-                              Upload Deck
-                            </Button>
-                          </div>
-                          {offeringForm.deck && (
-                            <div className="flex items-center gap-2 text-sm text-blue-600">
-                              <span>deck-file.pdf</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOfferingForm((prev) => ({
-                                    ...prev,
-                                    deck: "",
-                                  }))
-                                }
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </FormField>
-                    </Grid.Col>
-                    <Grid.Col span={{ sm: 6, base: 12 }}>
-                      <FormField label="Market deck file">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="file"
-                              accept=".pdf,.ppt,.pptx"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  handleFileUpload(file, "market_deck");
-                                }
-                              }}
-                              style={{ display: "none" }}
-                              id="offering_market_deck_input"
-                            />
-                            <Button
-                              type="button"
-                              variant="filled"
-                              className="bg-primary hover:bg-primary/90 text-white"
-                              onClick={() =>
-                                document
-                                  .getElementById("offering_market_deck_input")
-                                  ?.click()
-                              }
-                              leftSection={<Upload size={16} />}
-                            >
-                              Upload Market Deck
-                            </Button>
-                          </div>
-                          {offeringForm.market_deck && (
-                            <div className="flex items-center gap-2 text-sm text-blue-600">
-                              <span>market-deck-file.pdf</span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setOfferingForm((prev) => ({
-                                    ...prev,
-                                    market_deck: "",
-                                  }))
-                                }
-                                className="text-gray-400 hover:text-gray-600"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </FormField>
                     </Grid.Col>
                   </Grid>
                 </FormSection>
