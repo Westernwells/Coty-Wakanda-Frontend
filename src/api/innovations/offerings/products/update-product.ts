@@ -6,19 +6,20 @@ import { CreateOfferingProductDTO } from "./create-product";
 export const updateOfferingProduct = ({
   innovationId,
   offeringId,
-  productId,
+  id,
   data,
 }: {
   innovationId: number | string;
   offeringId: number | string;
-  productId: number | string;
+  id: number;
   data: CreateOfferingProductDTO;
 }): Promise<{ data: { id: number } }> => {
   console.log(
-    `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`
+    `/innovations/${innovationId}/offerings/${offeringId}/products/${id}`
   );
+  console.log("updating product-------", data);
   return axios.put(
-    `/innovations/${innovationId}/offerings/${offeringId}/products/${productId}`,
+    `/innovations/${innovationId}/offerings/${offeringId}/products/${id}`,
     data
   );
 };

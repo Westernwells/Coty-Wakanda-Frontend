@@ -295,6 +295,44 @@ export function AddProductToOfferingModal({
     ]);
   };
 
+  function sanitizePayload<T extends Record<string, unknown>>(obj: T): T {
+    const sanitized: Record<string, unknown> = {};
+    // List fields where "0" should be treated as undefined
+    const zeroAsUndefined = [
+      "brand_id",
+      "sub_brand_id",
+      "category_id",
+      "subcategory_id",
+      "market_id",
+      "segment_id",
+      "country_id",
+      "factory",
+      "line_id",
+      "offering_number",
+    ];
+    for (const key in obj) {
+      const value = obj[key];
+      if (
+        value === "" ||
+        (zeroAsUndefined.includes(key) && value === "0") ||
+        (typeof value === "number" && isNaN(value))
+      ) {
+        sanitized[key] = undefined;
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized as T;
+  }
+
+  function formatDateToMySQL(
+    date: Date | null | undefined
+  ): string | undefined {
+    if (!date) return undefined;
+    // Only date part: YYYY-MM-DD
+    return date.toISOString().slice(0, 10);
+  }
+
   const handleSubmit = (values: OfferingProductFormValues) => {
     const validation = form.validate();
     if (validation.hasErrors) {
@@ -310,7 +348,8 @@ export function AddProductToOfferingModal({
     }
 
     // Create the submission object with required fields
-    const submissionValues = {
+    const submissionValues = sanitizePayload({
+      id: editMode && initialData ? initialData.id : undefined,
       irc: values.irc.trim(),
       material_description: values.material_description?.trim(),
       icp_cost,
@@ -321,21 +360,44 @@ export function AddProductToOfferingModal({
       product_type: values.product_type,
       pref: values.pref,
       grouping: values.grouping,
-    };
+      division: values.division,
+      brand_category: values.brand_category,
+      ean_upc: values.ean_upc,
+      house: values.house,
+      line: values.line,
+      line_id: values.line_id,
+      article_type: values.article_type,
+      offering_number: values.offering_number,
+      launch_date: formatDateToMySQL(values.launch_date),
+      discontinue_date: formatDateToMySQL(values.discontinue_date),
+      category_id: values.category_id,
+      subcategory_id: values.subcategory_id,
+      market_id: values.market_id,
+      segment_id: values.segment_id,
+      factory: values.factory,
+      commodity_id: values.commodity_id,
+      country_id: values.country_id,
+      gender: values.gender,
+      size: values.size,
+      length: values.length,
+      height: values.height,
+      width: values.width,
+      volume: values.volume,
+      gross_weight: values.gross_weight,
+      net_weight: values.net_weight,
+      units: values.units,
+      icp_eur: values.icp_eur,
+      icp_usd: values.icp_usd,
+    });
+
+    console.log("submissionValues", submissionValues);
 
     if (editMode && initialData) {
-      console.log("Updating product:", {
-        innovationId,
-        offeringId,
-        productId: initialData.id,
-        data: submissionValues,
-      });
-
       updateProductMutation.mutate(
         {
           innovationId,
           offeringId,
-          productId: initialData.id,
+          id: initialData.id,
           data: submissionValues,
         },
         {

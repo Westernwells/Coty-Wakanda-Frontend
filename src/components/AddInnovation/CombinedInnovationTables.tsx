@@ -21,6 +21,7 @@ interface CombinedInnovationTablesProps {
   onDeleteProducts?: (productIds: number[]) => void;
   selectedProducts?: number[];
   onSelectedProductsChange?: (productIds: number[]) => void;
+  isDeleteMode: boolean;
 
   // Distributor prices props
   distributors: {
@@ -58,6 +59,7 @@ function CombinedInnovationTables({
   onDeleteProducts,
   selectedProducts = [],
   onSelectedProductsChange,
+  isDeleteMode,
 
   // Distributor prices props
   distributors,
@@ -91,6 +93,9 @@ function CombinedInnovationTables({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [benchmarkedProducts, setBenchmarkedProducts] = useState<Set<number>>(
+    new Set()
+  );
 
   const currentDistributor = distributors[currentDistributorIndex] || null;
 
@@ -118,7 +123,7 @@ function CombinedInnovationTables({
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    if (!onSelectedProductsChange) return;
+    if (!onSelectedProductsChange || !isDeleteMode) return;
 
     const newSelectedProducts = e.currentTarget.checked
       ? products.map((product) => product.id)
@@ -132,13 +137,23 @@ function CombinedInnovationTables({
     productId: number
   ) => {
     e.stopPropagation();
-    if (!onSelectedProductsChange) return;
+    if (!onSelectedProductsChange || !isDeleteMode) return;
 
     const newSelectedProducts = selectedProducts.includes(productId)
       ? selectedProducts.filter((id) => id !== productId)
       : [...selectedProducts, productId];
 
     onSelectedProductsChange(newSelectedProducts);
+  };
+
+  const handleBenchmarkToggle = (productId: number) => {
+    const newBenchmarkedProducts = new Set(benchmarkedProducts);
+    if (newBenchmarkedProducts.has(productId)) {
+      newBenchmarkedProducts.delete(productId);
+    } else {
+      newBenchmarkedProducts.add(productId);
+    }
+    setBenchmarkedProducts(newBenchmarkedProducts);
   };
 
   const handleRowClick = (e: React.MouseEvent, product: Product) => {
@@ -170,7 +185,7 @@ function CombinedInnovationTables({
       updateProductMutation.mutate({
         innovationId,
         offeringId,
-        productId: product.id,
+        id: product.id,
         data: {
           irc: product.irc,
           material_description: product.material_description,
@@ -234,6 +249,8 @@ function CombinedInnovationTables({
   if (!products.length) {
     return <p>No products available</p>;
   }
+
+  console.log("products", products);
 
   return (
     <div className="flex flex-col h-full">
@@ -300,29 +317,31 @@ function CombinedInnovationTables({
                 <Table.Tr className="bg-primary text-white">
                   <Table.Th className="rounded-ss-xl checkbox-cell w-[120px]">
                     <div className="flex items-center gap-2">
-                      <Checkbox
-                        color="white"
-                        checked={
-                          selectedProducts.length === products.length &&
-                          products.length > 0
-                        }
-                        indeterminate={
-                          selectedProducts.length > 0 &&
-                          selectedProducts.length < products.length
-                        }
-                        onChange={handleSelectAll}
-                        styles={{
-                          input: {
-                            backgroundColor: "transparent",
-                            borderColor: "white",
-                            "&:checked": {
-                              backgroundColor: "white",
+                      {isDeleteMode && (
+                        <Checkbox
+                          color="white"
+                          checked={
+                            selectedProducts.length === products.length &&
+                            products.length > 0
+                          }
+                          indeterminate={
+                            selectedProducts.length > 0 &&
+                            selectedProducts.length < products.length
+                          }
+                          onChange={handleSelectAll}
+                          styles={{
+                            input: {
+                              backgroundColor: "transparent",
                               borderColor: "white",
+                              "&:checked": {
+                                backgroundColor: "white",
+                                borderColor: "white",
+                              },
+                              cursor: "pointer",
                             },
-                            cursor: "pointer",
-                          },
-                        }}
-                      />
+                          }}
+                        />
+                      )}
                       <span className="text-white">Actions</span>
                     </div>
                   </Table.Th>
@@ -334,8 +353,9 @@ function CombinedInnovationTables({
                   <Table.Th>ICP EU</Table.Th>
                   <Table.Th>ICP USD</Table.Th>
                   <Table.Th>Pref Value</Table.Th>
+                  <Table.Th>Status</Table.Th>
                   <Table.Th className="border-r border-gray-200">
-                    Status
+                    Benchmarked
                   </Table.Th>
                   {/* Distributor Price Columns */}
                   <Table.Th>Price</Table.Th>
@@ -359,17 +379,19 @@ function CombinedInnovationTables({
                           className="flex items-center gap-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Checkbox
-                            checked={selectedProducts.includes(product.id)}
-                            onChange={(e) =>
-                              handleCheckboxChange(e, product.id)
-                            }
-                            styles={{
-                              input: {
-                                cursor: "pointer",
-                              },
-                            }}
-                          />
+                          {isDeleteMode && (
+                            <Checkbox
+                              checked={selectedProducts.includes(product.id)}
+                              onChange={(e) =>
+                                handleCheckboxChange(e, product.id)
+                              }
+                              styles={{
+                                input: {
+                                  cursor: "pointer",
+                                },
+                              }}
+                            />
+                          )}
                           <div className="flex items-center gap-1">
                             <Button
                               variant="subtle"
@@ -436,12 +458,33 @@ function CombinedInnovationTables({
                           {product.pref}
                         </span>
                       </Table.Td>
-                      <Table.Td className="border-r border-gray-200">
+                      <Table.Td>
                         {product.status && (
                           <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
                             {product.status}
                           </span>
                         )}
+                      </Table.Td>
+                      <Table.Td className="border-r border-gray-200">
+                        <Checkbox
+                          checked={benchmarkedProducts.has(product.id)}
+                          onChange={() => handleBenchmarkToggle(product.id)}
+                          styles={{
+                            input: {
+                              cursor: "pointer",
+                              backgroundColor: benchmarkedProducts.has(
+                                product.id
+                              )
+                                ? "#0025FF"
+                                : "transparent",
+                              borderColor: "#0025FF",
+                              "&:checked": {
+                                backgroundColor: "#0025FF",
+                                borderColor: "#0025FF",
+                              },
+                            },
+                          }}
+                        />
                       </Table.Td>
                       {/* Distributor Price Cells */}
                       <Table.Td>

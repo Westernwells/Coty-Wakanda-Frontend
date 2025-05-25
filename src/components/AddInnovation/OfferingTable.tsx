@@ -12,22 +12,12 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  PlusIcon,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Upload,
-  Trash2,
-  Pencil,
-} from "lucide-react";
+import { PlusIcon, ChevronDown, ChevronUp, Trash2, Pencil } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
-import { FormField } from "../Shared/Form/Field";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import { MasterDistributor } from "@/types";
 import { getOfferingProducts } from "@/api/products/get-offering-products";
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
 import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
@@ -36,13 +26,11 @@ import { CreateOfferingProductDTO } from "@/api/innovations/offerings/products/c
 
 // Placeholder imports - actual components might have different props/structure
 import InnovationProductsTable from "./InnovationProductsTable";
-import InnovationDistributorPrices from "./InnovationDistributorPrices";
-import { Product, Meta, Filters } from "@/types";
+import { Product } from "@/types";
 import {
   AddProductToOfferingModal,
   OfferingProductFormValues,
 } from "./AddProductToOfferingModal"; // Import the new modal
-import { PriceBenchmark as ImportedPriceBenchmark } from "@/types";
 import CombinedInnovationTables from "./CombinedInnovationTables";
 
 // Updated to match OfferingProductFormValues in the modal
@@ -95,6 +83,7 @@ interface OfferingTableProps {
 
 // Define interface for mapped product (from EditInnovationForm mapping)
 interface OfferingMappedProduct {
+  id?: number;
   irc: string;
   currency: string;
   price: number;
@@ -126,40 +115,6 @@ interface DistributorData {
   id: number;
   name: string;
   data: DistributorPrice[];
-}
-
-interface OfferingProductResponse {
-  id: number;
-  name: string;
-  irc: string;
-  pref: string;
-  product_type: string;
-  brand_id: string;
-  currency: "EUR" | "USD";
-  icp_cost: number;
-  material_description?: string;
-  distributor_pricing: Array<{
-    irc: string;
-    billing_price: string;
-    rrsp: string;
-  }>;
-}
-
-interface DistributorPricing {
-  irc: string;
-  billing_price: string;
-  rrsp: string;
-}
-
-// Update the AddProductToOfferingModal props interface to include editMode and initialData
-interface AddProductToOfferingModalProps {
-  opened: boolean;
-  onClose: () => void;
-  onSubmit: (product: OfferingProductFormValues) => void;
-  innovationId: string;
-  offeringId: string;
-  editMode?: boolean;
-  initialData?: Product;
 }
 
 export const OfferingTable: React.FC<OfferingTableProps> = ({
@@ -243,6 +198,9 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   // Add state for edit mode
   const [editMode, setEditMode] = useState(false);
   const [editInitialData, setEditInitialData] = useState<Product | null>(null);
+
+  // Add isDeleteMode state near other states
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
 
   // Initialize states when offerings change
   useEffect(() => {
@@ -423,6 +381,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       onSuccess: (response, variables) => {
         // Add the new product to the current offering's products
         const newProduct = response.data;
+
         if (newProduct) {
           setOfferingProducts((prev) => ({
             ...prev,
@@ -532,7 +491,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       await updateProductMutation.mutateAsync({
         innovationId,
         offeringId,
-        productId: product.id,
+        id: product.id,
         data: submissionData,
       });
 
@@ -573,6 +532,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       try {
         const response = await getOfferingProducts(innovationId, offeringId);
         const { products, distributors } = response.data;
+        console.log("products from offering table", products);
 
         // Map products to the format expected by the component
         const mappedProducts: OfferingMappedProduct[] = products.map((p) => ({
@@ -586,6 +546,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
           material_description: p.description || "",
           brand_id: "",
           sub_brand_id: "",
+          id: p.id,
         }));
 
         // Map distributors to the format expected by the component
@@ -990,21 +951,26 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                         <Button
                                           variant="outline"
                                           className="border-primary text-primary hover:bg-primary/10 rounded-lg"
-                                          onClick={() =>
-                                            offering.id &&
-                                            handleDeleteProducts(
-                                              offering.id as number,
-                                              index
-                                            )
-                                          }
-                                          disabled={
-                                            !selectedProducts[
-                                              offering.id as number
-                                            ]?.length || isDeletingProduct
-                                          }
+                                          onClick={() => {
+                                            if (isDeleteMode) {
+                                              if (
+                                                offering.id &&
+                                                selectedProducts[offering.id]
+                                                  ?.length
+                                              ) {
+                                                handleDeleteProducts(
+                                                  offering.id as number,
+                                                  index
+                                                );
+                                              }
+                                              setIsDeleteMode(false);
+                                            } else {
+                                              setIsDeleteMode(true);
+                                            }
+                                          }}
                                         >
-                                          {isDeletingProduct
-                                            ? "Deleting..."
+                                          {isDeleteMode
+                                            ? "Cancel Delete"
                                             : "Delete product list"}
                                         </Button>
                                       </Group>
@@ -1016,7 +982,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                                 offeringProducts[offering.id] ||
                                                 []
                                               ).map((p, i) => ({
-                                                id: i + 1,
+                                                id: p.id || 0,
                                                 pref: p.pref,
                                                 product_type: p.product_type,
                                                 brand_pillar: {
@@ -1266,6 +1232,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                                   );
                                                 }
                                               }}
+                                              isDeleteMode={isDeleteMode}
                                             />
                                           )}
                                         </Grid.Col>
