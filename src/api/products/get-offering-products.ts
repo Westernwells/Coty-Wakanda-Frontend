@@ -1,4 +1,4 @@
-import axios from "axios";
+import { axios } from "@/lib/axios";
 
 export interface Brand {
   id: number;
@@ -112,10 +112,8 @@ export async function getOfferingProducts(
   innovationId: string | number,
   offeringId: string | number
 ): Promise<GetOfferingProductsResponse> {
-  console.log("from getOfferingProducts", innovationId, offeringId);
   const response = await axios.get(
     `/innovations/${innovationId}/offerings/${offeringId}/products`
   );
-  console.log("from getOfferingProducts", response.data);
   return response.data;
 }

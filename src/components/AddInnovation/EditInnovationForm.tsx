@@ -2,11 +2,11 @@ import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
 import { useFileUpload } from "@/api/products/upload-document";
-import { Innovation } from "@/types";
+import { Innovation, ProductListResponse } from "@/types";
 import { Button, Grid, Select, TextInput } from "@mantine/core";
 import { YearPickerInput, DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
-import { useQueries } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { X, Upload } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
@@ -273,7 +273,6 @@ const EditInnovationForm = forwardRef<
   const handleSubmit = () => {
     const validation = form.validate();
     if (Object.keys(validation.errors).length > 0) {
-      console.log("Form validation errors:", validation.errors);
       return;
     }
 
@@ -375,6 +374,9 @@ const EditInnovationForm = forwardRef<
                   innovationId,
                   offering.id
                 );
+                // console.log("res----", res);
+                // console.log("innovationId----", innovationId);
+                // console.log("offering.id----", offering.id);
                 // Map API product to local product shape
                 return (res.data || []).map((p) => ({
                   irc: p.irc,
@@ -502,95 +504,6 @@ const EditInnovationForm = forwardRef<
       setHasChanges(hasFormChanges);
     }
   }, [form.values, innovationData]);
-
-  const resetForm = () => {
-    if (innovationData) {
-      const brandId = innovationData.brand.id.toString();
-
-      // Determine initial reference names using the same logic as form initialization
-      let initialFormReferenceNames: string[] = [];
-      if (innovationData.reference_names) {
-        if (Array.isArray(innovationData.reference_names)) {
-          initialFormReferenceNames = innovationData.reference_names.filter(
-            (ref) => typeof ref === "string"
-          );
-        } else if (typeof innovationData.reference_names === "string") {
-          initialFormReferenceNames = [innovationData.reference_names];
-        }
-      }
-      initialFormReferenceNames = initialFormReferenceNames
-        .map((name) => name.trim())
-        .filter((name) => name !== "");
-
-      const transformedOfferings =
-        innovationData.offerings?.map((offering) => ({
-          id: offering.id,
-          number: offering.number || "",
-          icw: new Date(offering.icw),
-          ocd: new Date(offering.ocd),
-          type: offering.type || "",
-          deck: offering.deck || "",
-          market_deck: offering.market_deck || "",
-          products: [] as Array<{
-            irc: string;
-            currency: string;
-            price: number;
-            icp_cost: number;
-            product_type: string;
-            pref: string;
-            grouping: string;
-            material_description?: string;
-            brand_id: string;
-            sub_brand_id?: string;
-          }>,
-        })) || [];
-
-      form.setValues({
-        status: innovationData.status || "active",
-        brand_id: brandId,
-        sub_brand_id: innovationData.brand_pillar.id.toString(),
-        year: new Date(parseInt(innovationData.year), 0, 1),
-        format: innovationData.format || "",
-        launch_name: innovationData.launch_name || "",
-        reference_names: initialFormReferenceNames,
-        internal_offering_deck: innovationData.internal_offering_deck || "",
-        customer_offering_deck: innovationData.customer_offering_deck || "",
-        forecast_deadline: new Date(innovationData.forecast_deadline),
-        offerings: transformedOfferings,
-      });
-
-      setSelectedBrandId(brandId);
-      setReferenceNames(initialFormReferenceNames);
-      setHasChanges(false);
-
-      // Reset uploaded file states
-      setUploadedFiles({
-        internal_offering_deck: innovationData.internal_offering_deck || "",
-        customer_offering_deck: innovationData.customer_offering_deck || "",
-      });
-
-      setUploadedFileExtensions({
-        internal_offering_deck:
-          innovationData.internal_offering_deck
-            ?.split(".")
-            .pop()
-            ?.toLowerCase() || "",
-        customer_offering_deck:
-          innovationData.customer_offering_deck
-            ?.split(".")
-            .pop()
-            ?.toLowerCase() || "",
-      });
-      setUploadedFileNames({
-        internal_offering_deck: getFileNameFromUrl(
-          innovationData.internal_offering_deck ?? null
-        ),
-        customer_offering_deck: getFileNameFromUrl(
-          innovationData.customer_offering_deck ?? null
-        ),
-      });
-    }
-  };
 
   // Handle brand change to clear sub_brand_id and update selected brand
   const handleBrandChange = (brandId: string | null) => {
