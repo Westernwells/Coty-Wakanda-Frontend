@@ -173,11 +173,15 @@ const InnovationDistributorPrices: React.FC<
 
   if (!currentDistributor) {
     return (
-      <div className="flex flex-col h-full p-4">
-        <h2 className="text-xl font-semibold text-gray-800 border-b pb-4">
-          Distributor Prices
-        </h2>
-        <p className="text-gray-500 pt-4">No distributor data available.</p>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-20">
+          <h2 className="text-xl font-semibold text-gray-800">
+            Distributor Prices
+          </h2>
+        </div>
+        <div className="flex-grow p-4">
+          <p className="text-gray-500">No distributor data available.</p>
+        </div>
       </div>
     );
   }
@@ -222,6 +226,7 @@ const InnovationDistributorPrices: React.FC<
         className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
         ref={scrollableRef}
         onScroll={handleScroll}
+        id="distributor-scroll-container"
       >
         <InfiniteScroll
           dataLength={currentDistributorPrices.length}
@@ -239,6 +244,7 @@ const InnovationDistributorPrices: React.FC<
                 : ""}
             </div>
           }
+          scrollableTarget="distributor-scroll-container"
         >
           <Table
             verticalSpacing="sm"

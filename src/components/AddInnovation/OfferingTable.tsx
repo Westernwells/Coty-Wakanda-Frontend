@@ -40,6 +40,7 @@ import {
   OfferingProductFormValues,
 } from "./AddProductToOfferingModal"; // Import the new modal
 import { PriceBenchmark as ImportedPriceBenchmark } from "@/types";
+import CombinedInnovationTables from "./CombinedInnovationTables";
 
 // Updated to match OfferingProductFormValues in the modal
 interface OfferingProductData {
@@ -844,28 +845,220 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                         </Button>
                                       </Group>
                                       <Grid gutter="lg">
-                                        <Grid.Col span={{ base: 16, md: 8 }}>
-                                          <h3 className="text-lg font-semibold text-primary mb-2">
-                                            Product list
-                                          </h3>
+                                        <Grid.Col>
                                           {offering.id && (
-                                            <OfferingProductsTable
-                                              products={
+                                            <CombinedInnovationTables
+                                              products={(
                                                 offeringProducts[offering.id] ||
                                                 []
+                                              ).map((p, i) => ({
+                                                id: i + 1,
+                                                pref: p.pref,
+                                                product_type: p.product_type,
+                                                brand_pillar: {
+                                                  id: 0,
+                                                  name: "",
+                                                },
+                                                grouping: Number(p.grouping),
+                                                price: String(p.price),
+                                                launch_date: new Date(),
+                                                discontinue_date: new Date(),
+                                                offering_number: "",
+                                                irc: p.irc,
+                                                sku: p.irc,
+                                                material_description:
+                                                  p.material_description || "",
+                                                ean_upc: "",
+                                                house: "",
+                                                line: "",
+                                                line_id: "",
+                                                line_number: "",
+                                                article_type: p.product_type,
+                                                article_sub_type: "",
+                                                division: "",
+                                                segment: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                icp_eur:
+                                                  p.currency === "EUR"
+                                                    ? String(p.icp_cost)
+                                                    : "0",
+                                                icp_usd:
+                                                  p.currency === "USD"
+                                                    ? String(p.icp_cost)
+                                                    : "0",
+                                                factory: "",
+                                                commodity_id: "",
+                                                gender: "",
+                                                size: "",
+                                                length: "",
+                                                height: "",
+                                                width: "",
+                                                volume: "",
+                                                gross_weight: "",
+                                                net_weight: "",
+                                                units: "",
+                                                created_at: "",
+                                                brand: {
+                                                  id: Number(p.brand_id) || 0,
+                                                  brand_type_id: 0,
+                                                  name: "",
+                                                  active: true,
+                                                  type: BRAND_TYPE_MASS,
+                                                  created_at: "",
+                                                  updated_at: "",
+                                                  deleted_at: null,
+                                                  pivot: {
+                                                    distributor_id: 0,
+                                                    brand_id:
+                                                      Number(p.brand_id) || 0,
+                                                  },
+                                                },
+                                                pricing: {
+                                                  distributor_id: 0,
+                                                  icp_usd:
+                                                    p.currency === "USD"
+                                                      ? p.icp_cost
+                                                      : 0,
+                                                  icp_eur:
+                                                    p.currency === "EUR"
+                                                      ? p.icp_cost
+                                                      : 0,
+                                                  french_usd: null,
+                                                  french_eur: null,
+                                                  rrsp: null,
+                                                  regional_billing_price: null,
+                                                  c1: null,
+                                                  cssp: null,
+                                                  status: "",
+                                                },
+                                                category: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                country: {
+                                                  id: 0,
+                                                  name: "",
+                                                  official_name: "",
+                                                  iso2: "",
+                                                  iso3: "",
+                                                  flag_url: "",
+                                                  created_at: "",
+                                                },
+                                                market: null,
+                                                subcategory: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                price_benchmark: null,
+                                                documents: [],
+                                                distributor_pricing: [],
+                                                gmm_category: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_subCategory: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_market: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                                gmm_segment: {
+                                                  id: 0,
+                                                  name: "",
+                                                  created_at: "",
+                                                },
+                                              }))}
+                                              isEdit={
+                                                productsTableStates[index]
+                                                  ?.isEdit || false
                                               }
-                                              productsTableStates={
-                                                productsTableStates
+                                              setIsEdit={(isEditValue) => {
+                                                const newStates = [
+                                                  ...productsTableStates,
+                                                ];
+                                                if (newStates[index]) {
+                                                  newStates[index].isEdit =
+                                                    typeof isEditValue ===
+                                                    "function"
+                                                      ? isEditValue(
+                                                          newStates[index]
+                                                            .isEdit
+                                                        )
+                                                      : isEditValue;
+                                                  setProductsTableStates(
+                                                    newStates
+                                                  );
+                                                }
+                                              }}
+                                              onProductSelect={
+                                                handleProductSelect
                                               }
-                                              setProductsTableStates={
-                                                setProductsTableStates
+                                              brandOptions={brandOptions}
+                                              brandPillarOptions={
+                                                brandPillarOptions
                                               }
-                                              index={index}
-                                              offeringId={offering.id}
+                                              onBulkUpdate={(products) => {
+                                                console.log(
+                                                  "Bulk update:",
+                                                  products
+                                                );
+                                              }}
+                                              selectedProducts={
+                                                selectedProducts[offering.id] ||
+                                                []
+                                              }
+                                              onSelectedProductsChange={(
+                                                productIds
+                                              ) => {
+                                                setSelectedProducts((prev) => ({
+                                                  ...prev,
+                                                  [offering.id as number]:
+                                                    productIds,
+                                                }));
+                                              }}
+                                              distributors={
+                                                offeringDistributors[
+                                                  offering.id
+                                                ] || []
+                                              }
+                                              tableHeader={[
+                                                "Distributor IRC",
+                                                "Price",
+                                                "RRSP",
+                                              ]}
+                                              tableFields={[
+                                                "irc",
+                                                "billing_price",
+                                                "rrsp",
+                                              ]}
+                                              onPriceEdit={(irc, price) => {
+                                                console.log(
+                                                  "Price edit:",
+                                                  irc,
+                                                  price
+                                                );
+                                              }}
+                                              onRRSPEdit={(irc, rrsp) => {
+                                                console.log(
+                                                  "RRSP edit:",
+                                                  irc,
+                                                  rrsp
+                                                );
+                                              }}
                                             />
                                           )}
                                         </Grid.Col>
-                                        <Grid.Col span={{ base: 8, md: 4 }}>
+                                        {/* <Grid.Col span={{ base: 8, md: 4 }}>
                                           {offering.id && (
                                             <InnovationDistributorPrices
                                               distributors={
@@ -943,7 +1136,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                               }}
                                             />
                                           )}
-                                        </Grid.Col>
+                                        </Grid.Col> */}
                                       </Grid>
                                     </>
                                   )
