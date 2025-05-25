@@ -17,7 +17,10 @@ import { getBrands } from "@/api/get-brands"; // Assuming API path
 import { getBrandPillars } from "@/api/get-brandPillars"; // Assuming API path
 import { useEffect } from "react";
 import { DateInput } from "@mantine/dates";
-import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
+import {
+  useCreateOfferingProduct,
+  CreateOfferingProductDTO,
+} from "@/api/innovations/offerings/products/create-product";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 import { Product } from "@/types";
 
@@ -416,11 +419,53 @@ export function AddProductToOfferingModal({
         }
       );
     } else {
+      // Create submission values with all fields for create operation (send null instead of undefined)
+      const createSubmissionValues = {
+        irc: submissionValues.irc,
+        material_description: submissionValues.material_description,
+        icp_cost: submissionValues.icp_cost,
+        price: submissionValues.price,
+        currency: submissionValues.currency,
+        brand_id: submissionValues.brand_id,
+        sub_brand_id: submissionValues.sub_brand_id,
+        product_type: submissionValues.product_type,
+        pref: submissionValues.pref,
+        grouping: submissionValues.grouping,
+        division: submissionValues.division || null,
+        brand_category: submissionValues.brand_category || null,
+        ean_upc: submissionValues.ean_upc || null,
+        house: submissionValues.house || null,
+        line: submissionValues.line || null,
+        line_id: submissionValues.line_id ?? null,
+        article_type: submissionValues.article_type || null,
+        offering_number: submissionValues.offering_number ?? null,
+        launch_date: submissionValues.launch_date ?? null,
+        discontinue_date: submissionValues.discontinue_date ?? null,
+        category_id: submissionValues.category_id || null,
+        subcategory_id: submissionValues.subcategory_id || null,
+        market_id: submissionValues.market_id || null,
+        segment_id: submissionValues.segment_id || null,
+        factory: submissionValues.factory ?? null,
+        commodity_id: submissionValues.commodity_id || null,
+        country_id: submissionValues.country_id || null,
+        gender: submissionValues.gender || null,
+        size: submissionValues.size || null,
+        length: submissionValues.length ?? null,
+        height: submissionValues.height ?? null,
+        width: submissionValues.width ?? null,
+        volume: submissionValues.volume ?? null,
+        gross_weight: submissionValues.gross_weight ?? null,
+        net_weight: submissionValues.net_weight ?? null,
+        units: submissionValues.units ?? null,
+        icp_eur: submissionValues.icp_eur ?? null,
+        icp_usd: submissionValues.icp_usd ?? null,
+      } as CreateOfferingProductDTO; // Type assertion to bypass TypeScript checking
+
       createProductMutation.mutate(
         {
           innovationId,
           offeringId,
-          data: submissionValues,
+          data: createSubmissionValues,
         },
         {
           onSuccess: () => {
