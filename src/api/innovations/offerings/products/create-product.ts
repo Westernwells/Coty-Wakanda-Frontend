@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PriceBenchmark } from "@/types";
 
 export interface CreateOfferingProductDTO {
+  id?: number;
   irc: string;
   material_description?: string;
   icp_cost: number;
@@ -14,7 +15,36 @@ export interface CreateOfferingProductDTO {
   product_type: "saleable" | "non-saleable";
   pref: "pref" | "non-pref";
   grouping: "1" | "2" | "3";
+  division?: string;
+  brand_category?: string;
+  ean_upc?: string;
+  house?: string;
+  line?: string;
+  line_id?: string | number;
+  article_type?: string;
+  offering_number?: string | number;
+  launch_date?: string;
+  discontinue_date?: string;
+  category_id?: string;
+  subcategory_id?: string;
+  market_id?: string;
+  segment_id?: string;
+  factory?: string | number;
+  commodity_id?: string;
+  country_id?: string;
+  gender?: string;
+  size?: string;
+  length?: string | number;
+  height?: string | number;
+  width?: string | number;
+  volume?: string | number;
+  gross_weight?: string | number;
+  net_weight?: string | number;
+  units?: string | number;
+  icp_eur?: string | number;
+  icp_usd?: string | number;
   price_benchmark?: PriceBenchmark | null;
+  __gemini_diag_field?: string; // Temporary diagnostic field
 }
 
 interface CreateOfferingProductResponse {

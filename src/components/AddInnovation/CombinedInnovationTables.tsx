@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Loader, Table, Checkbox, Button, Modal, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { CustomSelect } from "../HomePage/CustomSelect";
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
@@ -678,6 +677,14 @@ function CombinedInnovationTables({
             pref: benchmarkProduct.pref as "pref" | "non-pref",
             grouping: benchmarkProduct.grouping as unknown as "1" | "2" | "3",
             price: benchmarkProduct.price ? Number(benchmarkProduct.price) : 0,
+            launch_date:
+              benchmarkProduct.launch_date instanceof Date
+                ? benchmarkProduct.launch_date.toISOString().split("T")[0]
+                : benchmarkProduct.launch_date,
+            discontinue_date:
+              benchmarkProduct.discontinue_date instanceof Date
+                ? benchmarkProduct.discontinue_date.toISOString().split("T")[0]
+                : benchmarkProduct.discontinue_date,
           }}
         />
       )}

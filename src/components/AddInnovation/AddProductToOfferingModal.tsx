@@ -60,6 +60,7 @@ export interface OfferingProductFormValues {
   gross_weight: string | number | undefined;
   net_weight: string | number | undefined;
   units: string | number | undefined;
+  price?: number; // Add price field to match API expectations
 }
 
 interface AddProductToOfferingModalProps {
@@ -138,8 +139,14 @@ export function AddProductToOfferingModal({
             icp_cost:
               Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
             currency: initialData.icp_eur ? "EUR" : "USD",
-            brand_id: initialData.brand?.id?.toString() || "",
-            sub_brand_id: initialData.brand_pillar?.id?.toString() || "",
+            brand_id:
+              initialData.brand?.id && initialData.brand.id !== 0
+                ? initialData.brand.id.toString()
+                : "",
+            sub_brand_id:
+              initialData.brand_pillar?.id && initialData.brand_pillar.id !== 0
+                ? initialData.brand_pillar.id.toString()
+                : "",
             product_type:
               (initialData.product_type as "saleable" | "non-saleable") ||
               "saleable",
@@ -160,15 +167,30 @@ export function AddProductToOfferingModal({
             discontinue_date: initialData.discontinue_date
               ? new Date(initialData.discontinue_date)
               : null,
-            category_id: initialData.category?.id?.toString() || "",
-            subcategory_id: initialData.subcategory?.id?.toString() || "",
-            market_id: initialData.market?.id?.toString() || "",
-            segment_id: initialData.segment?.id?.toString() || "",
+            category_id:
+              initialData.category?.id && initialData.category.id !== 0
+                ? initialData.category.id.toString()
+                : "",
+            subcategory_id:
+              initialData.subcategory?.id && initialData.subcategory.id !== 0
+                ? initialData.subcategory.id.toString()
+                : "",
+            market_id:
+              initialData.market?.id && initialData.market.id !== 0
+                ? initialData.market.id.toString()
+                : "",
+            segment_id:
+              initialData.segment?.id && initialData.segment.id !== 0
+                ? initialData.segment.id.toString()
+                : "",
             icp_eur: initialData.icp_eur || "",
             icp_usd: initialData.icp_usd || "",
             factory: initialData.factory || "",
             commodity_id: initialData.commodity_id || "",
-            country_id: initialData.country?.id?.toString() || "",
+            country_id:
+              initialData.country?.id && initialData.country.id !== 0
+                ? initialData.country.id.toString()
+                : "",
             gender: initialData.gender || "",
             size: initialData.size || "",
             length: initialData.length || "",
@@ -178,6 +200,8 @@ export function AddProductToOfferingModal({
             gross_weight: initialData.gross_weight || "",
             net_weight: initialData.net_weight || "",
             units: initialData.units || "",
+            price:
+              Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
           }
         : {
             irc: "",
@@ -217,6 +241,7 @@ export function AddProductToOfferingModal({
             gross_weight: undefined,
             net_weight: undefined,
             units: undefined,
+            price: undefined,
           },
     validate: zodResolver(productSchema),
   });
@@ -297,36 +322,6 @@ export function AddProductToOfferingModal({
     ]);
   };
 
-  function sanitizePayload<T extends Record<string, unknown>>(obj: T): T {
-    const sanitized: Record<string, unknown> = {};
-    // List fields where "0" should be treated as undefined
-    const zeroAsUndefined = [
-      "brand_id",
-      "sub_brand_id",
-      "category_id",
-      "subcategory_id",
-      "market_id",
-      "segment_id",
-      "country_id",
-      "factory",
-      "line_id",
-      "offering_number",
-    ];
-    for (const key in obj) {
-      const value = obj[key];
-      if (
-        value === "" ||
-        (zeroAsUndefined.includes(key) && value === "0") ||
-        (typeof value === "number" && isNaN(value))
-      ) {
-        sanitized[key] = undefined;
-      } else {
-        sanitized[key] = value;
-      }
-    }
-    return sanitized as T;
-  }
-
   function formatDateToMySQL(
     date: Date | null | undefined
   ): string | undefined {
@@ -350,15 +345,16 @@ export function AddProductToOfferingModal({
     }
 
     // Create the submission object with required fields
-    const submissionValues = sanitizePayload({
+    const submissionValues = {
       id: editMode && initialData ? initialData.id : undefined,
       irc: values.irc.trim(),
-      material_description: values.material_description?.trim(),
+      material_description: values.material_description?.trim() || "",
       icp_cost,
       price: icp_cost,
       currency: values.currency,
-      brand_id: values.brand_id,
-      sub_brand_id: values.sub_brand_id,
+      brand_id: values.brand_id === "0" ? "" : values.brand_id || "",
+      sub_brand_id:
+        values.sub_brand_id === "0" ? "" : values.sub_brand_id || "",
       product_type: values.product_type,
       pref: values.pref,
       grouping: values.grouping,
@@ -370,15 +366,20 @@ export function AddProductToOfferingModal({
       line_id: values.line_id,
       article_type: values.article_type,
       offering_number: values.offering_number,
-      launch_date: formatDateToMySQL(values.launch_date),
-      discontinue_date: formatDateToMySQL(values.discontinue_date),
-      category_id: values.category_id,
-      subcategory_id: values.subcategory_id,
-      market_id: values.market_id,
-      segment_id: values.segment_id,
+      launch_date: values.launch_date
+        ? values.launch_date.toISOString().split("T")[0]
+        : undefined,
+      discontinue_date: values.discontinue_date
+        ? values.discontinue_date.toISOString().split("T")[0]
+        : undefined,
+      category_id: values.category_id === "0" ? "" : values.category_id || "",
+      subcategory_id:
+        values.subcategory_id === "0" ? "" : values.subcategory_id || "",
+      market_id: values.market_id === "0" ? "" : values.market_id || "",
+      segment_id: values.segment_id === "0" ? "" : values.segment_id || "",
       factory: values.factory,
       commodity_id: values.commodity_id,
-      country_id: values.country_id,
+      country_id: values.country_id === "0" ? "" : values.country_id || "",
       gender: values.gender,
       size: values.size,
       length: values.length,
@@ -390,11 +391,12 @@ export function AddProductToOfferingModal({
       units: values.units,
       icp_eur: values.icp_eur,
       icp_usd: values.icp_usd,
-    });
+    };
 
-    console.log("submissionValues", submissionValues);
+    console.log("submissionValues for update/create:", submissionValues);
 
     if (editMode && initialData) {
+      console.log("updateProductMutation", submissionValues);
       updateProductMutation.mutate(
         {
           innovationId,
