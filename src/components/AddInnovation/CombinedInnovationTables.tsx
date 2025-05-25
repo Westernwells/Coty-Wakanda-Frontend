@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
+import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -97,6 +98,11 @@ function CombinedInnovationTables({
     new Set()
   );
 
+  const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
+  const [benchmarkProduct, setBenchmarkProduct] = useState<Product | null>(
+    null
+  );
+
   const currentDistributor = distributors[currentDistributorIndex] || null;
 
   const updateProductMutation = useUpdateOfferingProduct({
@@ -146,12 +152,13 @@ function CombinedInnovationTables({
     onSelectedProductsChange(newSelectedProducts);
   };
 
-  const handleBenchmarkToggle = (productId: number) => {
+  const handleBenchmarkToggle = (product: Product) => {
     const newBenchmarkedProducts = new Set(benchmarkedProducts);
-    if (newBenchmarkedProducts.has(productId)) {
-      newBenchmarkedProducts.delete(productId);
+    if (newBenchmarkedProducts.has(product.id)) {
+      newBenchmarkedProducts.delete(product.id);
     } else {
-      newBenchmarkedProducts.add(productId);
+      setBenchmarkProduct(product);
+      setIsBenchmarkModalOpen(true);
     }
     setBenchmarkedProducts(newBenchmarkedProducts);
   };
@@ -345,6 +352,7 @@ function CombinedInnovationTables({
                       <span className="text-white">Actions</span>
                     </div>
                   </Table.Th>
+                  <Table.Th> Benchmarked</Table.Th>
                   <Table.Th>IRC</Table.Th>
                   <Table.Th>Brand</Table.Th>
                   <Table.Th>Brand Type</Table.Th>
@@ -353,9 +361,9 @@ function CombinedInnovationTables({
                   <Table.Th>ICP EU</Table.Th>
                   <Table.Th>ICP USD</Table.Th>
                   <Table.Th>Pref Value</Table.Th>
-                  <Table.Th>Status</Table.Th>
+
                   <Table.Th className="border-r border-gray-200">
-                    Benchmarked
+                    Status
                   </Table.Th>
                   {/* Distributor Price Columns */}
                   <Table.Th>Price</Table.Th>
@@ -446,29 +454,10 @@ function CombinedInnovationTables({
                           </div>
                         </div>
                       </Table.Td>
-                      <Table.Td>{product.irc}</Table.Td>
-                      <Table.Td>{product.brand.name}</Table.Td>
-                      <Table.Td>{product.brand.type}</Table.Td>
-                      <Table.Td>{product.brand_pillar?.name || "-"}</Table.Td>
-                      <Table.Td>{product.material_description}</Table.Td>
-                      <Table.Td>{product.icp_eur}</Table.Td>
-                      <Table.Td>{product.icp_usd}</Table.Td>
                       <Table.Td>
-                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
-                          {product.pref}
-                        </span>
-                      </Table.Td>
-                      <Table.Td>
-                        {product.status && (
-                          <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
-                            {product.status}
-                          </span>
-                        )}
-                      </Table.Td>
-                      <Table.Td className="border-r border-gray-200">
                         <Checkbox
                           checked={benchmarkedProducts.has(product.id)}
-                          onChange={() => handleBenchmarkToggle(product.id)}
+                          onChange={() => handleBenchmarkToggle(product)}
                           styles={{
                             input: {
                               cursor: "pointer",
@@ -486,6 +475,26 @@ function CombinedInnovationTables({
                           }}
                         />
                       </Table.Td>
+                      <Table.Td>{product.irc}</Table.Td>
+                      <Table.Td>{product.brand.name}</Table.Td>
+                      <Table.Td>{product.brand.type}</Table.Td>
+                      <Table.Td>{product.brand_pillar?.name || "-"}</Table.Td>
+                      <Table.Td>{product.material_description}</Table.Td>
+                      <Table.Td>{product.icp_eur}</Table.Td>
+                      <Table.Td>{product.icp_usd}</Table.Td>
+                      <Table.Td>
+                        <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
+                          {product.pref}
+                        </span>
+                      </Table.Td>
+                      <Table.Td className="border-r border-gray-200">
+                        {product.status && (
+                          <span className="text-white bg-blue px-[10px] py-0.5 rounded-full text-nowrap">
+                            {product.status}
+                          </span>
+                        )}
+                      </Table.Td>
+
                       {/* Distributor Price Cells */}
                       <Table.Td>
                         {distributorPrice ? (
@@ -638,6 +647,35 @@ function CombinedInnovationTables({
           </Modal.Body>
         </Modal.Content>
       </Modal.Root>
+
+      {benchmarkProduct && (
+        <PriceBenchmarkModal
+          opened={isBenchmarkModalOpen}
+          onClose={() => {
+            setIsBenchmarkModalOpen(false);
+            setBenchmarkProduct(null);
+          }}
+          onSave={(benchmark) => {
+            setBenchmarkedProducts((prev) => {
+              const newSet = new Set(prev);
+              if (benchmarkProduct) newSet.add(benchmarkProduct.id);
+              return newSet;
+            });
+            setIsBenchmarkModalOpen(false);
+            setBenchmarkProduct(null);
+            // Optionally: handle saving the benchmark data to server here
+          }}
+          initialValue={null} // or pass existing benchmark if available
+          productId={benchmarkProduct.id}
+          innovationId={innovationId}
+          offeringId={offeringId}
+          isEditMode={true}
+          productData={{
+            ...benchmarkProduct,
+            price: benchmarkProduct.price ? Number(benchmarkProduct.price) : 0,
+          }}
+        />
+      )}
     </div>
   );
 }
