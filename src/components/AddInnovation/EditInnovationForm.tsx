@@ -1,6 +1,9 @@
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
+import { useCreateOffering } from "@/api/innovations/offerings/create-offering";
+import { useUpdateOffering } from "@/api/innovations/offerings/update-offering";
+import { useDeleteOffering } from "@/api/innovations/offerings/delete-offering";
 import { useFileUpload } from "@/api/products/upload-document";
 import { Innovation } from "@/types";
 import { Button, Grid, Select, TextInput } from "@mantine/core";
@@ -188,13 +191,26 @@ const EditInnovationForm = forwardRef<
     mutationConfig: {
       onSuccess: () => {
         setIsSubmitting(false);
-        navigate({ to: "/innovations" });
       },
       onError: () => {
         setIsSubmitting(false);
       },
     },
   });
+
+  // Add new mutations for offerings
+  const createOfferingMutation = useCreateOffering({
+    mutationConfig: {
+      onSuccess: () => {
+        setIsSubmitting(false);
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      },
+    },
+  });
+  const updateOfferingMutation = useUpdateOffering({});
+  const deleteOfferingMutation = useDeleteOffering({});
 
   // File upload mutation
   const fileUploadMutation = useFileUpload({
@@ -266,6 +282,7 @@ const EditInnovationForm = forwardRef<
     fileUploadMutation.mutate({ data: formData });
   };
 
+  // Update handleSubmit to exclude offerings
   const handleSubmit = () => {
     const validation = form.validate();
     if (Object.keys(validation.errors).length > 0) {
@@ -280,26 +297,28 @@ const EditInnovationForm = forwardRef<
     const submitData = {
       ...toSubmit,
       reference_names,
-      // Use uploaded URLs from state, fallback to form values
       internal_offering_deck:
         uploadedFiles.internal_offering_deck || values.internal_offering_deck,
       customer_offering_deck:
         uploadedFiles.customer_offering_deck || values.customer_offering_deck,
       forecast_deadline: forecast_deadline.toISOString().split("T")[0],
       year: year?.getFullYear().toString(),
-      offerings: offerings?.map((offering) => {
-        return {
-          ...offering,
-          icw: offering.icw.toISOString().split("T")[0],
-          ocd: offering.ocd.toISOString().split("T")[0],
-        };
-      }),
     };
 
-    updateInnovationMutation.mutate({
-      innovationId: parseInt(innovationId),
-      data: submitData,
-    });
+    updateInnovationMutation.mutate(
+      {
+        innovationId: parseInt(innovationId),
+        data: submitData,
+      },
+      {
+        onSuccess: () => {
+          setIsSubmitting(false);
+        },
+        onError: () => {
+          setIsSubmitting(false);
+        },
+      }
+    );
   };
 
   // Helper function to get filename from URL (used for initial data)
@@ -491,21 +510,58 @@ const EditInnovationForm = forwardRef<
     form.setFieldValue("reference_name", newNames);
   };
 
-  // Offering management handlers
-  const handleAddOffering = (offering: OfferingType) => {
-    if (form.getValues().offerings?.length) {
-      form.insertListItem("offerings", offering);
-    } else {
-      form.setFieldValue("offerings", [offering]);
+  // Update offering handlers in OfferingTable
+  const handleAddOffering = async (offering: OfferingType) => {
+    try {
+      await createOfferingMutation.mutateAsync({
+        innovationId,
+        data: {
+          number: offering.number,
+          icw: offering.icw.toISOString().split("T")[0],
+          ocd: offering.ocd.toISOString().split("T")[0],
+          type: offering.type,
+          deck: offering.deck,
+          market_deck: offering.market_deck,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to create offering:", error);
     }
   };
 
-  const handleEditOffering = (index: number, offering: OfferingType) => {
-    form.setFieldValue(`offerings.${index}`, offering);
+  const handleEditOffering = async (index: number, offering: OfferingType) => {
+    if (!offering.id) return;
+
+    try {
+      await updateOfferingMutation.mutateAsync({
+        innovationId,
+        offeringId: offering.id,
+        data: {
+          number: offering.number,
+          icw: offering.icw.toISOString().split("T")[0],
+          ocd: offering.ocd.toISOString().split("T")[0],
+          type: offering.type,
+          deck: offering.deck,
+          market_deck: offering.market_deck,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to update offering:", error);
+    }
   };
 
-  const handleDeleteOffering = (index: number) => {
-    form.removeListItem("offerings", index);
+  const handleDeleteOffering = async (index: number) => {
+    const offering = form.getValues().offerings?.[index];
+    if (!offering?.id) return;
+
+    try {
+      await deleteOfferingMutation.mutateAsync({
+        innovationId,
+        offeringId: offering.id,
+      });
+    } catch (error) {
+      console.error("Failed to delete offering:", error);
+    }
   };
 
   return (

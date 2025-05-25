@@ -29,7 +29,10 @@ import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { MasterDistributor } from "@/types";
 import { getOfferingProducts } from "@/api/products/get-offering-products";
-import { deleteOfferingProducts } from "@/api/products/delete-offering-product";
+import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
+import { useCreateOfferingProduct } from "@/api/innovations/offerings/products/create-product";
+import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
+import { CreateOfferingProductDTO } from "@/api/innovations/offerings/products/create-product";
 
 // Placeholder imports - actual components might have different props/structure
 import InnovationProductsTable from "./InnovationProductsTable";
@@ -66,8 +69,8 @@ interface Offering {
   market_deck: string;
   products: Array<{
     irc: string;
-    price: number;
     currency: string;
+    price: number;
     icp_cost: number;
     product_type: string;
     pref: string;
@@ -87,8 +90,7 @@ interface OfferingTableProps {
   onAdd: (offering: Offering) => void;
   onEdit: (index: number, offering: Offering) => void;
   onDelete: (index: number) => void;
-  onOpenProductModal?: (offeringIndex: number) => void;
-  innovationId?: string | number;
+  innovationId: string;
 }
 
 // Define interface for mapped product (from EditInnovationForm mapping)
@@ -149,14 +151,24 @@ interface DistributorPricing {
   rrsp: string;
 }
 
-const OfferingTable: React.FC<OfferingTableProps> = ({
+// Update the AddProductToOfferingModal props interface to include editMode and initialData
+interface AddProductToOfferingModalProps {
+  opened: boolean;
+  onClose: () => void;
+  onSubmit: (product: OfferingProductFormValues) => void;
+  innovationId: string;
+  offeringId: string;
+  editMode?: boolean;
+  initialData?: Product;
+}
+
+export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
   onAdd,
   onEdit,
   onDelete,
-  onOpenProductModal,
   innovationId,
-}): JSX.Element => {
+}) => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [modalOpened, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -200,14 +212,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   >([]);
 
   // State for product modal and which offering is targeted
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [targetOfferingIndex, setTargetOfferingIndex] = useState<number | null>(
-    null
-  );
+  const [selectedOffering, setSelectedOffering] = useState<number | null>(null);
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
 
   // Add state for fetched products per offering
   const [offeringProducts, setOfferingProducts] = useState<
-    Record<number, OfferingMappedProduct[]>
+    Record<string, OfferingMappedProduct[]>
   >({});
   const [offeringDistributors, setOfferingDistributors] = useState<
     Record<number, DistributorData[]>
@@ -228,7 +238,11 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
   const [selectedProducts, setSelectedProducts] = useState<
     Record<number, number[]>
   >({});
-  const [isDeletingProducts, setIsDeletingProducts] = useState(false);
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+
+  // Add state for edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [editInitialData, setEditInitialData] = useState<Product | null>(null);
 
   // Initialize states when offerings change
   useEffect(() => {
@@ -307,30 +321,25 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     openDeleteModal();
   };
 
-  const confirmDeleteOffering = () => {
-    if (deletingIndex !== null) {
-      onDelete(deletingIndex);
-      setDeletingIndex(null);
-      closeDeleteModal();
-    }
-  };
+  const [isAddingOffering, setIsAddingOffering] = useState(false);
+  const [isEditingOffering, setIsEditingOffering] = useState(false);
+  const [isDeletingOffering, setIsDeletingOffering] = useState(false);
 
-  const handleSubmitOffering = () => {
-    setIsSubmitted(true);
-
-    // Validate required fields
+  const handleSubmit = async () => {
+    // Since offeringForm doesn't have a validate method, let's do manual validation
     if (!offeringForm.number.trim() || !offeringForm.type) {
-      return; // Stop submission if required fields are empty
+      setIsSubmitted(true);
+      return;
     }
 
-    const newOffering: Offering = {
+    const newOffering = {
       id:
         modalMode === "add"
-          ? Date.now()
+          ? undefined
           : editingIndex !== null
             ? offerings[editingIndex].id
-            : Date.now(), // Temporary ID for new offerings
-      number: offeringForm.number,
+            : undefined,
+      number: offeringForm.number.trim(),
       icw: offeringForm.icw,
       ocd: offeringForm.ocd,
       type: offeringForm.type,
@@ -339,14 +348,37 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       products: [],
     };
 
-    if (modalMode === "edit" && editingIndex !== null) {
-      onEdit(editingIndex, newOffering);
-    } else {
-      onAdd(newOffering);
+    try {
+      if (modalMode === "add") {
+        setIsAddingOffering(true);
+        await onAdd(newOffering);
+      } else if (modalMode === "edit" && editingIndex !== null) {
+        setIsEditingOffering(true);
+        await onEdit(editingIndex, newOffering);
+      }
+      resetForm();
+      closeModal();
+    } catch (error) {
+      console.error("Failed to save offering:", error);
+    } finally {
+      setIsAddingOffering(false);
+      setIsEditingOffering(false);
     }
+  };
 
-    resetForm();
-    closeModal();
+  const confirmDeleteOffering = async () => {
+    if (deletingIndex !== null) {
+      try {
+        setIsDeletingOffering(true);
+        await onDelete(deletingIndex);
+        setDeletingIndex(null);
+        closeDeleteModal();
+      } catch (error) {
+        console.error("Failed to delete offering:", error);
+      } finally {
+        setIsDeletingOffering(false);
+      }
+    }
   };
 
   const toggleRow = (index: number) => {
@@ -369,63 +401,159 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     fileUploadMutation.mutate({ data: formData });
   };
 
-  // Handler to open product modal for a specific offering
-  function handleOpenProductModal(index: number) {
-    setTargetOfferingIndex(index);
-    setIsProductModalOpen(true);
+  // Update the handleOpenProductModal function
+  function handleOpenProductModal(index: number, editData?: Product) {
+    setSelectedOffering(index);
+    if (editData) {
+      setEditMode(true);
+      setEditInitialData(editData);
+    } else {
+      setEditMode(false);
+      setEditInitialData(null);
+    }
+    setIsAddProductModalOpen(true);
   }
 
   // Update the handleAddProductToOffering function
-  function handleAddProductToOffering(
-    product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number }
-  ) {
-    if (targetOfferingIndex === null) return;
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
 
-    // Map modal product to OfferingProductData shape
-    const productWithPrice: OfferingProductData = {
-      irc: product.irc,
-      material_description: product.material_description,
-      icp_cost: product.icp_cost,
-      price: product.icp_cost,
-      currency: product.currency,
-      brand_id: product.brand_id,
-      sub_brand_id: product.sub_brand_id,
-      product_type: product.product_type,
-      pref: product.pref,
-      grouping: product.grouping,
-    };
+  const createProductMutation = useCreateOfferingProduct({
+    mutationConfig: {
+      onSuccess: (response, variables) => {
+        // Add the new product to the current offering's products
+        const newProduct = response.data;
+        if (newProduct) {
+          setOfferingProducts((prev) => ({
+            ...prev,
+            [variables.offeringId.toString()]: [
+              ...(prev[variables.offeringId.toString()] || []),
+              {
+                irc: newProduct.irc,
+                currency: newProduct.currency,
+                price: newProduct.price,
+                icp_cost: newProduct.icp_cost,
+                product_type: newProduct.product_type,
+                pref: newProduct.pref,
+                grouping: newProduct.grouping,
+                material_description: newProduct.material_description,
+                brand_id: newProduct.brand_id,
+                sub_brand_id: newProduct.sub_brand_id,
+              },
+            ],
+          }));
+        }
+      },
+      onError: (error) => {
+        console.error("Failed to create product:", error);
+      },
+    },
+  });
 
-    // Get the current offering
-    const currentOffering = offerings[targetOfferingIndex];
+  const updateProductMutation = useUpdateOfferingProduct({});
+  const deleteProductMutation = useDeleteOfferingProduct({});
 
-    if (!currentOffering || !currentOffering.id) return;
+  // Add new function to handle product creation
+  const handleAddProductToOffering = async (
+    product: Omit<OfferingProductFormValues, "icp_cost"> & { icp_cost: number },
+    offeringId: number
+  ) => {
+    if (!innovationId) return;
 
-    // Update the offeringProducts state
-    setOfferingProducts((prev) => ({
-      ...prev,
-      [currentOffering.id as number]: [
-        ...(prev[currentOffering.id as number] || []),
-        productWithPrice,
-      ],
-    }));
+    try {
+      setIsAddingProduct(true);
 
-    // Update the offerings array with the new product
-    const updatedOffering = {
-      ...currentOffering,
-      products: [...(currentOffering.products || []), productWithPrice],
-    };
+      // Call the create product endpoint
+      await createProductMutation.mutateAsync({
+        innovationId,
+        offeringId,
+        data: {
+          irc: product.irc,
+          material_description: product.material_description,
+          icp_cost: product.icp_cost,
+          price: product.icp_cost,
+          currency: product.currency,
+          brand_id: product.brand_id,
+          sub_brand_id: product.sub_brand_id,
+          product_type: product.product_type,
+          pref: product.pref,
+          grouping: product.grouping,
+        },
+      });
 
-    // Call onEdit to update the parent component's state
-    onEdit(targetOfferingIndex, updatedOffering);
+      // Close the modal
+      setIsAddProductModalOpen(false);
+      setSelectedOffering(null);
 
-    // Close the modal and reset the target index
-    setIsProductModalOpen(false);
-    setTargetOfferingIndex(null);
-  }
+      // Refresh the products list for this offering
+      if (expandedRows.has(offerings.findIndex((o) => o.id === offeringId))) {
+        await handleExpandRow(
+          offerings.findIndex((o) => o.id === offeringId),
+          offeringId
+        );
+      }
+    } catch (error) {
+      console.error("Failed to add product:", error);
+    } finally {
+      setIsAddingProduct(false);
+    }
+  };
 
-  // Update toggleRow to fetch products if not already fetched
-  async function handleExpandRow(index: number, offeringId: number) {
-    toggleRow(index);
+  // Add new function to handle product update
+  const handleUpdateProduct = async (product: Product, offeringId: number) => {
+    if (!innovationId) return;
+
+    try {
+      setIsUpdatingProduct(true);
+
+      // Convert the product data to match the API's expected format
+      const submissionData: CreateOfferingProductDTO = {
+        irc: product.irc,
+        material_description: product.material_description,
+        icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+        price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
+        currency: (product.icp_eur ? "EUR" : "USD") as "EUR" | "USD",
+        brand_id: String(product.brand.id),
+        sub_brand_id: product.brand_pillar?.id
+          ? String(product.brand_pillar.id)
+          : undefined,
+        product_type:
+          product.product_type === "saleable" ||
+          product.product_type === "non-saleable"
+            ? product.product_type
+            : "saleable",
+        pref:
+          product.pref === "pref" || product.pref === "non-pref"
+            ? product.pref
+            : "pref",
+        grouping: "1",
+      };
+
+      await updateProductMutation.mutateAsync({
+        innovationId,
+        offeringId,
+        productId: product.id,
+        data: submissionData,
+      });
+
+      // Refresh the products list
+      handleExpandRow(
+        offerings.findIndex((o) => o.id === offeringId),
+        offeringId
+      );
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    } finally {
+      setIsUpdatingProduct(false);
+    }
+  };
+
+  // Update handleExpandRow to be callable from other functions
+  const handleExpandRow = async (index: number, offeringId: number) => {
+    // If not already expanded, expand it
+    if (!expandedRows.has(index)) {
+      toggleRow(index);
+    }
 
     // Initialize empty arrays for new offerings
     if (!offeringProducts[offeringId]) {
@@ -444,9 +572,6 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       setLoadingOfferings((prev) => new Set(prev).add(offeringId));
       try {
         const response = await getOfferingProducts(innovationId, offeringId);
-        console.log("response", response);
-        console.log("innovationId", innovationId);
-        console.log("offeringId", offeringId);
         const { products, distributors } = response.data;
 
         // Map products to the format expected by the component
@@ -493,7 +618,12 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
         });
       }
     }
-  }
+  };
+
+  // Handler for after product addition
+  const handleProductAdded = async (index: number, offeringId: number) => {
+    await handleExpandRow(index, offeringId);
+  };
 
   // Update OfferingProductsTable to accept products as a prop
   interface OfferingProductsTableProps {
@@ -612,7 +742,13 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
         brandOptions={brandOptions}
         brandPillarOptions={brandPillarOptions}
         onBulkUpdate={(products) => {
-          console.log("Bulk update:", products);
+          if (offeringId) {
+            Promise.all(
+              products.map((product) =>
+                handleUpdateProduct(product, offeringId as number)
+              )
+            );
+          }
         }}
         selectedProducts={selectedProducts[offeringId] || []}
         onSelectedProductsChange={(productIds) => {
@@ -621,6 +757,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
             [offeringId]: productIds,
           }));
         }}
+        isUpdating={isUpdatingProduct}
       />
     );
   }
@@ -700,12 +837,18 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     if (!innovationId || !selectedProducts[offeringId]?.length) return;
 
     try {
-      setIsDeletingProducts(true);
-      await deleteOfferingProducts({
-        innovationId,
-        offeringId,
-        productIds: selectedProducts[offeringId],
-      });
+      setIsDeletingProduct(true);
+
+      // Delete each selected product one by one
+      await Promise.all(
+        selectedProducts[offeringId].map((productId) =>
+          deleteProductMutation.mutateAsync({
+            innovationId,
+            offeringId,
+            productId,
+          })
+        )
+      );
 
       // Refresh the products list after deletion
       handleExpandRow(index, offeringId);
@@ -718,9 +861,10 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
     } catch (error) {
       console.error("Failed to delete products:", error);
     } finally {
-      setIsDeletingProducts(false);
+      setIsDeletingProduct(false);
     }
   };
+  console.log("offerings", offerings);
 
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
@@ -856,10 +1000,10 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                           disabled={
                                             !selectedProducts[
                                               offering.id as number
-                                            ]?.length || isDeletingProducts
+                                            ]?.length || isDeletingProduct
                                           }
                                         >
-                                          {isDeletingProducts
+                                          {isDeletingProduct
                                             ? "Deleting..."
                                             : "Delete product list"}
                                         </Button>
@@ -1074,6 +1218,53 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                                                   irc,
                                                   rrsp
                                                 );
+                                              }}
+                                              innovationId={innovationId}
+                                              offeringId={offering.id.toString()}
+                                              onLocalEdit={(product) => {
+                                                if (
+                                                  typeof offering.id ===
+                                                  "number"
+                                                ) {
+                                                  handleOpenProductModal(
+                                                    index,
+                                                    product
+                                                  );
+                                                }
+                                              }}
+                                              onLocalDelete={(product) => {
+                                                // Handle local deletion
+                                                const offeringId = offering.id;
+                                                if (
+                                                  offeringId &&
+                                                  typeof offeringId === "number"
+                                                ) {
+                                                  setOfferingProducts(
+                                                    (prev) => {
+                                                      const updatedProducts = {
+                                                        ...prev,
+                                                      };
+                                                      if (
+                                                        updatedProducts[
+                                                          offeringId
+                                                        ]
+                                                      ) {
+                                                        updatedProducts[
+                                                          offeringId
+                                                        ] = updatedProducts[
+                                                          offeringId
+                                                        ].filter(
+                                                          (
+                                                            p: OfferingMappedProduct
+                                                          ) =>
+                                                            p.irc !==
+                                                            product.irc
+                                                        );
+                                                      }
+                                                      return updatedProducts;
+                                                    }
+                                                  );
+                                                }
                                               }}
                                             />
                                           )}
@@ -1321,6 +1512,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={closeModal}
+                    disabled={isAddingOffering || isEditingOffering}
                   >
                     Cancel
                   </Button>
@@ -1328,9 +1520,14 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     type="button"
                     variant="outline"
                     className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                    onClick={handleSubmitOffering}
+                    onClick={handleSubmit}
+                    disabled={isAddingOffering || isEditingOffering}
                   >
-                    {modalMode === "add" ? "Add Offering" : "Update Offering"}
+                    {isAddingOffering || isEditingOffering
+                      ? "Saving..."
+                      : modalMode === "add"
+                        ? "Add Offering"
+                        : "Update Offering"}
                   </Button>
                 </div>
               </div>
@@ -1369,6 +1566,7 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40 transition-all ease-in-out duration-300"
                     onClick={closeDeleteModal}
+                    disabled={isDeletingOffering}
                   >
                     Cancel
                   </Button>
@@ -1376,8 +1574,9 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
                     variant="outline"
                     className="border-red-500 bg-red-500 border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-red-600 transition-all ease-in-out duration-300"
                     onClick={confirmDeleteOffering}
+                    disabled={isDeletingOffering}
                   >
-                    Delete
+                    {isDeletingOffering ? "Deleting..." : "Delete"}
                   </Button>
                 </Group>
               </div>
@@ -1387,11 +1586,69 @@ const OfferingTable: React.FC<OfferingTableProps> = ({
       </Modal.Root>
 
       {/* Add Product To Offering Modal */}
-      <AddProductToOfferingModal
-        opened={isProductModalOpen}
-        onClose={() => setIsProductModalOpen(false)}
-        onSubmit={handleAddProductToOffering}
-      />
+      {selectedOffering !== null && offerings[selectedOffering]?.id && (
+        <AddProductToOfferingModal
+          opened={isAddProductModalOpen}
+          onClose={() => {
+            setIsAddProductModalOpen(false);
+            setSelectedOffering(null);
+            setEditMode(false);
+            setEditInitialData(null);
+          }}
+          onSubmit={async (product) => {
+            if (editMode && editInitialData) {
+              // Handle edit submission
+              const updatedProduct = {
+                ...editInitialData,
+                grouping: Number(product.grouping),
+                product_type: product.product_type as
+                  | "saleable"
+                  | "non-saleable",
+                pref: product.pref as "pref" | "non-pref",
+                irc: product.irc,
+                material_description: product.material_description,
+                brand: {
+                  ...editInitialData.brand,
+                  id: Number(product.brand_id),
+                },
+                brand_pillar: {
+                  id: Number(product.sub_brand_id || 0),
+                  name: editInitialData.brand_pillar?.name || "",
+                },
+              };
+
+              await handleUpdateProduct(
+                updatedProduct as Product, // Force type assertion since we know the structure matches
+                offerings[selectedOffering].id!
+              );
+            } else {
+              // Handle add submission
+              await handleAddProductToOffering(
+                {
+                  ...product,
+                  icp_cost: Number(product.icp_cost) || 0,
+                },
+                offerings[selectedOffering].id!
+              );
+            }
+            // After successful submission
+            if (selectedOffering !== null && offerings[selectedOffering]?.id) {
+              await handleProductAdded(
+                selectedOffering,
+                offerings[selectedOffering].id!
+              );
+            }
+            setIsAddProductModalOpen(false);
+            setSelectedOffering(null);
+            setEditMode(false);
+            setEditInitialData(null);
+          }}
+          innovationId={innovationId}
+          offeringId={offerings[selectedOffering].id!.toString()}
+          editMode={editMode}
+          initialData={editInitialData || undefined}
+        />
+      )}
     </div>
   );
 };

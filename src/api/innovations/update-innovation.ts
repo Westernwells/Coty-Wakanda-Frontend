@@ -3,13 +3,15 @@ import { MutationConfig } from "@/lib/react-query";
 import { InnovationInput } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+export type UpdateInnovationDTO = Omit<InnovationInput, "offerings">;
+
 export const updateInnovation = ({
   data,
   innovationId,
 }: {
-  data: InnovationInput;
+  data: UpdateInnovationDTO;
   innovationId: number;
-}): Promise<Comment> => {
+}): Promise<void> => {
   return axios.put(`/innovations/${innovationId}`, data);
 };
 
