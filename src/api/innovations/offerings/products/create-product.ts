@@ -1,6 +1,7 @@
 import { axios } from "@/lib/axios";
 import { MutationConfig } from "@/lib/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { PriceBenchmark } from "@/types";
 
 export interface CreateOfferingProductDTO {
   irc: string;
@@ -13,6 +14,7 @@ export interface CreateOfferingProductDTO {
   product_type: "saleable" | "non-saleable";
   pref: "pref" | "non-pref";
   grouping: "1" | "2" | "3";
+  price_benchmark?: PriceBenchmark | null;
 }
 
 interface CreateOfferingProductResponse {
