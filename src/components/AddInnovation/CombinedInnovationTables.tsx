@@ -390,7 +390,7 @@ function CombinedInnovationTables({
                             >
                               <Pencil
                                 size={14}
-                                className={cn("text-blue-600", {
+                                className={cn("text-primary", {
                                   "opacity-50":
                                     isEdit && updateProductMutation.isPending,
                                 })}
@@ -415,7 +415,7 @@ function CombinedInnovationTables({
                             >
                               <Trash2
                                 size={14}
-                                className={cn("text-red-600", {
+                                className={cn("text-primary", {
                                   "opacity-50":
                                     isEdit && deleteProductMutation.isPending,
                                 })}
