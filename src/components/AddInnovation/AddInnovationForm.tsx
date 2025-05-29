@@ -18,7 +18,7 @@ import ExitIcon from "../Icons/ExitIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import OfferingTable from "./OfferingTable";
+import OfferingTable from "./Offering/OfferingTable";
 import {
   AddProductToOfferingModal,
   OfferingProductFormValues,
