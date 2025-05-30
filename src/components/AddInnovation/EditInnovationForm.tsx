@@ -19,7 +19,7 @@ import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import OfferingTable from "./OfferingTable";
+import OfferingTable from "./Offering/OfferingTable";
 
 // Extended Innovation type for API response
 interface ExtendedInnovation extends Innovation {
