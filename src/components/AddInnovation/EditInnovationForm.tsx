@@ -80,7 +80,7 @@ const formSchema = z.object({
   year: z.date(),
   format: z.string().min(1, "Format is required"),
   launch_name: z.string().min(1, "Launch name is required"),
-  reference_name: z.array(z.string()).optional(),
+  reference_names: z.array(z.string()).optional(),
   internal_offering_deck: z.string().optional(),
   customer_offering_deck: z.string().optional(),
   forecast_deadline: z.date(),
@@ -499,7 +499,7 @@ const EditInnovationForm = forwardRef<
     if (referenceNameInput.trim()) {
       const newNames = [...referenceNames, referenceNameInput.trim()];
       setReferenceNames(newNames);
-      form.setFieldValue("reference_name", newNames);
+      form.setFieldValue("reference_names", newNames);
       setReferenceNameInput("");
     }
   };
@@ -508,7 +508,7 @@ const EditInnovationForm = forwardRef<
   const handleRemoveReferenceName = (index: number) => {
     const newNames = referenceNames.filter((_, i) => i !== index);
     setReferenceNames(newNames);
-    form.setFieldValue("reference_name", newNames);
+    form.setFieldValue("reference_names", newNames);
   };
 
   // Update offering handlers in OfferingTable

@@ -15,7 +15,7 @@ import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { useQuery, useQueryClient } from "@tanstack/react-query"; // Added for data fetching and query client
 import { getBrands } from "@/api/get-brands"; // Assuming API path
 import { getBrandPillars } from "@/api/get-brandPillars"; // Assuming API path
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { DateInput } from "@mantine/dates";
 import {
   useCreateOfferingProduct,
@@ -247,6 +247,66 @@ export function AddProductToOfferingModal({
     validate: zodResolver(productSchema),
   });
 
+  // Add a useEffect hook to ensure form fields are properly populated in edit mode
+  // Using a ref to track if we've already initialized the form to prevent continuous resets
+  const formInitializedRef = useRef(false);
+  
+  useEffect(() => {
+    // Only set form values once when the modal is first opened in edit mode
+    if (editMode && initialData && opened && !formInitializedRef.current) {
+      console.log("Edit mode initialData:", initialData);
+      formInitializedRef.current = true;
+      
+      // Force update form values to ensure all fields are properly populated
+      // This is especially important for fields like EAN/UPC that might not be updating correctly
+      form.setValues({
+        irc: initialData.irc || "",
+        material_description: initialData.material_description || "",
+        icp_cost: Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
+        currency: initialData.icp_eur ? "EUR" : "USD",
+        brand_id: initialData.brand?.id && initialData.brand.id !== 0 ? initialData.brand.id.toString() : "",
+        sub_brand_id: initialData.brand_pillar?.id && initialData.brand_pillar.id !== 0 ? initialData.brand_pillar.id.toString() : "",
+        product_type: (initialData.product_type as "saleable" | "non-saleable") || "saleable",
+        pref: (initialData.pref as "pref" | "non-pref") || "pref",
+        grouping: (initialData.grouping?.toString() as "1" | "2" | "3") || "1",
+        division: initialData.division || "",
+        brand_category: "", // Brand category is not in the Product type
+        ean_upc: initialData.ean_upc || "",
+        house: initialData.house || "",
+        line: initialData.line || "",
+        line_id: initialData.line_id || "",
+        article_type: initialData.article_type || "",
+        offering_number: initialData.offering_number || "",
+        launch_date: initialData.launch_date ? new Date(initialData.launch_date) : null,
+        discontinue_date: initialData.discontinue_date ? new Date(initialData.discontinue_date) : null,
+        category_id: initialData.category?.id && initialData.category.id !== 0 ? initialData.category.id.toString() : "",
+        subcategory_id: initialData.subcategory?.id && initialData.subcategory.id !== 0 ? initialData.subcategory.id.toString() : "",
+        market_id: initialData.market?.id && initialData.market.id !== 0 ? initialData.market.id.toString() : "",
+        segment_id: initialData.segment?.id && initialData.segment.id !== 0 ? initialData.segment.id.toString() : "",
+        icp_eur: initialData.icp_eur || "",
+        icp_usd: initialData.icp_usd || "",
+        factory: initialData.factory || "",
+        commodity_id: initialData.commodity_id || "",
+        country_id: initialData.country?.id && initialData.country.id !== 0 ? initialData.country.id.toString() : "",
+        gender: initialData.gender || "",
+        size: initialData.size || "",
+        length: initialData.length || "",
+        height: initialData.height || "",
+        width: initialData.width || "",
+        volume: initialData.volume || "",
+        gross_weight: initialData.gross_weight || "",
+        net_weight: initialData.net_weight || "",
+        units: initialData.units || "",
+        price: Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
+      });
+    }
+    
+    // Reset the ref when the modal is closed so it will initialize again when reopened
+    if (!opened) {
+      formInitializedRef.current = false;
+    }
+  }, [editMode, initialData, form, opened]);
+
   const selectedBrandId = form.values.brand_id;
 
   const { data: brandsData, isLoading: brandsLoading } = useQuery<
@@ -345,28 +405,26 @@ export function AddProductToOfferingModal({
       return;
     }
 
-    // Create the submission object with required fields
+    // Prepare submission values with proper handling of all fields
     const submissionValues = {
-      id: editMode && initialData ? initialData.id : undefined,
       irc: values.irc.trim(),
       material_description: values.material_description?.trim() || "",
-      icp_cost,
+      icp_cost: icp_cost,
       price: icp_cost,
       currency: values.currency,
       brand_id: values.brand_id === "0" ? "" : values.brand_id || "",
-      sub_brand_id:
-        values.sub_brand_id === "0" ? "" : values.sub_brand_id || "",
+      sub_brand_id: values.sub_brand_id === "0" ? "" : values.sub_brand_id || "",
       product_type: values.product_type,
       pref: values.pref,
       grouping: values.grouping,
-      division: values.division,
-      brand_category: values.brand_category,
-      ean_upc: values.ean_upc,
-      house: values.house,
-      line: values.line,
-      line_id: values.line_id,
-      article_type: values.article_type,
-      offering_number: values.offering_number,
+      division: values.division || "",
+      brand_category: values.brand_category || "",
+      ean_upc: values.ean_upc || "",
+      house: values.house || "",
+      line: values.line || "",
+      line_id: values.line_id === "" ? undefined : values.line_id,
+      article_type: values.article_type || "",
+      offering_number: values.offering_number === "" ? undefined : values.offering_number,
       launch_date: values.launch_date
         ? values.launch_date.toISOString().split("T")[0]
         : undefined,
@@ -374,24 +432,23 @@ export function AddProductToOfferingModal({
         ? values.discontinue_date.toISOString().split("T")[0]
         : undefined,
       category_id: values.category_id === "0" ? "" : values.category_id || "",
-      subcategory_id:
-        values.subcategory_id === "0" ? "" : values.subcategory_id || "",
+      subcategory_id: values.subcategory_id === "0" ? "" : values.subcategory_id || "",
       market_id: values.market_id === "0" ? "" : values.market_id || "",
       segment_id: values.segment_id === "0" ? "" : values.segment_id || "",
-      factory: values.factory,
-      commodity_id: values.commodity_id,
+      factory: values.factory === "" ? undefined : values.factory,
+      commodity_id: values.commodity_id || "",
       country_id: values.country_id === "0" ? "" : values.country_id || "",
-      gender: values.gender,
-      size: values.size,
-      length: values.length,
-      height: values.height,
-      width: values.width,
-      volume: values.volume,
-      gross_weight: values.gross_weight,
-      net_weight: values.net_weight,
-      units: values.units,
-      icp_eur: values.icp_eur,
-      icp_usd: values.icp_usd,
+      gender: values.gender || "",
+      size: values.size || "",
+      length: values.length === "" ? undefined : values.length,
+      height: values.height === "" ? undefined : values.height,
+      width: values.width === "" ? undefined : values.width,
+      volume: values.volume === "" ? undefined : values.volume,
+      gross_weight: values.gross_weight === "" ? undefined : values.gross_weight,
+      net_weight: values.net_weight === "" ? undefined : values.net_weight,
+      units: values.units === "" ? undefined : values.units,
+      icp_eur: values.currency === "EUR" ? icp_cost : undefined,
+      icp_usd: values.currency === "USD" ? icp_cost : undefined,
     };
 
     console.log("submissionValues for update/create:", submissionValues);
@@ -406,7 +463,61 @@ export function AddProductToOfferingModal({
           data: submissionValues,
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
+            // Immediately update the queryClient cache to reflect changes
+            queryClient.setQueryData(
+              ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
+              (oldData: any) => {
+                if (!oldData) return oldData;
+                
+                // Find and update the product in the cache
+                // Create a deep copy of the product data to ensure all fields are updated
+                const updatedProducts = oldData.data.map((product: any) => {
+                  if (product.id === initialData.id) {
+                    // Force a new object creation to ensure React detects the change
+                    const updatedProduct = JSON.parse(JSON.stringify({
+                      ...product,
+                      ...submissionValues,
+                    }));
+                    // Explicitly ensure EAN/UPC is updated
+                    updatedProduct.ean_upc = submissionValues.ean_upc;
+                    return updatedProduct;
+                  }
+                  return product;
+                });
+                
+                return {
+                  ...oldData,
+                  data: updatedProducts,
+                };
+              }
+            );
+            
+            // Also update the offering-products cache
+            queryClient.setQueryData(
+              ["offering-products", innovationId, offeringId],
+              (oldData: any) => {
+                if (!oldData) return oldData;
+                
+                // Create a deep copy of the product data to ensure all fields are updated
+                const updatedProducts = oldData.map((product: any) => {
+                  if (product.id === initialData.id) {
+                    // Force a new object creation to ensure React detects the change
+                    const updatedProduct = JSON.parse(JSON.stringify({
+                      ...product,
+                      ...submissionValues,
+                    }));
+                    // Explicitly ensure EAN/UPC is updated
+                    updatedProduct.ean_upc = submissionValues.ean_upc;
+                    return updatedProduct;
+                  }
+                  return product;
+                });
+                
+                return updatedProducts;
+              }
+            );
+            
             onSubmit(values);
             form.reset();
             onClose();
@@ -417,62 +528,47 @@ export function AddProductToOfferingModal({
         }
       );
     } else {
-      // Create submission values with all fields for create operation (send null instead of undefined)
-      const createSubmissionValues = {
-        irc: submissionValues.irc,
-        material_description: submissionValues.material_description,
-        icp_cost: submissionValues.icp_cost,
-        price: submissionValues.price,
-        currency: submissionValues.currency,
-        brand_id: submissionValues.brand_id,
-        sub_brand_id: submissionValues.sub_brand_id,
-        product_type: submissionValues.product_type,
-        pref: submissionValues.pref,
-        grouping: submissionValues.grouping,
-        division: submissionValues.division || null,
-        brand_category: submissionValues.brand_category || null,
-        ean_upc: submissionValues.ean_upc || null,
-        house: submissionValues.house || null,
-        line: submissionValues.line || null,
-        line_id: submissionValues.line_id ?? null,
-        article_type: submissionValues.article_type || null,
-        offering_number: submissionValues.offering_number ?? null,
-        launch_date: submissionValues.launch_date ?? null,
-        discontinue_date: submissionValues.discontinue_date ?? null,
-        category_id: submissionValues.category_id || null,
-        subcategory_id: submissionValues.subcategory_id || null,
-        market_id: submissionValues.market_id || null,
-        segment_id: submissionValues.segment_id || null,
-        factory: submissionValues.factory ?? null,
-        commodity_id: submissionValues.commodity_id || null,
-        country_id: submissionValues.country_id || null,
-        gender: submissionValues.gender || null,
-        size: submissionValues.size || null,
-        length: submissionValues.length ?? null,
-        height: submissionValues.height ?? null,
-        width: submissionValues.width ?? null,
-        volume: submissionValues.volume ?? null,
-        gross_weight: submissionValues.gross_weight ?? null,
-        net_weight: submissionValues.net_weight ?? null,
-        units: submissionValues.units ?? null,
-        icp_eur: submissionValues.icp_eur ?? null,
-        icp_usd: submissionValues.icp_usd ?? null,
-      } as CreateOfferingProductDTO; // Type assertion to bypass TypeScript checking
-
+      // Use the same consistent format for both create and update operations
       createProductMutation.mutate(
         {
           innovationId,
           offeringId,
-          data: createSubmissionValues,
+          data: submissionValues as CreateOfferingProductDTO,
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
+            // Immediately update the queryClient cache to reflect the new product
+            queryClient.setQueryData(
+              ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
+              (oldData: any) => {
+                if (!oldData) return { data: [data.data] };
+                
+                return {
+                  ...oldData,
+                  data: [...oldData.data, data.data],
+                };
+              }
+            );
+            
+            // Also update the offering-products cache
+            queryClient.setQueryData(
+              ["offering-products", innovationId, offeringId],
+              (oldData: any) => {
+                if (!oldData) return [data.data];
+                return [...oldData, data.data];
+              }
+            );
+            
             onSubmit(values);
             form.reset();
             onClose();
           },
-          onError: (error) => {
+          onError: (error: any) => {
             console.error("Failed to create product:", error);
+            // Check if it's a duplicate IRC error
+            if (error.response?.data?.message?.includes("IRC already exists")) {
+              form.setFieldError("irc", "This IRC already exists. Please use a unique IRC.");
+            }
           },
         }
       );
