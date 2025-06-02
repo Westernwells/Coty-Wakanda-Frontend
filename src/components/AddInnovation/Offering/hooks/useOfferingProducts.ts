@@ -124,8 +124,18 @@ export const useOfferingProducts = (innovationId: string) => {
           material_description: product.material_description || "",
           brand_id: product.brand?.id ? String(product.brand.id) : "",
           sub_brand_id: product.brand_pillar?.id ? String(product.brand_pillar.id) : "",
-          brand: product.brand,
-          brand_pillar: product.brand_pillar,
+          brand: product.brand || null,
+          brand_pillar: product.brand_pillar ? {
+            id: product.brand_pillar.id,
+            name: product.brand_pillar.name,
+            created_at: product.created_at || new Date().toISOString(),
+            brand: {
+              id: product.brand?.id || 0,
+              name: product.brand?.name || '',
+              type: product.brand?.type || '',
+              created_at: product.created_at || new Date().toISOString()
+            }
+          } : null,
           created_at: product.created_at || new Date().toISOString(),
           is_innovation_product: true,
         });
