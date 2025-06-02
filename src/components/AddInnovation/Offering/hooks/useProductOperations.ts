@@ -30,27 +30,32 @@ export const useProductOperations = (innovationId: string) => {
 
     try {
       setIsAddingProduct(true);
-
+      
+      const productData: CreateOfferingProductDTO = {
+        irc: product.irc,
+        material_description: product.material_description || "",
+        icp_cost: Number(product.icp_cost) || 0,
+        price: Number(product.icp_cost) || 0,
+        currency: product.currency || "EUR",
+        brand_id: product.brand_id || "",
+        sub_brand_id: product.sub_brand_id,
+        product_type: product.product_type || "saleable",
+        pref: product.pref || "non-pref",
+        grouping: product.grouping || "1",
+      };
+      
       const response = await createProductMutation.mutateAsync({
         innovationId,
         offeringId,
-        data: {
-          irc: product.irc,
-          material_description: product.material_description,
-          icp_cost: product.icp_cost,
-          price: product.icp_cost,
-          currency: product.currency,
-          brand_id: product.brand_id,
-          sub_brand_id: product.sub_brand_id,
-          product_type: product.product_type,
-          pref: product.pref,
-          grouping: product.grouping,
-        },
+        data: productData,
       });
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to add product:", error);
+      if (error.response?.data) {
+        console.error("Server validation errors:", error.response.data);
+      }
       return false;
     } finally {
       setIsAddingProduct(false);
@@ -64,27 +69,22 @@ export const useProductOperations = (innovationId: string) => {
       setIsUpdatingProduct(true);
 
       const submissionData: CreateOfferingProductDTO = {
-        irc: product.irc,
-        material_description: product.material_description,
+        irc: product.irc || "",
+        material_description: product.material_description || "",
         icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
         price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
         currency: (product.icp_eur ? "EUR" : "USD") as "EUR" | "USD",
-        brand_id: String(product.brand.id),
-        sub_brand_id: product.brand_pillar?.id
-          ? String(product.brand_pillar.id)
-          : undefined,
-        product_type:
-          product.product_type === "saleable" ||
-          product.product_type === "non-saleable"
-            ? product.product_type
-            : "saleable",
-        pref:
-          product.pref === "pref" || product.pref === "non-pref"
-            ? product.pref
-            : "pref",
-        grouping: "1",
+        brand_id: product.brand?.id ? String(product.brand.id) : "",
+        sub_brand_id: product.brand_pillar?.id ? String(product.brand_pillar.id) : undefined,
+        product_type: (product.product_type === "saleable" || product.product_type === "non-saleable")
+          ? product.product_type
+          : "saleable",
+        pref: (product.pref === "pref" || product.pref === "non-pref")
+          ? product.pref
+          : "non-pref",
+        grouping: product.grouping?.toString() as "1" | "2" | "3" || "1",
       };
-
+      
       const response = await updateProductMutation.mutateAsync({
         innovationId,
         offeringId,
@@ -93,8 +93,12 @@ export const useProductOperations = (innovationId: string) => {
       });
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      // Enhanced error logging to help diagnose validation issues
       console.error("Failed to update product:", error);
+      if (error.response?.data) {
+        console.error("Server validation errors:", error.response.data);
+      }
       return false;
     } finally {
       setIsUpdatingProduct(false);

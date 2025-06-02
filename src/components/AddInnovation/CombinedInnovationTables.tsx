@@ -1,5 +1,5 @@
 import { Product } from "@/types";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader, Table, Checkbox, Button, Modal, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
 import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
+import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -76,6 +77,7 @@ function CombinedInnovationTables({
   onLocalEdit,
   onLocalDelete,
 }: CombinedInnovationTablesProps) {
+  const {fetchOfferingProducts} = useOfferingProducts(innovationId);
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
   const [editingPrice, setEditingPrice] = useState<{
     irc: string;
@@ -93,6 +95,12 @@ function CombinedInnovationTables({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [localProducts, setLocalProducts] = useState<Product[]>([]);
+  
+  useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
   const [benchmarkedProducts, setBenchmarkedProducts] = useState<Set<number>>(
     new Set()
   );
@@ -119,6 +127,7 @@ function CombinedInnovationTables({
     mutationConfig: {
       onSuccess: () => {
         setIsDeletingProduct(false);
+        fetchOfferingProducts(Number(offeringId));
       },
       onError: (error) => {
         console.error("Failed to delete product:", error);
@@ -131,7 +140,7 @@ function CombinedInnovationTables({
     if (!onSelectedProductsChange || !isDeleteMode) return;
 
     const newSelectedProducts = e.currentTarget.checked
-      ? products.map((product) => product.id)
+      ? localProducts.map((product) => product.id)
       : [];
 
     onSelectedProductsChange(newSelectedProducts);
@@ -234,14 +243,24 @@ function CombinedInnovationTables({
 
     try {
       setIsDeletingProduct(true);
-      await deleteProductMutation.mutateAsync({
+      const deleteResult = await deleteProductMutation.mutateAsync({
         innovationId,
         offeringId,
         productId: productToDelete.id,
       });
 
-      // Call onLocalDelete if provided
-      onLocalDelete?.(productToDelete);
+      const updatedProducts = localProducts.filter(p => p.id !== productToDelete.id);
+      setLocalProducts(updatedProducts);
+
+      if (onLocalDelete) {
+        onLocalDelete(productToDelete);
+      }
+      
+      try {
+        await fetchOfferingProducts(Number(offeringId));
+      } catch (fetchError) {
+        console.error("Error fetching products after deletion:", fetchError);
+      }
 
       closeDeleteModal();
       setProductToDelete(null);
@@ -252,11 +271,9 @@ function CombinedInnovationTables({
     }
   };
 
-  if (!products.length) {
+  if (!localProducts || localProducts.length === 0) {
     return <p>No products available</p>;
   }
-
-  console.log("products", products);
 
   return (
     <div className="flex flex-col h-full">
@@ -370,7 +387,7 @@ function CombinedInnovationTables({
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
-                {products.map((product, index) => {
+                {localProducts.map((product, index) => {
                   const distributorPrice = currentDistributor?.data.find(
                     (price) => price.irc === product.irc
                   );
