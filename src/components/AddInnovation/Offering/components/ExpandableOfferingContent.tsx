@@ -74,7 +74,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
                 onSelectedProductsChange={onSelectedProductsChange}
                 onLocalEdit={onEditProduct}
                 onLocalDelete={(product) => {
-                  console.log("Local delete:", product);
+                  onDeleteProducts();
                 }}
                 isDeleteMode={isDeleteMode}
                 brandOptions={brandOptions}
