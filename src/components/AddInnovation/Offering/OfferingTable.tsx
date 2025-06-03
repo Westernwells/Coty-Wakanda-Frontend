@@ -250,6 +250,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                 pref: product.pref as "pref" | "non-pref",
                 irc: product.irc,
                 material_description: product.material_description,
+                ean_upc: product.ean_upc,
                 brand: {
                   ...editInitialData.brand,
                   id: Number(product.brand_id),
