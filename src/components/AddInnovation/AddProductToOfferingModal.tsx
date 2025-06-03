@@ -12,9 +12,16 @@ import {
 import { useForm, zodResolver } from "@mantine/form";
 import { z } from "zod";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import { useQuery, useQueryClient } from "@tanstack/react-query"; // Added for data fetching and query client
-import { getBrands } from "@/api/get-brands"; // Assuming API path
-import { getBrandPillars } from "@/api/get-brandPillars"; // Assuming API path
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query"; // Added for data fetching and query client
+import { getBrands } from "@/api/get-brands";
+import { getBrandPillars } from "@/api/get-brandPillars";
+import { getMarkets } from "@/api/listManagement/markets/get-markets";
+import { getSegments } from "@/api/listManagement/segments/get-segments";
+import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
+import { getSubcategories } from "@/api/listManagement/subCategories/get-subcategories";
+import { getCountries } from "@/api/get-countries";
+import { getProducts } from "@/api/products/get-products";
+import { getProductDistributors } from "@/api/products/get-product-distributors";
 import { useEffect, useRef } from "react";
 import { DateInput } from "@mantine/dates";
 import {
@@ -161,7 +168,7 @@ export function AddProductToOfferingModal({
             line: initialData.line || "",
             line_id: initialData.line_id || "",
             article_type: initialData.article_type || "",
-            offering_number: initialData.offering_number || "",
+            offering_number: initialData.offering_number+ "" || "",
             launch_date: initialData.launch_date
               ? new Date(initialData.launch_date)
               : null,
@@ -276,7 +283,7 @@ export function AddProductToOfferingModal({
         line: initialData.line || "",
         line_id: initialData.line_id || "",
         article_type: initialData.article_type || "",
-        offering_number: initialData.offering_number || "",
+        offering_number: initialData.offering_number + "" || "",
         launch_date: initialData.launch_date ? new Date(initialData.launch_date) : null,
         discontinue_date: initialData.discontinue_date ? new Date(initialData.discontinue_date) : null,
         category_id: initialData.category?.id && initialData.category.id !== 0 ? initialData.category.id.toString() : "",
@@ -308,22 +315,85 @@ export function AddProductToOfferingModal({
   }, [editMode, initialData, form, opened]);
 
   const selectedBrandId = form.values.brand_id;
+  const selectedCategoryId = form.values.category_id;
+  const selectedGmmCategoryId = form.values.category_id; // Using the same category for GMM as well
 
-  const { data: brandsData, isLoading: brandsLoading } = useQuery<
-    { data: Array<{ id: number; name: string }> }, // Assuming this is the shape of getBrands response
-    Error
-  >({
-    queryKey: ["brands"],
-    queryFn: () => getBrands(), // Wrapped in arrow function
-  });
-
-  const { data: brandPillarsData, isLoading: brandPillarsLoading } = useQuery<
-    { data: Array<{ id: number; name: string }> }, // Assuming this is the shape for brand pillars
-    Error
-  >({
-    queryKey: ["brand_pillars", selectedBrandId],
-    queryFn: () => getBrandPillars({ filter: { brand_id: selectedBrandId } }), // Wrapped
-    enabled: !!selectedBrandId,
+  // Implement the useQueries hook to fetch all necessary data
+  const [
+    { data: marketsData, isLoading: marketsLoading },
+    { data: segmentsData, isLoading: segmentsLoading },
+    { data: categoriesData, isLoading: categoriesLoading },
+    { data: subCategoriesData, isLoading: subCategoriesLoading },
+    { data: gmmSubCategoriesData, isLoading: gmmSubCategoriesLoading },
+    { data: brandsData, isLoading: brandsLoading },
+    { data: countriesData, isLoading: countriesLoading },
+    { data: brandPillarsData, isLoading: brandPillarsLoading },
+    { data: productsListData, isLoading: productsLoading },
+    { data: productDistributorsData, isLoading: productDistributorsLoading },
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: ["markets"],
+        queryFn: () => getMarkets({ page_size: 999999, type: "core" }),
+      },
+      {
+        queryKey: ["segments"],
+        queryFn: () => getSegments({ page_size: 999999 }),
+      },
+      {
+        queryKey: ["categories"],
+        queryFn: () => getCategories({ type: "core", page_size: 999999 }),
+      },
+      {
+        queryKey: ["subCategories", selectedCategoryId],
+        queryFn: () =>
+          getSubcategories({
+            filter: {
+              category_id: selectedCategoryId,
+            },
+            page_size: 99999,
+            type: "core",
+          }),
+        enabled: !!selectedCategoryId,
+      },
+      {
+        queryKey: ["GmmSubCategories", selectedGmmCategoryId],
+        queryFn: () =>
+          getSubcategories({
+            filter: {
+              category_id: selectedGmmCategoryId,
+            },
+            page_size: 99999,
+            type: "core",
+          }),
+        enabled: !!selectedGmmCategoryId,
+      },
+      { queryKey: ["brands"], queryFn: () => getBrands() },
+      { queryKey: ["countries"], queryFn: getCountries },
+      {
+        queryKey: ["brand_pillars", selectedBrandId],
+        queryFn: () =>
+          getBrandPillars({
+            filter: {
+              brand_id: selectedBrandId,
+            },
+          }),
+        enabled: !!selectedBrandId,
+      },
+      {
+        queryKey: ["products"],
+        queryFn: () => getProducts({ cursor: 1, page_size: 100 }),
+      },
+      {
+        queryKey: ["product-distributor", selectedBrandId, form.values.pref],
+        queryFn: () =>
+          getProductDistributors(
+            selectedBrandId,
+            form.values.pref
+          ),
+        enabled: !!selectedBrandId && !!form.values.pref,
+      },
+    ],
   });
 
   // Reset sub_brand_id when brand_id changes
@@ -424,7 +494,7 @@ export function AddProductToOfferingModal({
       line: values.line || "",
       line_id: values.line_id === "" ? undefined : values.line_id,
       article_type: values.article_type || "",
-      offering_number: values.offering_number === "" ? undefined : values.offering_number,
+      offering_number: values.offering_number === "" ? undefined : values.offering_number + "",
       launch_date: values.launch_date
         ? values.launch_date.toISOString().split("T")[0]
         : undefined,
@@ -746,9 +816,18 @@ export function AddProductToOfferingModal({
                     name="category_id"
                     label="Core Category"
                     placeholder="Select Core Category"
-                    data={[] /* TODO: fetch categories */}
+                    data={
+                      categoriesData?.data
+                        ? categoriesData.data.map((category) => ({
+                            value: category.id.toString(),
+                            label: category.name,
+                          }))
+                        : []
+                    }
                     {...form.getInputProps("category_id")}
                     classNames={selectStyles}
+                    disabled={categoriesLoading}
+                    rightSection={categoriesLoading ? <Loader size="xs" /> : null}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -756,9 +835,18 @@ export function AddProductToOfferingModal({
                     name="subcategory_id"
                     label="Sub Category"
                     placeholder="Select Sub Category"
-                    data={[] /* TODO: fetch subcategories */}
+                    data={
+                      subCategoriesData?.data
+                        ? subCategoriesData.data.map((subcategory) => ({
+                            value: subcategory.id.toString(),
+                            label: subcategory.name,
+                          }))
+                        : []
+                    }
                     {...form.getInputProps("subcategory_id")}
                     classNames={selectStyles}
+                    disabled={subCategoriesLoading || !form.values.category_id}
+                    rightSection={subCategoriesLoading ? <Loader size="xs" /> : null}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -766,9 +854,18 @@ export function AddProductToOfferingModal({
                     name="market_id"
                     label="Market"
                     placeholder="Select Market"
-                    data={[] /* TODO: fetch markets */}
+                    data={
+                      marketsData?.data
+                        ? marketsData.data.map((market) => ({
+                            value: market.id.toString(),
+                            label: market.name,
+                          }))
+                        : []
+                    }
                     {...form.getInputProps("market_id")}
                     classNames={selectStyles}
+                    disabled={marketsLoading}
+                    rightSection={marketsLoading ? <Loader size="xs" /> : null}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -776,20 +873,26 @@ export function AddProductToOfferingModal({
                     name="segment_id"
                     label="Segment"
                     placeholder="Select Segment"
-                    data={[] /* TODO: fetch segments */}
+                    data={
+                      segmentsData?.data
+                        ? segmentsData.data.map((segment) => ({
+                            value: segment.id.toString(),
+                            label: segment.name,
+                          }))
+                        : []
+                    }
                     {...form.getInputProps("segment_id")}
                     classNames={selectStyles}
+                    disabled={segmentsLoading}
+                    rightSection={segmentsLoading ? <Loader size="xs" /> : null}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <NumberInput
+                  <TextInput
                     label="Factory"
                     placeholder="Enter Factory"
                     {...form.getInputProps("factory")}
                     classNames={textInputStyles}
-                    hideControls
-                    allowDecimal={false}
-                    allowNegative={false}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
@@ -805,9 +908,18 @@ export function AddProductToOfferingModal({
                     name="country_id"
                     label="Country of Origin"
                     placeholder="Select Country"
-                    data={[] /* TODO: fetch countries */}
+                    data={
+                      countriesData?.data
+                        ? countriesData.data.map((country) => ({
+                            value: country.id.toString(),
+                            label: country.name,
+                          }))
+                        : []
+                    }
                     {...form.getInputProps("country_id")}
                     classNames={selectStyles}
+                    disabled={countriesLoading}
+                    rightSection={countriesLoading ? <Loader size="xs" /> : null}
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>

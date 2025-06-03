@@ -30,9 +30,9 @@ export const getMasterData = async (
           cursor: params?.cursor || 1,
           page_size: params?.page_size || 20,
           search: params?.filter?.search || "",
-          "filter[brand_id]": params?.filter?.brand_id || "",
-          "filter[distributor_id]": params?.filter?.distributor_id || "",
-          "filter[house]": params?.filter?.house || "",
+          "filter[brand_id]": params?.filter?.brand_id || "20",
+          "filter[distributor_id]": params?.filter?.distributor_id || "25",
+          "filter[house]": params?.filter?.house || "burberry",
         }
       : params;
 

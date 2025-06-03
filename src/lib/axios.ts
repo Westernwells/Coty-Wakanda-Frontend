@@ -10,7 +10,7 @@ function authRequestInterceptor(config: InternalAxiosRequestConfig) {
 }
 
 export const axios = Axios.create({
-  baseURL: import.meta.env.VITE_API_SERVER_URL,
+  baseURL: "https://wakanda-api.cotyretailx.com/",
 });
 
 axios.interceptors.request.use(authRequestInterceptor);
