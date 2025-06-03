@@ -41,7 +41,8 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     id: p.id || 0,
     pref: p.pref,
     product_type: p.product_type,
-    brand_category: p.brand_category,
+    brand_category: p.brand_category || "",
+    currency: (p.currency === "EUR" ? "EUR" : "USD"),
     brand_pillar: p.brand_pillar ? { 
       id: p.brand_pillar.id, 
       name: p.brand_pillar.name 
@@ -61,7 +62,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     line: p.line || "",
     line_id: p.line_id || "",
     line_number: "",
-    offering_number: p.offering_number || "",
+    offering_number: String(p.offering_number || ""),
     article_type: p.product_type,
     article_sub_type: p.article_sub_type || "",
     division: p.division || "",

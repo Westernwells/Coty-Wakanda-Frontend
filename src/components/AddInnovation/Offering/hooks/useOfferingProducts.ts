@@ -5,6 +5,12 @@ import { OfferingProductFormValues } from "../../AddProductToOfferingModal";
 import { Product } from "@/types";
 import { OfferingMappedProduct } from "../types";
 
+declare global {
+  interface Window {
+    _lastProductUpdateTime?: number;
+  }
+}
+
 export const useOfferingProducts = (innovationId: string) => {
   const [selectedProducts, setSelectedProducts] = useState<Record<number, number[]>>({});
   
@@ -95,6 +101,18 @@ export const useOfferingProducts = (innovationId: string) => {
   };
 
   const updateProductWithRefresh = async (product: Product, offeringId: number) => {
+    const lastUpdateTime = window._lastProductUpdateTime || 0;
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateTime;
+    
+    if (timeSinceLastUpdate < 2000) {
+      setTimeout(() => {
+        fetchOfferingProducts(offeringId);
+      }, 500);
+      
+      return true;
+    }
+    
     try {
       // Check if the IRC is being changed to one that already exists
       if (product.irc) {
@@ -106,16 +124,17 @@ export const useOfferingProducts = (innovationId: string) => {
           return false;
         }
       }
+
+      window._lastProductUpdateTime = Date.now();
       
       const updatedProduct = await updateProduct(product, offeringId);
       if (updatedProduct) {
-        console.log("Product updated:", updatedProduct);
         
         // Update the product in local state for immediate UI feedback
         updateProductInState(offeringId, product.id, {
           id: product.id,
           irc: product.irc || "",
-          currency: product.icp_eur ? "EUR" : product.icp_usd ? "USD" : "EUR",
+          currency: (product as any).currency || "USD",
           price: Number(product.icp_eur || product.icp_usd || 0),
           icp_cost: Number(product.icp_eur || product.icp_usd || 0),
           product_type: product.product_type || "",

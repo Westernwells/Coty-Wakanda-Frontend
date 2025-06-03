@@ -194,35 +194,16 @@ function CombinedInnovationTables({
   };
 
   const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    
     if (isEdit) {
-      // Remote edit
-      setEditingProduct(product);
-      updateProductMutation.mutate({
-        innovationId,
-        offeringId,
-        id: product.id,
-        data: {
-          irc: product.irc,
-          material_description: product.material_description,
-          icp_cost: Number(product.icp_eur) || Number(product.icp_usd) || 0,
-          price: Number(product.icp_eur) || Number(product.icp_usd) || 0,
-          currency: product.icp_eur ? "EUR" : "USD",
-          brand_id: product.brand.id.toString(),
-          sub_brand_id: product.brand_pillar?.id.toString(),
-          product_type: product.product_type as "saleable" | "non-saleable",
-          pref: product.pref as "pref" | "non-pref",
-          grouping: product.grouping.toString() as "1" | "2" | "3",
-        },
-      });
+    // testing
     } else {
-      // Local edit - Pass the product data to parent component
       const editData = {
         ...product,
-        // Keep original numeric values
         icp_eur: product.icp_eur,
         icp_usd: product.icp_usd,
         grouping: product.grouping,
-        // Add additional fields for editing
         currency: product.icp_eur ? "EUR" : "USD",
         brand_id: product.brand.id.toString(),
         sub_brand_id: product.brand_pillar?.id.toString(),
@@ -693,6 +674,7 @@ function CombinedInnovationTables({
               | "non-saleable",
             pref: benchmarkProduct.pref as "pref" | "non-pref",
             grouping: benchmarkProduct.grouping as unknown as "1" | "2" | "3",
+            currency: (benchmarkProduct.currency === "EUR" ? "EUR" : "USD") as "EUR" | "USD",
             price: benchmarkProduct.price ? Number(benchmarkProduct.price) : 0,
             launch_date:
               benchmarkProduct.launch_date instanceof Date

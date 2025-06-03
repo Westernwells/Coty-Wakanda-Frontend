@@ -144,9 +144,10 @@ export function AddProductToOfferingModal({
         ? {
             irc: initialData.irc || "",
             material_description: initialData.material_description || "",
-            icp_cost:
-              Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
-            currency: initialData.icp_eur ? "EUR" : "USD",
+            icp_cost: (initialData as any).currency === "USD" 
+              ? Number(initialData.icp_usd) || 0 
+              : Number(initialData.icp_eur) || 0,
+            currency: (initialData as any).currency || "USD",
             brand_id:
               initialData.brand?.id && initialData.brand.id !== 0
                 ? initialData.brand.id.toString()
@@ -162,7 +163,7 @@ export function AddProductToOfferingModal({
             grouping:
               (initialData.grouping?.toString() as "1" | "2" | "3") || "1",
             division: initialData.division || "",
-            brand_category: "",
+            brand_category: (initialData as any).brand_category || "",
             ean_upc: initialData.ean_upc || "",
             house: initialData.house || "",
             line: initialData.line || "",
@@ -215,7 +216,7 @@ export function AddProductToOfferingModal({
             irc: "",
             material_description: "",
             icp_cost: "",
-            currency: "EUR",
+            currency: "USD",
             brand_id: "",
             sub_brand_id: "",
             product_type: "saleable",
@@ -270,7 +271,7 @@ export function AddProductToOfferingModal({
         irc: initialData.irc || "",
         material_description: initialData.material_description || "",
         icp_cost: Number(initialData.icp_eur) || Number(initialData.icp_usd) || 0,
-        currency: initialData.icp_eur ? "EUR" : "USD",
+        currency: ((initialData as any).currency === "EUR" ? "EUR" : "USD") as "EUR" | "USD",
         brand_id: initialData.brand?.id && initialData.brand.id !== 0 ? initialData.brand.id.toString() : "",
         sub_brand_id: initialData.brand_pillar?.id && initialData.brand_pillar.id !== 0 ? initialData.brand_pillar.id.toString() : "",
         product_type: (initialData.product_type as "saleable" | "non-saleable") || "saleable",
@@ -412,7 +413,30 @@ export function AddProductToOfferingModal({
 
   const createProductMutation = useCreateOfferingProduct({
     mutationConfig: {
-      onSuccess: async (data) => {
+      onSuccess: async (data, variables) => {
+
+        queryClient.setQueryData(
+          ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
+          (oldData: any) => {
+            if (!oldData) return { data: [data.data] };
+            
+            return {
+              ...oldData,
+              data: [...oldData.data, data.data],
+            };
+          }
+        );
+        
+        // Also update the offering-products cache
+        queryClient.setQueryData(
+          ["offering-products", innovationId, offeringId],
+          (oldData: any) => {
+            if (!oldData) return [data.data];
+            return [...oldData, data.data];
+          }
+        );
+        
+        // Invalidate related queries
         await invalidateQueries();
         await onSubmit(form.values);
         form.reset();
@@ -426,7 +450,43 @@ export function AddProductToOfferingModal({
 
   const updateProductMutation = useUpdateOfferingProduct({
     mutationConfig: {
-      onSuccess: async (data) => {
+      onSuccess: async (data, variables) => {
+        
+        queryClient.setQueryData(
+          ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            
+            const updatedProducts = oldData.data.map((product: any) => {
+              if (product.id === variables.id) {
+                return { ...product, ...variables.data };
+              }
+              return product;
+            });
+            
+            return {
+              ...oldData,
+              data: updatedProducts,
+            };
+          }
+        );
+        
+        queryClient.setQueryData(
+          ["offering-products", innovationId, offeringId],
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            
+            const updatedProducts = oldData.map((product: any) => {
+              if (product.id === variables.id) {
+                return { ...product, ...variables.data };
+              }
+              return product;
+            });
+            
+            return updatedProducts;
+          }
+        );
+        
         await invalidateQueries();
         await onSubmit(form.values);
         form.reset();
@@ -438,7 +498,6 @@ export function AddProductToOfferingModal({
     },
   });
 
-  // Helper function to invalidate queries
   const invalidateQueries = async () => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -524,124 +583,18 @@ export function AddProductToOfferingModal({
     console.log("submissionValues for update/create:", submissionValues);
 
     if (editMode && initialData) {
-      console.log("updateProductMutation", submissionValues);
-      updateProductMutation.mutate(
-        {
-          innovationId,
-          offeringId,
-          id: initialData.id,
-          data: submissionValues,
-        },
-        {
-          onSuccess: (data) => {
-            // Immediately update the queryClient cache to reflect changes
-            queryClient.setQueryData(
-              ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
-              (oldData: any) => {
-                if (!oldData) return oldData;
-                
-                // Find and update the product in the cache
-                // Create a deep copy of the product data to ensure all fields are updated
-                const updatedProducts = oldData.data.map((product: any) => {
-                  if (product.id === initialData.id) {
-                    // Force a new object creation to ensure React detects the change
-                    const updatedProduct = JSON.parse(JSON.stringify({
-                      ...product,
-                      ...submissionValues,
-                    }));
-                    // Explicitly ensure EAN/UPC is updated
-                    updatedProduct.ean_upc = submissionValues.ean_upc;
-                    return updatedProduct;
-                  }
-                  return product;
-                });
-                
-                return {
-                  ...oldData,
-                  data: updatedProducts,
-                };
-              }
-            );
-            
-            // Also update the offering-products cache
-            queryClient.setQueryData(
-              ["offering-products", innovationId, offeringId],
-              (oldData: any) => {
-                if (!oldData) return oldData;
-                
-                // Create a deep copy of the product data to ensure all fields are updated
-                const updatedProducts = oldData.map((product: any) => {
-                  if (product.id === initialData.id) {
-                    // Force a new object creation to ensure React detects the change
-                    const updatedProduct = JSON.parse(JSON.stringify({
-                      ...product,
-                      ...submissionValues,
-                    }));
-                    // Explicitly ensure EAN/UPC is updated
-                    updatedProduct.ean_upc = submissionValues.ean_upc;
-                    return updatedProduct;
-                  }
-                  return product;
-                });
-                
-                return updatedProducts;
-              }
-            );
-            
-            onSubmit(values);
-            form.reset();
-            onClose();
-          },
-          onError: (error) => {
-            console.error("Failed to update product:", error);
-          },
-        }
-      );
+      updateProductMutation.mutate({
+        innovationId,
+        offeringId,
+        id: initialData.id,
+        data: submissionValues
+      });
     } else {
-      // Use the same consistent format for both create and update operations
-      createProductMutation.mutate(
-        {
-          innovationId,
-          offeringId,
-          data: submissionValues as CreateOfferingProductDTO,
-        },
-        {
-          onSuccess: (data) => {
-            // Immediately update the queryClient cache to reflect the new product
-            queryClient.setQueryData(
-              ["innovations", innovationId.toString(), "offerings", offeringId.toString(), "products"],
-              (oldData: any) => {
-                if (!oldData) return { data: [data.data] };
-                
-                return {
-                  ...oldData,
-                  data: [...oldData.data, data.data],
-                };
-              }
-            );
-            
-            // Also update the offering-products cache
-            queryClient.setQueryData(
-              ["offering-products", innovationId, offeringId],
-              (oldData: any) => {
-                if (!oldData) return [data.data];
-                return [...oldData, data.data];
-              }
-            );
-            
-            onSubmit(values);
-            form.reset();
-            onClose();
-          },
-          onError: (error: any) => {
-            console.error("Failed to create product:", error);
-            // Check if it's a duplicate IRC error
-            if (error.response?.data?.message?.includes("IRC already exists")) {
-              form.setFieldError("irc", "This IRC already exists. Please use a unique IRC.");
-            }
-          },
-        }
-      );
+      createProductMutation.mutate({
+        innovationId,
+        offeringId,
+        data: submissionValues as CreateOfferingProductDTO
+      });
     }
   };
 
@@ -1090,7 +1043,10 @@ export function AddProductToOfferingModal({
                   }
                   variant="filled"
                   className="bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-primary/90 transition-all ease-in-out duration-300"
-                  onClick={() => handleSubmit(form.values)}
+                  onClick={() => {
+                    console.log("Update/Add button clicked");
+                    handleSubmit(form.values);
+                  }}
                 >
                   {createProductMutation.isPending ||
                   updateProductMutation.isPending
