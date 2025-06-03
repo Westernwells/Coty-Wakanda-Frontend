@@ -204,7 +204,7 @@ function CombinedInnovationTables({
         icp_eur: product.icp_eur,
         icp_usd: product.icp_usd,
         grouping: product.grouping,
-        currency: product.icp_eur ? "EUR" : "USD",
+        currency: product.currency,
         brand_id: product.brand.id.toString(),
         sub_brand_id: product.brand_pillar?.id.toString(),
         product_type: product.product_type as "saleable" | "non-saleable",
