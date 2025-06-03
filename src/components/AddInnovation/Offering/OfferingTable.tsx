@@ -59,6 +59,8 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     updateSelectedProducts,
   } = useOfferingProducts(innovationId);
 
+  console.log({offeringProducts})
+
   useEffect(() => {
     setProductsTableStates(offerings.map(() => ({ isEdit: false })));
   }, [offerings]);
@@ -243,24 +245,10 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
           }}
           onSubmit={async (product) => {
             if (editMode && editInitialData) {
-              try { 
-                const queryClient = useQueryClient();
-                await queryClient.invalidateQueries({
-                  queryKey: ["offering-products", innovationId, offerings[selectedOffering].id!.toString()]
-                });
-                await queryClient.invalidateQueries({
-                  queryKey: ["offerings", offerings[selectedOffering].id!.toString()]
-                });
-                const freshData = await fetchOfferingProducts(offerings[selectedOffering].id!);
-
-                if (editInitialData && freshData && Array.isArray(freshData)) {
-                  const updatedProduct = freshData.find((p: { id: number }) => p.id === editInitialData.id);
-                  if (updatedProduct) {
-                    setEditInitialData(updatedProduct);
-                  }
-                }
+              try {
+                await fetchOfferingProducts(offerings[selectedOffering].id!);
               } catch (error) {
-                console.error("Error refreshing product data:", error);
+                console.error("Error updating product data:", error);
               }
             } else {
               await addProduct(
