@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Grid, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { PlusIcon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { FormSection } from "../../Shared/Form/Section";
 import { Offering, OfferingTableProps } from "./types";
 import { AddProductToOfferingModal } from "../AddProductToOfferingModal";
@@ -242,31 +243,26 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
           }}
           onSubmit={async (product) => {
             if (editMode && editInitialData) {
-              // Handle edit submission
-              const updatedProduct = {
-                ...editInitialData,
-                grouping: Number(product.grouping),
-                product_type: product.product_type as "saleable" | "non-saleable",
-                pref: product.pref as "pref" | "non-pref",
-                irc: product.irc,
-                material_description: product.material_description,
-                ean_upc: product.ean_upc,
-                brand: {
-                  ...editInitialData.brand,
-                  id: Number(product.brand_id),
-                },
-                brand_pillar: {
-                  id: Number(product.sub_brand_id || 0),
-                  name: editInitialData.brand_pillar?.name || "",
-                },
-              };
+              try { 
+                const queryClient = useQueryClient();
+                await queryClient.invalidateQueries({
+                  queryKey: ["offering-products", innovationId, offerings[selectedOffering].id!.toString()]
+                });
+                await queryClient.invalidateQueries({
+                  queryKey: ["offerings", offerings[selectedOffering].id!.toString()]
+                });
+                const freshData = await fetchOfferingProducts(offerings[selectedOffering].id!);
 
-              await updateProductWithRefresh(
-                updatedProduct as Product, // Force type assertion since we know the structure matches
-                offerings[selectedOffering].id!
-              );
+                if (editInitialData && freshData && Array.isArray(freshData)) {
+                  const updatedProduct = freshData.find((p: { id: number }) => p.id === editInitialData.id);
+                  if (updatedProduct) {
+                    setEditInitialData(updatedProduct);
+                  }
+                }
+              } catch (error) {
+                console.error("Error refreshing product data:", error);
+              }
             } else {
-              // Handle add submission
               await addProduct(
                 {
                   ...product,

@@ -24,7 +24,7 @@ export const useProductData = (innovationId: string) => {
       const mappedProducts: OfferingMappedProduct[] = products.map((p) => ({
         id: p.id,
         irc: p.irc || "",
-        currency: p.icp_eur ? "EUR" : p.icp_usd ? "USD" : "EUR",
+        currency: (p as any).currency || (p.icp_usd && !p.icp_eur ? "USD" : "EUR"),
         price:
           typeof p.price === "number"
             ? p.price

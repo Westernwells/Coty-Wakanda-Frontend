@@ -128,6 +128,8 @@ export interface Product {
   id: number;
   pref: string;
   product_type: string;
+  brand_category?: string;
+  currency?: string;
   brand_pillar: {
     id: number;
     name: string;
