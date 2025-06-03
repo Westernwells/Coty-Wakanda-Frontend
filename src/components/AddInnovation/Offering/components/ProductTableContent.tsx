@@ -42,7 +42,13 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     pref: p.pref,
     product_type: p.product_type,
     brand_category: p.brand_category,
-    brand_pillar: p.brand_pillar,
+    brand_pillar: p.brand_pillar ? { 
+      id: p.brand_pillar.id, 
+      name: p.brand_pillar.name 
+    } : {
+      id: 0,
+      name: ""
+    },
     grouping: Number(p.grouping),
     price: String(p.price),
     launch_date: new Date(),
@@ -54,7 +60,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     house: p.house || "",
     line: p.line || "",
     line_id: p.line_id || "",
-    line_number: p.line_number || "",
+    line_number: "",
     offering_number: p.offering_number || "",
     article_type: p.product_type,
     article_sub_type: p.article_sub_type || "",
