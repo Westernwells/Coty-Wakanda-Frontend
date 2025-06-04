@@ -840,10 +840,13 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+             <NumberInput
               {...form.getInputProps("icp_eur")}
               label="ICP_EUR"
               classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
             />
           </Grid.Col>
           <Grid.Col
@@ -867,13 +870,10 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <NumberInput
+            <TextInput
               {...form.getInputProps("factory")}
               label="Factory"
               classNames={textInputStyles}
-              hideControls
-              allowDecimal={false}
-              allowNegative={false}
             />
           </Grid.Col>
           <Grid.Col
@@ -882,10 +882,13 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+               <NumberInput
               {...form.getInputProps("commodity_id")}
               label="Commodity ID"
               classNames={textInputStyles}
+              hideControls
+              allowDecimal={false}
+              allowNegative={false}
             />
           </Grid.Col>
           <Grid.Col
