@@ -12,7 +12,7 @@ import { getProductDistributors } from "@/api/products/get-product-distributors"
 import { getProducts } from "@/api/products/get-products";
 import { useUpdateProduct } from "@/api/products/update-product";
 import { queryClient } from "@/main";
-import { PriceBenchmark, Product, ProductInput } from "@/types";
+import { Document, PriceBenchmark, Product, ProductInput } from "@/types";
 import {
   Grid,
   Group,
@@ -112,22 +112,23 @@ const AddProductForm = forwardRef(function AddProductForm(
   );
 
   const form = useForm<
-    Partial<ProductInput> & { division?: string; brand_category?: string }
+    Partial<ProductInput> & { division?: string; brand_category: string, }
   >({
     mode: "uncontrolled",
     initialValues: isEdit
       ? {
           ...(productToEdit as object),
-          division: product?.division,
+          division: product?.division ?? "",
           brand_category:
             (productToEdit as unknown as { brand_category?: string })
-              ?.brand_category ?? undefined,
+              ?.brand_category ?? "",
+              brand_type: product?.division,
         }
       : {
           price_benchmark: {},
           distributor_pricing: [],
-          division: undefined,
-          brand_category: undefined,
+          division: "",
+          brand_category: "",
         },
     validate: zodResolver(addProductSchema),
   });
@@ -300,16 +301,25 @@ const AddProductForm = forwardRef(function AddProductForm(
         setIsSubmitting(true);
         try {
           const { documents, ...toSubmit } = values;
+          const newDocuments = (documents as (Document & { id?: string })[])?.filter(
+            (doc) => !doc.id
+          );
+      
           if (isEdit) {
-            documents?.map((doc: { title: string; url: string }) => {
-              addDocument.mutateAsync({
-                productId: product?.id || 0,
-                data: {
-                  title: doc.title,
-                  url: doc.url,
-                },
-              });
-            });
+            if (newDocuments?.length) {
+              await Promise.all(
+                newDocuments.map((doc: { title: string; url: string }) =>
+                  addDocument.mutateAsync({
+                    productId: product?.id || 0,
+                    data: {
+                      title: doc.title,
+                      url: doc.url,
+                    },
+                  })
+                )
+              );
+            }
+      
             updateProduct.mutate(
               {
                 data: {
@@ -319,8 +329,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                   discontinue_date: values.discontinue_date
                     ?.toISOString()
                     .split("T")[0],
-                  price_benchmark:
-                    (values.price_benchmark as PriceBenchmark) || null,
+                  price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
                 },
               },
@@ -345,8 +354,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                   discontinue_date: values.discontinue_date
                     ?.toISOString()
                     .split("T")[0],
-                  price_benchmark:
-                    (values.price_benchmark as PriceBenchmark) || null,
+                  price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
                   division: values.division,
                 },
@@ -723,7 +731,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           >
             <NumberInput
               {...form.getInputProps("offering_number")}
-              label="Offering number (optional)"
+              label="Offering number"
               classNames={textInputStyles}
               hideControls
               allowDecimal={false}
@@ -1306,23 +1314,30 @@ const AddProductForm = forwardRef(function AddProductForm(
           setShowDivisionModal(false);
           setPendingSubmitValues(null);
         }}
-        onConfirm={() => {
+        onConfirm={async () => {
           setShowDivisionModal(false);
           if (pendingSubmitValues) {
             setIsSubmitting(true);
             const values = pendingSubmitValues;
             setPendingSubmitValues(null);
-            // Repeat the mutation logic for edit here
+        
             const { documents, ...toSubmit } = values;
-            documents?.map((doc: { title: string; url: string }) => {
-              addDocument.mutateAsync({
-                productId: product?.id || 0,
-                data: {
-                  title: doc.title,
-                  url: doc.url,
-                },
-              });
-            });
+            const newDocuments = (documents as (Document & { id?: string })[])?.filter((doc) => !doc.id);
+        
+            if (newDocuments?.length) {
+              await Promise.all(
+                newDocuments.map((doc) =>
+                  addDocument.mutateAsync({
+                    productId: product?.id || 0,
+                    data: {
+                      title: doc.title,
+                      url: doc.url,
+                    },
+                  })
+                )
+              );
+            }
+            
             updateProduct.mutate(
               {
                 data: {
@@ -1332,8 +1347,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                   discontinue_date: values.discontinue_date
                     ?.toISOString()
                     .split("T")[0],
-                  price_benchmark:
-                    (values.price_benchmark as PriceBenchmark) || null,
+                  price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
                 },
               },

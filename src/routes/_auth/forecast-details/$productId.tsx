@@ -45,7 +45,7 @@ function RouteComponent() {
   }
   return (
     <div className="w-full">
-      <Headline title={foreCastData?.product.offering_number} />
+      <Headline title={String(foreCastData?.product.offering_number)} />
       <Button
         leftSection={
           <div className="rotate-90">

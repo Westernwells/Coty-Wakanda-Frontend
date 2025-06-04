@@ -9,15 +9,21 @@ export const addProductSchema = z.object({
   pref: z.enum(["pref", "non-pref"], {
     message: "This field is required",
   }),
-  product_type: z.string().min(1, { message: "This field is required" }),
+  brand_category: z.string({message: "This field is required"}).nonempty({message: "This field is required"}),
+  product_type :z.enum(["saleable", "non-saleable"], {
+    message: "This field is required",
+  }),
   grouping: z.enum(["1", "2", "3"], {
     message: "This field is required",
   }),
   launch_date: z.date({ message: "This field is required" }),
   discontinue_date: z.date({ message: "This field is required" }),
-  offering_number: z
-    .number({ coerce: true })
-    .min(1, { message: "This field is required" }),
+  offering_number: z.preprocess(
+    val => (val === "" ? undefined : val),
+    z.number({ coerce: true })
+      .min(1, { message: "Must be at least 1" })
+      .optional()
+  ),
   irc: z.string().min(1, { message: "This field is required" }),
   material_description: z
     .string()

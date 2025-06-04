@@ -62,7 +62,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     line: p.line || "",
     line_id: p.line_id || "",
     line_number: "",
-    offering_number: String(p.offering_number || ""),
+    offering_number: Number(p.offering_number || ""),
     article_type: p.product_type,
     article_sub_type: p.article_sub_type || "",
     division: p.division || "",

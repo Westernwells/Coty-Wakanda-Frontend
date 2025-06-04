@@ -138,7 +138,7 @@ export interface Product {
   price: string;
   launch_date: string | Date;
   discontinue_date: string | Date;
-  offering_number: string;
+  offering_number: number;
   irc: string;
   sku: string;
   material_description: string;
@@ -311,7 +311,7 @@ export interface ProductInput {
   price: string;
   launch_date: Date;
   discontinue_date: Date;
-  offering_number: string;
+  offering_number: number;
   irc: string;
   material_description: string;
   ean_upc: string;
@@ -349,6 +349,7 @@ export interface ProductInput {
   gmm_market_id: string;
   gmm_segment_id: string;
   brand_type?: string;
+  brand_category: string;
 }
 
 export interface ForecastData {
