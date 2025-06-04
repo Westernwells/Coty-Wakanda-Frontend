@@ -1,6 +1,12 @@
-const PlusIcon = ({ fill = "white" }: { fill?: string }) => {
+type PlusIconProps = {
+  className?: string;
+  stroke?: string;
+};
+
+const PlusIcon = ({ className, stroke = 'white' }: PlusIconProps) => {
   return (
     <svg
+      className={className}
       width="24"
       height="24"
       viewBox="0 0 24 24"
@@ -9,7 +15,7 @@ const PlusIcon = ({ fill = "white" }: { fill?: string }) => {
     >
       <path
         d="M6 12H12M12 12H18M12 12V18M12 12V6"
-        stroke={fill}
+        stroke={className ? 'currentColor' : stroke}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -17,5 +23,4 @@ const PlusIcon = ({ fill = "white" }: { fill?: string }) => {
     </svg>
   );
 };
-
 export default PlusIcon;
