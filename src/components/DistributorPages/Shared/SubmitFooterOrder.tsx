@@ -34,7 +34,7 @@ const SubmitFooter = ({
           .array(),
         product_id: z.number()
       }).array();
-      if(!schema.safeParse(data).success) {
+      if (!schema.safeParse(data).success) {
         schema.safeParse(data).error?.issues.map((issue) => {
           const path = issue.path.join(".")
           form.setFieldError(`order.${path}`, "please fill this fields")
@@ -45,7 +45,7 @@ const SubmitFooter = ({
     }
   };
   return (
-    <Group justify="flex-end" mt="xl" gap={10}>
+    <Group justify="flex-end" mt="xl" gap={10} pb="lg" >
       <Button
         variant="outline"
         className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
@@ -55,10 +55,10 @@ const SubmitFooter = ({
         Save
       </Button>
       <Button
-        leftSection={<PlusIcon />}
+        leftSection={<PlusIcon className="w-4 h-4" />}
         type="submit"
         variant="outline"
-        className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+        className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:text-primary hover:bg-opacity-40 transition-all ease-in-out duration-300"
         onClick={() => open()}
       >
         Submit
