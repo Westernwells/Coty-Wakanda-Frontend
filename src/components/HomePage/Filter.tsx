@@ -40,6 +40,7 @@ const Filter = ({
       distributor_id: "",
       division: "",
       brand_type: "all",
+      is_innovation_product: false, 
     },
 
     onValuesChange: (values) => {
@@ -119,6 +120,15 @@ const Filter = ({
     form.setFieldValue("brand_type", type);
     setFilters({ ...form.values, brand_type: type });
   }
+  function handleInnovationChange(value: boolean) {
+    form.setFieldValue("is_innovation_product", value);
+    setFilters({ ...form.values, is_innovation_product: value });
+  }
+
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleInnovationChange(event.target.checked);
+  };
 
   // Calculate grid columns based on select count
   const selectCount = isProductsPage ? 3 : 2;
@@ -143,6 +153,7 @@ const Filter = ({
               distributor_id: "",
               division: "",
               brand_type: "all",
+              is_innovation_product: false,
             });
             form.reset();
           }}
@@ -256,6 +267,18 @@ const Filter = ({
               classNames={{
                 input: "cursor-pointer",
               }}
+            />
+            <Checkbox
+              checked={
+                 form.values.is_innovation_product === true
+              }
+              onChange={handleCheckboxChange}
+              label={<span className="text-primary text-sm">Innovation</span>}
+              className="min-w-[120px] "
+              classNames={{
+                input: "cursor-pointer",
+              }}
+              name="is_innovation_product"
             />
           </div>
         </Group>
