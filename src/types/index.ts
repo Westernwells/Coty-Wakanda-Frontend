@@ -208,6 +208,7 @@ export interface Filters {
   market_id: string;
   division?: string;
   brand_type?: string;
+  is_innovation_product?: boolean;
 }
 
 export interface MasterProductFilters {
