@@ -98,54 +98,54 @@ const ProductTable: React.FC<ProductTableProps> = ({
           className="min-w-full"
         >
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0 z-10">
+            <thead className="bg-primary text-white sticky top-0 z-10">
               <tr>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   House
                 </th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   Description
                 </th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   Brand Line
                 </th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   Article Type
                 </th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   IRC
                 </th>
-                <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider">
                   Group
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {products.map((product) => (
                 <tr
                   key={product.irc}
                   onClick={() => setSelectedRow(product.irc)}
                   className={cn(
                     "cursor-pointer hover:bg-primary/10",
-                    selectedRow === product.irc && "bg-primary/30"
+                    selectedRow === product.irc ? "bg-primary/30" : " odd:bg-white even:bg-[#F2F4F6]"
                   )}
                 >
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.house}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.description}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.brand_line}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.article_type}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.irc}
                   </td>
-                  <td className="px-2 py-1 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.group}
                   </td>
                 </tr>
