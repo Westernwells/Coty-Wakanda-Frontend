@@ -116,3 +116,7 @@ body {
     opacity: 1;
   }
 }
+
+.mantine-ScrollArea-viewport{
+  padding-bottom: 0px !important;
+}

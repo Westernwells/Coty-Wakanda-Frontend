@@ -28,6 +28,7 @@ interface OfferingTableRowProps {
   brandPillarOptions: Array<{ value: string; label: string }>;
   isEdit: boolean;
   setIsEdit: (isEdit: boolean | ((prevState: boolean) => boolean)) => void;
+  onBulkProductUpload: (e: React.ChangeEvent<HTMLInputElement>, index: number) => void;
 }
 
 export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
@@ -52,6 +53,7 @@ export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
   brandPillarOptions,
   isEdit,
   setIsEdit,
+  onBulkProductUpload
 }) => {
   return (
     <React.Fragment>
@@ -84,6 +86,7 @@ export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
             brandPillarOptions={brandPillarOptions}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
+            onBulkProductUpload={(e) => onBulkProductUpload(e, index)}
           />
         </Table.Td>
       </Table.Tr>
