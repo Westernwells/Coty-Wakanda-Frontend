@@ -180,6 +180,7 @@ function CombinedInnovationTables({
       return;
     }
     onProductSelect?.(product);
+    setSelectedRow(product.irc);
   };
 
   const nextDistributor = (e: React.MouseEvent) => {
@@ -337,6 +338,7 @@ function CombinedInnovationTables({
                 borderColor="transparent"
                 striped="even"
                 stripedColor="#F2F4F6"
+                style={{ padding: "0px" }}
               >
                 <Table.Thead>
                   <Table.Tr className="bg-primary text-white">
@@ -395,10 +397,22 @@ function CombinedInnovationTables({
                       <Table.Tr
                         key={product.id}
                         onClick={(e) => handleRowClick(e, product)}
-                        className="hover:bg-gray-50"
-                        style={{ padding: "0px" }}
+                        className={cn(
+                          "cursor-pointer hover:bg-primary/10",
+                          selectedRow === product.irc
+                            ? "bg-primary/30"
+                            : " odd:bg-white even:bg-[#F2F4F6] max-h-[42px]"
+                        )}
+                        style={{ padding: "0px", height: "42px" }}
                       >
-                        <Table.Td className="checkbox-cell w-[120px]">
+                        <Table.Td
+                          className="checkbox-cell w-[120px] max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           <div
                             className="flex items-center gap-2"
                             onClick={(e) => e.stopPropagation()}
@@ -412,6 +426,7 @@ function CombinedInnovationTables({
                                 styles={{
                                   input: {
                                     cursor: "pointer",
+                                    maxHeight: "42px",
                                   },
                                 }}
                               />
@@ -470,7 +485,14 @@ function CombinedInnovationTables({
                             </div>
                           </div>
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           <Checkbox
                             checked={benchmarkedProducts.has(product.id)}
                             onChange={() => handleBenchmarkToggle(product)}
@@ -487,23 +509,101 @@ function CombinedInnovationTables({
                                   backgroundColor: "#0025FF",
                                   borderColor: "#0025FF",
                                 },
+                                padding: "0px",
                               },
                             }}
                           />
                         </Table.Td>
-                        <Table.Td>{product.irc}</Table.Td>
-                        <Table.Td>{product.brand.name}</Table.Td>
-                        <Table.Td>{product.brand.type}</Table.Td>
-                        <Table.Td>{product.brand_pillar?.name || "-"}</Table.Td>
-                        <Table.Td>{product.material_description}</Table.Td>
-                        <Table.Td>{product.icp_eur}</Table.Td>
-                        <Table.Td>{product.icp_usd}</Table.Td>
-                        <Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.irc}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.brand.name}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.brand.type}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.brand_pillar?.name || "-"}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.material_description}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.icp_eur}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {product.icp_usd}
+                        </Table.Td>
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           <span className="text-white bg-blue px-[10px] rounded-full text-nowrap">
                             {product.pref}
                           </span>
                         </Table.Td>
-                        <Table.Td className="border-r border-gray-200">
+                        <Table.Td
+                          className="border-r border-gray-200 max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           {product.status && (
                             <span className="text-white bg-blue px-[10px] rounded-full text-nowrap">
                               {product.status}
@@ -593,10 +693,26 @@ function CombinedInnovationTables({
                       <Table.Tr
                         key={product.id}
                         onClick={(e) => handleRowClick(e, product)}
-                        className="hover:bg-gray-50"
+                        style={{
+                          height: "42px !important",
+                          paddingTop: "0px",
+                          paddingBottom: "0px",
+                        }}
+                        className={cn(
+                          "cursor-pointer hover:bg-primary/10",
+                          selectedRow === product.irc
+                            ? "bg-primary/30"
+                            : " odd:bg-white even:bg-[#F2F4F6]"
+                        )}
                       >
                         {/* Distributor Price Cells */}
-                        <Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           {distributorPrice ? (
                             editingPrice?.irc === product.irc ? (
                               <input
@@ -634,7 +750,7 @@ function CombinedInnovationTables({
                                     price: distributorPrice.billing_price,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[22px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[42px]"
                               >
                                 ${distributorPrice.billing_price.toFixed(2)}
                               </div>
@@ -643,7 +759,13 @@ function CombinedInnovationTables({
                             "-"
                           )}
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
                           {distributorPrice ? (
                             editingRRSP?.irc === product.irc ? (
                               <input
@@ -681,7 +803,7 @@ function CombinedInnovationTables({
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[22px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>

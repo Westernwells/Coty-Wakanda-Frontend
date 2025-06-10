@@ -239,14 +239,14 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {currentDistributorPrices.map((price) => (
                 <tr
                   key={price.irc + "-" + distributors[currentIndex].id}
                   onClick={() => setSelectedRow(price.irc as string)}
                   className={cn(
-                    "cursor-pointer hover:bg-primary/10",
-                    selectedRow === price.irc && "bg-primary/30"
+                    "cursor-pointer hover:bg-primary/10 ",
+                    selectedRow === price.irc ? "bg-primary/30" : " odd:bg-white even:bg-[#F2F4F6]"
                   )}
                 >
                   {tableFields.map((field) => {
@@ -269,10 +269,7 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handlePriceEdit(
-                                  price.irc as string,
-                                  Number(value)
-                                );
+                                handlePriceEdit(price.irc as string, Number(value));
                               }}
                               className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
@@ -300,10 +297,7 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleRRSPEdit(
-                                  price.irc as string,
-                                  Number(value)
-                                );
+                                handleRRSPEdit(price.irc as string, Number(value));
                               }}
                               className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >

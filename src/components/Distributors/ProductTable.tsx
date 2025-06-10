@@ -120,14 +120,14 @@ const ProductTable: React.FC<ProductTableProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {products.map((product) => (
                 <tr
                   key={product.irc}
                   onClick={() => setSelectedRow(product.irc)}
                   className={cn(
                     "cursor-pointer hover:bg-primary/10",
-                    selectedRow === product.irc && "bg-primary/30"
+                    selectedRow === product.irc ? "bg-primary/30" : " odd:bg-white even:bg-[#F2F4F6]"
                   )}
                 >
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
