@@ -190,9 +190,9 @@ const MasterDataViewModal = ({
                 </div>
             </div> */}
         <div className="mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-0.5">
             {/* Product Table Section - 1/2 width */}
-            <div className="lg:col-span-3 bg-white rounded-lg shadow overflow-hidden">
+            <div className="lg:col-span-3 bg-white rounded-s-xl shadow overflow-hidden">
               <ProductTable
                 products={masterProducts.products}
                 selectedRow={selectedRow}
@@ -207,7 +207,7 @@ const MasterDataViewModal = ({
             </div>
 
             {/* Distributor Prices Section - 1/2 width */}
-            <div className="lg:col-span-3 bg-white rounded-lg shadow overflow-hidden">
+            <div className="lg:col-span-3 bg-white rounded-e-xl shadow overflow-hidden">
               <DistributorPrices
                 distributors={masterProducts.distributors}
                 selectedRow={selectedRow}
