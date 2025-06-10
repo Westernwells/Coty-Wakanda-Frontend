@@ -160,7 +160,7 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-20">
+      <div className="p-4 border-b sticky top-0 bg-white z-20 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">
           Distributor Prices
         </h2>
@@ -193,8 +193,9 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
       </div>
 
       <div
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        id="distributorTableScrollable"
         ref={scrollableRef}
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
         onScroll={handleScroll}
       >
         <InfiniteScroll
@@ -203,54 +204,58 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
           hasMore={hasMorePrices}
           loader={
             isLoadingMorePrices ? (
-              <div className="text-center py-2">Loading...</div>
+              <tr>
+                <td colSpan={tableHeader.length} className="text-center py-2">
+                  Loading...
+                </td>
+              </tr>
             ) : null
           }
+          scrollableTarget="distributorTableScrollable"
           endMessage={
-            <div className="text-center text-gray-500 py-2">
-              {currentDistributorPrices.length > 0
-                ? "No more prices to load."
-                : ""}
-            </div>
+            <tr>
+              <td
+                colSpan={tableHeader.length}
+                className="text-center text-gray-500 py-4"
+              >
+                {currentDistributorPrices.length > 0
+                  ? "No more prices to load."
+                  : ""}
+              </td>
+            </tr>
           }
+          className="min-w-full"
         >
-          <Table
-            verticalSpacing="sm"
-            borderColor="transparent"
-            striped="even"
-            stripedColor="#F2F4F6"
-          >
-            <Table.Thead>
-              <Table.Tr className="bg-primary text-white">
-                {tableHeader.map((header, index) => (
-                  <Table.Th
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-primary text-white sticky top-0 z-10">
+              <tr>
+                {tableHeader.map((header) => (
+                  <th
                     key={header}
-                    className={cn(
-                      "text-white font-medium",
-                      index === 0 && "rounded-ss-xl",
-                      index === tableHeader.length - 1 && "rounded-se-xl"
-                    )}
+                    className="px-2 py-1 text-left text-xs font-medium uppercase tracking-wider"
                   >
                     {header}
-                  </Table.Th>
+                  </th>
                 ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
               {currentDistributorPrices.map((price) => (
-                <Table.Tr
+                <tr
                   key={price.irc + "-" + distributors[currentIndex].id}
                   onClick={() => setSelectedRow(price.irc as string)}
                   className={cn(
-                    "cursor-pointer",
+                    "cursor-pointer hover:bg-primary/10",
                     selectedRow === price.irc && "bg-primary/30"
                   )}
                 >
                   {tableFields.map((field) => {
+                    const value = price[field as keyof typeof price];
+
                     if (field === "billing_price") {
                       return (
-                        <Table.Td key={field}>
-                          {editingPrice && editingPrice.irc === price.irc ? (
+                        <td key={field} className="text-sm text-gray-900">
+                          {editingPrice?.irc === price.irc ? (
                             <input
                               type="number"
                               value={editingPrice.price}
@@ -266,21 +271,22 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                                 e.stopPropagation();
                                 handlePriceEdit(
                                   price.irc as string,
-                                  Number(price.billing_price)
+                                  Number(value)
                                 );
                               }}
-                              className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                              className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
-                              ${Number(price.billing_price).toFixed(2)}
+                              ${Number(value).toFixed(2)}
                             </div>
                           )}
-                        </Table.Td>
+                        </td>
                       );
                     }
+
                     if (field === "rrsp") {
                       return (
-                        <Table.Td key={field}>
-                          {editingRRSP && editingRRSP.irc === price.irc ? (
+                        <td key={field} className="text-sm text-gray-900">
+                          {editingRRSP?.irc === price.irc ? (
                             <input
                               type="number"
                               value={editingRRSP.rrsp}
@@ -296,29 +302,28 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                                 e.stopPropagation();
                                 handleRRSPEdit(
                                   price.irc as string,
-                                  Number(price.rrsp)
+                                  Number(value)
                                 );
                               }}
-                              className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded min-h-[22px]"
+                              className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
-                              ${Number(price.rrsp).toFixed(2)}
+                              ${Number(value).toFixed(2)}
                             </div>
                           )}
-                        </Table.Td>
+                        </td>
                       );
                     }
+
                     return (
-                      <Table.Td key={field}>
-                        {(price as Record<string, string | number | null>)[
-                          field
-                        ] ?? "-"}
-                      </Table.Td>
+                      <td key={field} className="text-sm text-gray-900">
+                        {value ?? "-"}
+                      </td>
                     );
                   })}
-                </Table.Tr>
+                </tr>
               ))}
-            </Table.Tbody>
-          </Table>
+            </tbody>
+          </table>
         </InfiniteScroll>
       </div>
     </div>
