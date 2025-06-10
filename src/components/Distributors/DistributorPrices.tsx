@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Table } from "@mantine/core";
+import { TableLoader } from "./ProductTable";
 
 interface DistributorPricesProps {
   distributors: MasterDistributor[];
@@ -204,12 +205,12 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
           hasMore={hasMorePrices}
           loader={
             isLoadingMorePrices ? (
-              <tr>
-                <td colSpan={tableHeader.length} className="text-center py-2">
-                  Loading...
-                </td>
+              <TableLoader />
+            ) : (
+              <tr style={{ height: "50px" }}>
+                <td colSpan={6}></td>
               </tr>
-            ) : null
+            )
           }
           scrollableTarget="distributorTableScrollable"
           endMessage={

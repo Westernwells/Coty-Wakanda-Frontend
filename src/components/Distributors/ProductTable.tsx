@@ -16,7 +16,7 @@ interface ProductTableProps {
   scrollSource: "product" | "distributor" | null;
 }
 
-const TableLoader = () => (
+export const TableLoader = () => (
   <div className="text-center self-center w-full ">
     <Loader size="md" className="text-center" />
   </div>
