@@ -5,7 +5,7 @@ import { PlusIcon } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { FormSection } from "../../Shared/Form/Section";
 import { Offering, OfferingTableProps } from "./types";
-import { AddProductToOfferingModal } from "../AddProductToOfferingModal";
+import { AddProductToOfferingModal, OfferingProductFormValues } from "../AddProductToOfferingModal";
 import { Product } from "@/types";
 
 import OfferingTableHeader from "./components/OfferingTableHeader";
@@ -15,6 +15,9 @@ import OfferingFormModal from "./components/OfferingFormModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 
 import { useOfferingProducts } from "./hooks/useOfferingProducts";
+import { useCsvProductBulkUploader } from "@/lib/hooks/useCsvProductBulkUploader";
+import { useImportProducts } from "@/api/products/import-products";
+import { toast } from "react-toastify";
 
 export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
@@ -143,7 +146,24 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   const handleProductSelect = (product: Product) => {
     console.log("Product selected:", product);
   };
+  const [rows, setRows] = useState<OfferingProductFormValues[]>([]);
+  const { mutate: importCsv } = useImportProducts({
+    mutationConfig: {
+      onError: (err) => toast.error(`Error importing products: ${err}`),
+      onSuccess: () => {
+        toast.success("Products imported successfully");
+        setRows([]);
+      }
+    },
+  })
 
+  const { handleFileUpload } = useCsvProductBulkUploader((parsedRows) => {
+    setRows(parsedRows);
+    
+  },(file)=>{
+    console.log(file.name, file.type)
+    importCsv(file)
+  });
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
       <FormSection title="Offerings">
@@ -201,6 +221,9 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                                 : isEditValue;
                             setProductsTableStates(newStates);
                           }
+                        }}
+                        onBulkProductUpload={(e, index) => {
+                          handleFileUpload(e);
                         }}
                       />
                     ))}
