@@ -24,6 +24,7 @@ interface ExpandableOfferingContentProps {
   brandPillarOptions: Array<{ value: string; label: string }>;
   isEdit: boolean;
   setIsEdit: (isEdit: boolean | ((prevState: boolean) => boolean)) => void;
+  onBulkProductUpload: (e:React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps> = ({
@@ -45,6 +46,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
   brandPillarOptions,
   isEdit,
   setIsEdit,
+  onBulkProductUpload
 }) => {
   return (
     <Collapse in={isExpanded}>
@@ -60,6 +62,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
                 setIsDeleteMode={setIsDeleteMode}
                 onDeleteProducts={onDeleteProducts}
                 hasSelectedProducts={selectedProducts.length > 0}
+                onBulkProductUpload={onBulkProductUpload} // Optional prop for bulk upload
               />
               
               <ProductTableContent
