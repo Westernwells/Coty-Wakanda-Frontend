@@ -72,10 +72,10 @@ const REQUIRED_HEADERS = [
 
 export const useCsvProductBulkUploader = (
   onUpload: (rows: OfferingProductFormValues[]) => void,
-  submitData?: (file: File) => void
+  submitData?: (file: File, offeringId: number) => void
 ) => {
   const handleFileUpload = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
+    async (event: React.ChangeEvent<HTMLInputElement>, offeringId: number) => {
       const file = event.target.files?.[0];
       if (!file) return;
       if (!file.name.toLowerCase().endsWith(".csv")) {
@@ -192,7 +192,7 @@ export const useCsvProductBulkUploader = (
           console.log("Uploading:", rows);
           onUpload(rows);
           if (submitData) {
-            submitData(file);
+            submitData(file, offeringId);
           }
           toast.success(`Processed ${rows.length} rows`);
         },
