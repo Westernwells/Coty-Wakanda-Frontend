@@ -148,21 +148,28 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   };
   const [rows, setRows] = useState<OfferingProductFormValues[]>([]);
   const { mutate: importCsv } = useImportProducts({
-    mutationConfig: {
-      onError: (err) => toast.error(`Error importing products: ${err}`),
-      onSuccess: () => {
-        toast.success("Products imported successfully");
-        setRows([]);
-      }
-    },
-  })
+      mutationConfig: {
+        onError: (err) => toast.error(`Error importing products: ${err}`),
+        onSuccess: () => {
+          toast.success("Products imported successfully");
+          setRows([]);
+        }
+      },
+    })
+
+
 
   const { handleFileUpload } = useCsvProductBulkUploader((parsedRows) => {
     setRows(parsedRows);
     
-  },(file)=>{
+  },(file, offeringId)=>{
     console.log(file.name, file.type)
-    importCsv(file)
+    importCsv({
+      innovationId: Number(innovationId),
+      offeringId,
+      file,
+      type: file.type.includes("text/csv") ? "pim" : "trex",
+    });
   });
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
@@ -223,7 +230,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                           }
                         }}
                         onBulkProductUpload={(e, index) => {
-                          handleFileUpload(e);
+                          handleFileUpload(e, Number(offering.id));
                         }}
                       />
                     ))}
