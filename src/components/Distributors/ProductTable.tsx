@@ -16,7 +16,7 @@ interface ProductTableProps {
   scrollSource: "product" | "distributor" | null;
 }
 
-const TableLoader = () => (
+export const TableLoader = () => (
   <div className="text-center self-center w-full ">
     <Loader size="md" className="text-center" />
   </div>
@@ -127,7 +127,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   onClick={() => setSelectedRow(product.irc)}
                   className={cn(
                     "cursor-pointer hover:bg-primary/10",
-                    selectedRow === product.irc ? "bg-primary/30" : " odd:bg-white even:bg-[#F2F4F6]"
+                    selectedRow === product.irc
+                      ? "bg-primary/30"
+                      : " odd:bg-white even:bg-[#F2F4F6]"
                   )}
                 >
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">

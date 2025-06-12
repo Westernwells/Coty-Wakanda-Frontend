@@ -373,9 +373,9 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
 }
   return (
     <div className="flex flex-col h-full">
-      <div className="relative grid grid-cols-2 max-h-[calc(100vh-28rem)]">
+      <div className="relative grid grid-cols-6 max-h-[calc(100vh-28rem)]">
         {/* Products Table */}
-        <div className="flex flex-col mb-4">
+        <div className="col-span-4 mb-4">
           <div className="flex">
             <h3 className="text-lg font-semibold text-primary">Product list</h3>
           </div>
@@ -679,7 +679,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
         </div>
 
         {/* DistributorPrices Table */}
-        <div className="flex flex-col mb-4">
+        <div className="col-span-2 mb-4">
           <div className="flex items-center justify-between gap-4">
             {currentDistributor && (
               <>
@@ -737,9 +737,12 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                   <Table.Tr className="bg-primary text-white">
                     {/* Distributor Price Columns */}
                     <Table.Th className="border-l border-gray-200">
-                      Price
+                      Billing Price
                     </Table.Th>
-                    <Table.Th className="rounded-se-xl">RRSP</Table.Th>
+                    <Table.Th>RRSP</Table.Th>
+                    <Table.Th>C1</Table.Th>
+                    <Table.Th>French USD</Table.Th>
+                    <Table.Th>French EUR</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -796,7 +799,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                   setEditingPrice(null);
                                 }}
                                 autoFocus
-                                className="w-20 border border-gray-300 rounded px-1 py-2 text-sm min-h-[22px]"
+                                className="w-20 border border-gray-300 rounded text-sm min-h-[22px]"
                                 step="0.01"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -809,7 +812,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     price: distributorPrice.billing_price,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
                               >
                                 ${distributorPrice.billing_price.toFixed(2)}
                               </div>
@@ -849,7 +852,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                   setEditingRRSP(null);
                                 }}
                                 autoFocus
-                                className="w-20 border border-gray-300 rounded px-1 py-2 text-sm"
+                                className="w-20 border border-gray-300 rounded text-sm"
                                 step="0.01"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -862,7 +865,166 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center py-2 px-1 rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                              >
+                                ${distributorPrice.rrsp.toFixed(2)}
+                              </div>
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {distributorPrice ? (
+                            editingRRSP?.irc === product.irc ? (
+                              <input
+                                type="number"
+                                value={editingRRSP.rrsp}
+                                onChange={(e) => {
+                                  const newRRSP = parseFloat(e.target.value);
+                                  if (!isNaN(newRRSP)) {
+                                    setEditingRRSP({
+                                      ...editingRRSP,
+                                      rrsp: newRRSP,
+                                    });
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingRRSP) {
+                                    onRRSPEdit?.(
+                                      editingRRSP.irc,
+                                      editingRRSP.rrsp
+                                    );
+                                  }
+                                  setEditingRRSP(null);
+                                }}
+                                autoFocus
+                                className="w-20 border border-gray-300 rounded text-sm"
+                                step="0.01"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRRSP({
+                                    irc: product.irc,
+                                    rrsp: distributorPrice.rrsp,
+                                  });
+                                }}
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                              >
+                                ${distributorPrice.rrsp.toFixed(2)}
+                              </div>
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {distributorPrice ? (
+                            editingRRSP?.irc === product.irc ? (
+                              <input
+                                type="number"
+                                value={editingRRSP.rrsp}
+                                onChange={(e) => {
+                                  const newRRSP = parseFloat(e.target.value);
+                                  if (!isNaN(newRRSP)) {
+                                    setEditingRRSP({
+                                      ...editingRRSP,
+                                      rrsp: newRRSP,
+                                    });
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingRRSP) {
+                                    onRRSPEdit?.(
+                                      editingRRSP.irc,
+                                      editingRRSP.rrsp
+                                    );
+                                  }
+                                  setEditingRRSP(null);
+                                }}
+                                autoFocus
+                                className="w-20 border border-gray-300 rounded text-sm"
+                                step="0.01"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRRSP({
+                                    irc: product.irc,
+                                    rrsp: distributorPrice.rrsp,
+                                  });
+                                }}
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                              >
+                                ${distributorPrice.rrsp.toFixed(2)}
+                              </div>
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                          {distributorPrice ? (
+                            editingRRSP?.irc === product.irc ? (
+                              <input
+                                type="number"
+                                value={editingRRSP.rrsp}
+                                onChange={(e) => {
+                                  const newRRSP = parseFloat(e.target.value);
+                                  if (!isNaN(newRRSP)) {
+                                    setEditingRRSP({
+                                      ...editingRRSP,
+                                      rrsp: newRRSP,
+                                    });
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingRRSP) {
+                                    onRRSPEdit?.(
+                                      editingRRSP.irc,
+                                      editingRRSP.rrsp
+                                    );
+                                  }
+                                  setEditingRRSP(null);
+                                }}
+                                autoFocus
+                                className="w-20 border border-gray-300 rounded text-sm"
+                                step="0.01"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingRRSP({
+                                    irc: product.irc,
+                                    rrsp: distributorPrice.rrsp,
+                                  });
+                                }}
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>

@@ -2,38 +2,65 @@ import { useMutation } from "@tanstack/react-query";
 import { MutationConfig } from "@/lib/react-query";
 import { queryClient } from "@/main";
 import { axios } from "@/lib/axios";
-
-export const importProducts = (file: File): Promise<void> => {
+export interface ImportProductsResponse {
+  message: string;
+  data: {
+    id: number;
+    number: string;
+    icw: string;
+    ocd: string;
+    type: string;
+    deck: string;
+    market_deck: string;
+  };
+}
+export const importProducts = (params: {
+  innovationId: number;
+  offeringId: number;
+  file: File;
+  type: "pim" | "trex";
+}): Promise<ImportProductsResponse> => {
+  const { innovationId, offeringId, file, type } = params;
   const formData = new FormData();
-  formData.append("file", file, file.name);
+  formData.append("product_file", file, file.name);
+  formData.append("type", type);
 
   return axios
-    .post("/product-import", formData, {
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "multipart/form-data",
-      },
-    })
-    .then(() => {
-      return;
-    });
+    .post<ImportProductsResponse>(
+      `innovations/${innovationId}/offerings/${offeringId}/import-products`,
+      formData,
+      {
+        headers: {
+          Accept: "application/json",
+          // ← do NOT set Content-Type here, browser will add the right boundary
+        },
+      }
+    )
+    .then((res) => res.data);
 };
-
 export type UseImportProductsOptions = {
-  mutationConfig?: MutationConfig<typeof importProducts>;
+  mutationConfig?: MutationConfig<any>;
 };
 
 export const useImportProducts = ({
   mutationConfig,
-}: UseImportProductsOptions = {}) => {
+}: UseImportProductsOptions) => {
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
-  return useMutation({
-    mutationFn: importProducts,
-    onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      onSuccess?.(...args);
+  return useMutation<
+    ImportProductsResponse,
+    Error,
+    { file: File; type: "pim" | "trex"; offeringId: number; innovationId: number }
+  >({
+    mutationFn: ({ file, type, offeringId, innovationId }) =>{
+      return importProducts({ innovationId, offeringId, file, type })
     },
+
+    onSuccess: (data, variables, context) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      onSuccess?.(data, variables, context);
+    },
+
     ...restConfig,
   });
 };
