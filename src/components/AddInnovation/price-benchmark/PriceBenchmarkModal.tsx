@@ -27,7 +27,6 @@ export function PriceBenchmarkModal({
   productData = {},
   productListData = [],
 }: PriceBenchmarkModalProps) {
-  console.log(" initialValue", initialValue);
   const [localValue, setLocalValue] = useState<PriceBenchmark | null>(
     initialValue
       ? {

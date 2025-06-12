@@ -114,10 +114,12 @@ function CombinedInnovationTables({
     new Set()
   );
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
-  const [benchmarkProduct, setBenchmarkProduct] = useState<Product | null>(
+  const [benchmarkProduct, setBenchmarkProduct] = useState<Product &{
+    icp_cost?: number;
+  } | null>(
     null
   );
-  console.log("benchmarkProduct", benchmarkProduct);
+ 
   const productData = useMemo(() => {
 
     return {
@@ -355,7 +357,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
           icp_cost: productData?.icp_cost ?? 0,
           price: productData.price ?? 0,
           currency: productData.currency ?? "USD",
-          brand_id: productData?.brand?.id ?? "",
+          brand_id: String(productData?.brand?.id) || "",  
           product_type: productData.product_type ?? "saleable",
           pref: productData.pref ?? "pref",
           grouping: productData.grouping ?? "1",

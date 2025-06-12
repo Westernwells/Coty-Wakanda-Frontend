@@ -58,7 +58,6 @@ export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
   onBulkProductUpload,
   productListData
 }) => {
-  console.log("productsResp from offeringTableRow", productListData);
 
   return (
     <React.Fragment>
