@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Grid, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { PlusIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FormSection } from "../../Shared/Form/Section";
 import { Offering, OfferingTableProps } from "./types";
 import { AddProductToOfferingModal, OfferingProductFormValues } from "../AddProductToOfferingModal";
@@ -18,6 +18,8 @@ import { useOfferingProducts } from "./hooks/useOfferingProducts";
 import { useCsvProductBulkUploader } from "@/lib/hooks/useCsvProductBulkUploader";
 import { useImportProducts } from "@/api/products/import-products";
 import { toast } from "react-toastify";
+import { getProducts } from "@/api/products/get-products";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 
 export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
@@ -164,6 +166,11 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     console.log(file.name, file.type)
     importCsv(file)
   });
+  const { data: productsResp } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => getProducts({ page_size: 9999, filter: { is_innovation_product: true } }),
+  });
+
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
       <FormSection title="Offerings">
@@ -225,6 +232,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                         onBulkProductUpload={(e, index) => {
                           handleFileUpload(e);
                         }}
+                        productListData={productsResp?.data as unknown as InnovationProduct[] || []}
                       />
                     ))}
                     {(!offerings || offerings.length === 0) && <EmptyOfferingsMessage />}

@@ -199,13 +199,13 @@ export interface Subcategory {
 }
 
 export interface Filters {
-  search: string;
+  search?: string;
   category_id?: string;
-  brand_id: string;
-  sub_brand_id: string;
-  distributor_id: string;
-  region_id: string;
-  market_id: string;
+  brand_id?: string;
+  sub_brand_id?: string;
+  distributor_id?: string;
+  region_id?: string;
+  market_id?: string;
   division?: string;
   brand_type?: string;
   is_innovation_product?: boolean;

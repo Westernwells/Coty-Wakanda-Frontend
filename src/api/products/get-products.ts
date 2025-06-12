@@ -26,7 +26,7 @@ export const getProducts = async (
     ...(params?.page_size !== undefined && { page_size: params.page_size }),
 
     ...(params?.filter && isFilters(params.filter) && {
-      ...((params.filter as Filters).search?.trim() && { search: (params.filter as Filters).search.trim() }),
+      ...((params.filter as Filters).search?.trim() && { search: (params.filter as Filters)?.search?.trim() }),
       ...(params.filter.brand_id && { ["filter[brand_id]"]: params.filter.brand_id }),
       ...(params.filter.sub_brand_id && { ["filter[sub_brand_id]"]: params.filter.sub_brand_id }),
       ...((params.filter as Filters).distributor_id && {
@@ -37,7 +37,7 @@ export const getProducts = async (
       ...((params.filter as Filters).region_id && { ["filter[region_id]"]: (params.filter as Filters).region_id }),
       ...((params.filter as Filters).market_id && { ["filter[market_id]"]: (params.filter as Filters).market_id }),
        ...(params.filter.brand_type && params.filter?.brand_type !== "all" && { ["filter[brand_type]"]: params.filter.brand_type }),
-       ...('is_innovation_product' in params.filter && typeof params.filter.is_innovation_product === 'boolean' ? (params.filter.is_innovation_product ? { ["filter[is_innovation_product]"]: 1 } : {}) : {}),
+       ...('is_innovation_product' in params.filter && typeof params.filter.is_innovation_product === 'boolean' ? (params.filter.is_innovation_product ? { ["filter[is_innovation_product]"]: 1 } : {["filter[is_innovation_product]"]: 0 }) : {}),
     }),
   };
 
