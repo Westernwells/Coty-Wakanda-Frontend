@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { Product } from "@/types";
 import { Button, Grid, Table } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import { FormSection } from "../../Shared/Form/Section";
-import { Offering, OfferingTableProps } from "./types";
 import { AddProductToOfferingModal, OfferingProductFormValues } from "../AddProductToOfferingModal";
-import { Product } from "@/types";
+import { Offering, OfferingTableProps } from "./types";
 
-import OfferingTableHeader from "./components/OfferingTableHeader";
-import EmptyOfferingsMessage from "./components/EmptyOfferingsMessage";
-import OfferingTableRow from "./components/OfferingTableRow";
-import OfferingFormModal from "./components/OfferingFormModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
+import EmptyOfferingsMessage from "./components/EmptyOfferingsMessage";
+import OfferingFormModal from "./components/OfferingFormModal";
+import OfferingTableHeader from "./components/OfferingTableHeader";
+import OfferingTableRow from "./components/OfferingTableRow";
 
-import { useOfferingProducts } from "./hooks/useOfferingProducts";
-import { useCsvProductBulkUploader } from "@/lib/hooks/useCsvProductBulkUploader";
+import { getProducts } from "@/api/products/get-products";
 import { useImportProducts } from "@/api/products/import-products";
+import { useCsvProductBulkUploader } from "@/lib/hooks/useCsvProductBulkUploader";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 import { toast } from "react-toastify";
+import { useOfferingProducts } from "./hooks/useOfferingProducts";
 
 export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
@@ -61,8 +63,6 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     deleteProductsWithRefresh,
     updateSelectedProducts,
   } = useOfferingProducts(innovationId);
-
-  console.log({offeringProducts})
 
   useEffect(() => {
     setProductsTableStates(offerings.map(() => ({ isEdit: false })));
@@ -171,6 +171,11 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
       type: file.type.includes("text/csv") ? "pim" : "trex",
     });
   });
+  const { data: productsResp } = useQuery({
+    queryKey: ["products"],
+    queryFn: () => getProducts({ page_size: 9999, filter: { is_innovation_product: true } }),
+  });
+
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
       <FormSection title="Offerings">
@@ -232,6 +237,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                         onBulkProductUpload={(e, index) => {
                           handleFileUpload(e, Number(offering.id));
                         }}
+                        productListData={productsResp?.data as unknown as InnovationProduct[] || []}
                       />
                     ))}
                     {(!offerings || offerings.length === 0) && <EmptyOfferingsMessage />}

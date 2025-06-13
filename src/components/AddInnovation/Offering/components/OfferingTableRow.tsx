@@ -4,6 +4,7 @@ import { Offering, OfferingMappedProduct, DistributorData } from "../types";
 import { Product } from "@/types";
 import OfferingRow from "./OfferingRow";
 import ExpandableOfferingContent from "./ExpandableOfferingContent";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 
 interface OfferingTableRowProps {
   offering: Offering;
@@ -29,6 +30,7 @@ interface OfferingTableRowProps {
   isEdit: boolean;
   setIsEdit: (isEdit: boolean | ((prevState: boolean) => boolean)) => void;
   onBulkProductUpload: (e: React.ChangeEvent<HTMLInputElement>, index: number) => void;
+  productListData: InnovationProduct[]
 }
 
 export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
@@ -53,8 +55,10 @@ export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
   brandPillarOptions,
   isEdit,
   setIsEdit,
-  onBulkProductUpload
+  onBulkProductUpload,
+  productListData
 }) => {
+
   return (
     <React.Fragment>
       <OfferingRow
@@ -87,6 +91,7 @@ export const OfferingTableRow: React.FC<OfferingTableRowProps> = ({
             isEdit={isEdit}
             setIsEdit={setIsEdit}
             onBulkProductUpload={(e) => onBulkProductUpload(e, index)}
+            productListData={productListData}
           />
         </Table.Td>
       </Table.Tr>

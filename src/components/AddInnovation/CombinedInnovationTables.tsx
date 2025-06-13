@@ -1,15 +1,17 @@
 "use client";
 
-import { Product } from "@/types";
-import React, { useEffect, useRef, useState } from "react";
-import { Loader, Table, Checkbox, Button, Modal, Group } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import InfiniteScroll from "react-infinite-scroll-component";
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
+import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
+import { cn } from "@/lib/utils";
+import { PriceBenchmark, Product } from "@/types";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
+import { Button, Checkbox, Group, Loader, Modal, Table } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
+import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
 
 interface CombinedInnovationTablesProps {
@@ -48,6 +50,7 @@ interface CombinedInnovationTablesProps {
   // Local edit and delete props
   onLocalEdit?: (product: Product) => void;
   onLocalDelete?: (product: Product) => void;
+  productListData?: InnovationProduct[]; // Optional prop for product list data
 }
 
 function CombinedInnovationTables({
@@ -78,6 +81,7 @@ function CombinedInnovationTables({
   // Local edit and delete props
   onLocalEdit,
   onLocalDelete,
+  productListData
 }: CombinedInnovationTablesProps) {
   const { fetchOfferingProducts } = useOfferingProducts(innovationId);
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
@@ -91,6 +95,8 @@ function CombinedInnovationTables({
   } | null>(null);
 
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
+  const [removeBenchmark, setRemoveBenchmark] = useState(false);
+  const updateProduct = useUpdateOfferingProduct();
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
@@ -100,7 +106,6 @@ function CombinedInnovationTables({
   ] = useDisclosure(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
-
   useEffect(() => {
     setLocalProducts(products);
   }, [products]);
@@ -108,11 +113,37 @@ function CombinedInnovationTables({
   const [benchmarkedProducts, setBenchmarkedProducts] = useState<Set<number>>(
     new Set()
   );
-
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
-  const [benchmarkProduct, setBenchmarkProduct] = useState<Product | null>(
+  const [benchmarkProduct, setBenchmarkProduct] = useState<Product &{
+    icp_cost?: number;
+  } | null>(
     null
   );
+ 
+  const productData = useMemo(() => {
+
+    return {
+      ...benchmarkProduct,
+      product_type: benchmarkProduct?.product_type as
+        | "saleable"
+        | "non-saleable",
+      pref: benchmarkProduct?.pref as "pref" | "non-pref",
+      grouping: benchmarkProduct?.grouping as unknown as "1" | "2" | "3",
+      currency: (benchmarkProduct?.currency === "EUR" ? "EUR" : "USD") as
+        | "EUR"
+        | "USD",
+      price: benchmarkProduct?.price ? Number(benchmarkProduct?.price) : 0,
+      launch_date:
+        benchmarkProduct?.launch_date instanceof Date
+          ? benchmarkProduct?.launch_date.toISOString().split("T")[0]
+          : benchmarkProduct?.launch_date,
+      discontinue_date:
+        benchmarkProduct?.discontinue_date instanceof Date
+          ? benchmarkProduct?.discontinue_date.toISOString().split("T")[0]
+          : benchmarkProduct?.discontinue_date,
+    };
+  }, [benchmarkProduct]);
+
 
   const currentDistributor = distributors[currentDistributorIndex] || null;
 
@@ -166,8 +197,9 @@ function CombinedInnovationTables({
 
   const handleBenchmarkToggle = (product: Product) => {
     const newBenchmarkedProducts = new Set(benchmarkedProducts);
-    if (newBenchmarkedProducts.has(product.id)) {
-      newBenchmarkedProducts.delete(product.id);
+    if (product?.price_benchmark) {
+      setBenchmarkProduct(product);
+      setRemoveBenchmark(true);
     } else {
       setBenchmarkProduct(product);
       setIsBenchmarkModalOpen(true);
@@ -312,6 +344,33 @@ function CombinedInnovationTables({
     return <p>No products available</p>;
   }
 
+
+function handleSave(productId: number, localValue?: PriceBenchmark | null) {
+    updateProduct.mutate(
+      {
+        innovationId,
+        offeringId,
+        id: productId,
+        data: {
+          ...productData,
+          irc: productData.irc ?? "",
+          icp_cost: productData?.icp_cost ?? 0,
+          price: productData.price ?? 0,
+          currency: productData.currency ?? "USD",
+          brand_id: String(productData?.brand?.id) || "",  
+          product_type: productData.product_type ?? "saleable",
+          pref: productData.pref ?? "pref",
+          grouping: productData.grouping ?? "1",
+          ...(localValue ? {price_benchmark: localValue} : {price_benchmark: null}),
+        },
+      },
+      {
+        onSuccess: () => {
+          setBenchmarkProduct(null);
+        },
+      }
+    );
+}
   return (
     <div className="flex flex-col h-full">
       <div className="relative grid grid-cols-6 max-h-[calc(100vh-28rem)]">
@@ -494,7 +553,7 @@ function CombinedInnovationTables({
                           }}
                         >
                           <Checkbox
-                            checked={benchmarkedProducts.has(product.id)}
+                            checked={product?.price_benchmark ? true : false}
                             onChange={() => handleBenchmarkToggle(product)}
                             styles={{
                               input: {
@@ -532,7 +591,7 @@ function CombinedInnovationTables({
                             paddingBottom: "0px",
                           }}
                         >
-                          {product.brand.name}
+                          {product.brand?.name}
                         </Table.Td>
                         <Table.Td
                           className="max-h-[42px]"
@@ -542,7 +601,7 @@ function CombinedInnovationTables({
                             paddingBottom: "0px",
                           }}
                         >
-                          {product.brand.type}
+                          {product.brand?.type}
                         </Table.Td>
                         <Table.Td
                           className="max-h-[42px]"
@@ -1034,6 +1093,7 @@ function CombinedInnovationTables({
       </Modal.Root>
 
       {benchmarkProduct && (
+        <>
         <PriceBenchmarkModal
           opened={isBenchmarkModalOpen}
           onClose={() => {
@@ -1041,19 +1101,9 @@ function CombinedInnovationTables({
             setBenchmarkProduct(null);
           }}
           onSave={(benchmark) => {
-            setBenchmarkedProducts((prev) => {
-              const newSet = new Set(prev);
-              if (benchmarkProduct) newSet.add(benchmarkProduct.id);
-              return newSet;
-            });
-            setIsBenchmarkModalOpen(false);
-            setBenchmarkProduct(null);
-            // Optionally: handle saving the benchmark data to server here
+            handleSave(benchmarkProduct.id, benchmark);
           }}
-          initialValue={null} // or pass existing benchmark if available
-          productId={benchmarkProduct.id}
-          innovationId={innovationId}
-          offeringId={offeringId}
+          initialValue={benchmarkProduct?.price_benchmark} // or pass existing benchmark if available
           isEditMode={true}
           productData={{
             ...benchmarkProduct,
@@ -1075,8 +1125,25 @@ function CombinedInnovationTables({
                 ? benchmarkProduct.discontinue_date.toISOString().split("T")[0]
                 : benchmarkProduct.discontinue_date,
           }}
+          productListData={productListData}
         />
+      <ConfirmationModal 
+        open={removeBenchmark}
+        title="Remove Benchmark"
+        subtext="Are you sure you want to remove the benchmark for this product?"
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        onCancel={() => setRemoveBenchmark(false)}
+        onConfirm={() => {
+          handleSave(benchmarkProduct.id, null);
+        }}
+        confirmButtonClassName="bg-red-500 text-white hover:bg-red-600 transition-all ease-in-out duration-300"
+        cancelButtonClassName="border-red-500 text-red-500 hover:bg-red-100 transition-all ease-in-out duration-300"
+      />
+      </>
       )}
+  
+     
     </div>
   );
 }
