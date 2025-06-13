@@ -384,11 +384,12 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number"
+    "id" | "brand" | "material_description" | "offering_number" 
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
   monthly_average: Record<string, DateValues>;
+  forecast_deadline: string;
 }
 
 export interface ProductDistributor {
