@@ -97,7 +97,7 @@ function RouteComponent() {
         </Grid>
       </FormSection>
       <SubmitTable forecast={forecast} />
-      <Group justify="flex-end" mt="xl" gap={10}>
+      <Group justify="flex-start" mt="xl" gap={10}>
         <Button
           variant="outline"
           className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
