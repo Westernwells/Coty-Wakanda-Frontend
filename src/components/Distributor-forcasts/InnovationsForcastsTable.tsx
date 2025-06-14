@@ -4,172 +4,93 @@ import { useEffect, useMemo, useState } from "react";
 import PencilIcon from "../Icons/PencilIcon";
 import EyeIcon from "../Icons/EyeIcon";
 import { useNavigate } from "@tanstack/react-router";
-import { useInView } from "react-intersection-observer";
+import Pagination from "./Pagination";
+import { Loader } from "@mantine/core";
+import { showOptions, sortOptions } from "@/constants/sort-options";
+import { FlattenedOffering } from "@/components/Distributor-forcasts/types/types";
+import { sortData } from "@/components/Distributor-forcasts/utils/sort-data-innovations";
+import { useInnovationsWithOfferrings } from "./hooks/use-innovation-with-offerings";
 
-const elements = [
-    {
-        id: 1,
-        brand: "Brand example",
-        offeringNumber: "160439542",
-        globalICW: "00 Mar 2024",
-        globalOCD: "00 Mar 2024",
-        status: "Pending",
-    },
-    ...Array(10).fill({
-        id: 1,
-        brand: "Brand example2",
-        offeringNumber: "160439540",
-        globalICW: "00 Mar 2025",
-        globalOCD: "00 Mar 2025",
-        status: "Complete",
-    }),
-];
 
 function InnovationsForecastsTable() {
     const [activePage, setActivePage] = useState(1);
-    const [sortBy, setSortBy] = useState<string | null>("");
+    const [sortBy, setSortBy] = useState<string | null>(null);
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [itemsPerPage, setItemsPerPage] = useState("5");
-    const [totalPages, setTotalPages] = useState(0);
     const [activeTab, setActiveTab] = useState<string | null>("upcoming");
+    const { flatData, isLoading, totalPages } = useInnovationsWithOfferrings(activePage, Number(itemsPerPage), activeTab);
+
+
     const navigate = useNavigate();
-    const { ref, inView } = useInView({
-        threshold: 1,
-        delay: 100,
-        trackVisibility: true,
-    });
 
-    const sortOptions = [
-        {
-            value: "brand",
-            label: "Brand",
-        },
-        {
-            value: "offeringNumber",
-            label: "Offering number",
-        },
-        {
-            value: "status",
-            label: "Status",
-        },
-    ];
+    const handleForecastClick = (row: FlattenedOffering) => {
+        navigate({
+            to: "/innovation-forcasts-submit/$forecastId",
+            params: { forecastId: row.innovationId.toString() },
+        })
+    }
 
-    const showOptions = [
-        {
-            value: "5",
-            label: "Show 5",
-        },
-        {
-            value: "10",
-            label: "Show 10",
-        },
-        {
-            value: "50",
-            label: "Show 50",
-        },
-        {
-            value: "100",
-            label: "Show 100",
-        },
-    ];
+    const sortedData = useMemo(() => {
+        return sortData(flatData, sortBy, sortDirection);
+    }, [sortBy, sortDirection, flatData]);
 
-    useEffect(() => {
-        if (elements) {
-            setTotalPages(Math.ceil(elements.length / parseInt(itemsPerPage)));
+    const handleSort = (value: string | null) => {
+        if (value === sortBy) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(value);
+            setSortDirection('asc');
         }
-    }, [elements, itemsPerPage]);
+    };
 
-    // Filter data based on search and filters
-    const filteredData = useMemo(() => {
-        if (!elements) return [];
-        if (sortBy) {
-            return [
-                ...elements.sort((a, b) =>
-                    a[sortBy] > b[sortBy] ? 1 : b[sortBy] > a[sortBy] ? -1 : 0
-                ),
-            ];
-        }
-        return elements;
-    }, [sortBy]);
-
-    const paginatedData = useMemo(() => {
-        const startIndex = (activePage - 1) * parseInt(itemsPerPage);
-        return filteredData.slice(
-            startIndex,
-            startIndex + parseInt(itemsPerPage)
-        );
-    }, [filteredData, activePage, itemsPerPage]);
-
-    // Reset to first page when filters change
     useEffect(() => {
         setActivePage(1);
-    }, [sortBy, itemsPerPage]);
+    }, [itemsPerPage, activeTab]);
 
-    useEffect(() => {
-        if (inView && activePage !== totalPages) {
-            setActivePage((prev) => prev + 1);
-        }
-    }, [inView]);
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-[200px]">
+                <Loader size="md" />
+            </div>
+        );
+    }
+
     return (
         <div className="bg-white shadow-md rounded-lg p-6 mt-5">
-            {/* Table */}
             <Group justify="space-between" className="mb-4">
                 <Tabs
                     color="#002554"
                     className="text-primary hidden sm:block"
-                    defaultValue="upcoming"
                     value={activeTab}
                     onChange={setActiveTab}
                 >
-                    <Tabs.List className="before:border-0">
-                        <Tabs.Tab
-                            value="upcoming"
-                            className="grow text-base font-medium"
-                        >
+                    <Tabs.List>
+                        <Tabs.Tab value="upcoming" className="text-base font-medium">
                             Upcoming innovations
                         </Tabs.Tab>
-                        <Tabs.Tab
-                            value="archived"
-                            className="grow text-base font-medium"
-                        >
+                        <Tabs.Tab value="archived" className="text-base font-medium">
                             Archived innovations
                         </Tabs.Tab>
                     </Tabs.List>
                 </Tabs>
-                <Tabs
-                    color="#002554"
-                    className="text-primary sm:hidden grow"
-                    defaultValue="Innovation"
-                    value={activeTab}
-                    onChange={setActiveTab}
-                    orientation="vertical"
-                >
-                    <Tabs.List className="grow">
-                        <Tabs.Tab value="Innovation" className="grow">
-                            Innovation forecast
-                        </Tabs.Tab>
-                        <Tabs.Tab value="Base" className="grow">
-                            Base forecast
-                        </Tabs.Tab>
-                    </Tabs.List>
-                </Tabs>
+
                 <Group className="grow">
                     <Select
                         aria-label="Sort by"
                         placeholder="Sort by"
                         data={sortOptions}
                         value={sortBy}
-                        onChange={(v) => setSortBy(v)}
+                        onChange={handleSort}
                         clearable
                         className="grow"
                         rightSection={<ChevronDownIcon />}
                     />
                     <Select
-                        aria-label="Show 100"
-                        placeholder="Show 100"
+                        aria-label="Show items"
+                        placeholder="Show items"
                         data={showOptions}
                         value={itemsPerPage}
                         onChange={(v) => v && setItemsPerPage(v)}
-                        clearable
                         className="grow"
                         rightSection={<ChevronDownIcon />}
                     />
@@ -177,17 +98,10 @@ function InnovationsForecastsTable() {
             </Group>
             <div className="relative border border-primary rounded-xl border-t-0">
                 <Table.ScrollContainer minWidth={768}>
-                    <Table
-                        verticalSpacing="sm"
-                        borderColor="transparent"
-                        striped="even"
-                        stripedColor="#F2F4F6"
-                    >
+                    <Table verticalSpacing="sm" borderColor="transparent" striped="even" stripedColor="#F2F4F6">
                         <Table.Thead>
                             <Table.Tr className="bg-primary text-white">
-                                <Table.Th className="rounded-ss-xl">
-                                    Brand
-                                </Table.Th>
+                                <Table.Th className="rounded-ss-xl">Brand</Table.Th>
                                 <Table.Th>Offering Number</Table.Th>
                                 <Table.Th>Global ICW</Table.Th>
                                 <Table.Th>Global OCD</Table.Th>
@@ -196,52 +110,42 @@ function InnovationsForecastsTable() {
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                            {paginatedData.map((element, index) => (
-                                <Table.Tr
-                                    key={index}
-                                    ref={
-                                        index + 1 === paginatedData.length
-                                            ? ref
-                                            : null
-                                    }
-                                >
-                                    <Table.Td className="first:rounded-es-xl">
-                                        {element.brand}
-                                    </Table.Td>
-                                    <Table.Td>
-                                        {element.offeringNumber}
-                                    </Table.Td>
-                                    <Table.Td>{element.globalICW}</Table.Td>
-                                    <Table.Td>{element.globalOCD}</Table.Td>
-                                    <Table.Td>{element.status}</Table.Td>
-                                    {element.status.toLowerCase() ===
-                                    "pending" ? (
+                            {sortedData.length > 0 ? (
+                                sortedData.map((row: FlattenedOffering) => (
+                                    <Table.Tr key={row.number}>
+                                        <Table.Td className="first:rounded-es-xl">{row.brand?.name}</Table.Td>
+                                        <Table.Td>{row.number}</Table.Td>
+                                        <Table.Td>{row.icw ?? "–"}</Table.Td>
+                                        <Table.Td>{row.ocd ?? "–"}</Table.Td>
+                                        <Table.Td>{row.status}</Table.Td>
                                         <Table.Td
                                             className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                                            onClick={() => {
-                                                navigate({
-                                                    to: "/innovation-forcasts-submit/$forecastId",
-                                                    params: {
-                                                        forecastId: "123",
-                                                    },
-                                                });
-                                            }}
+                                            onClick={() => handleForecastClick(row)}
                                         >
-                                            <PencilIcon />
+                                            {row.status === "active" ? <PencilIcon /> : <EyeIcon />}
                                         </Table.Td>
-                                    ) : (
-                                        <Table.Td
-                                            className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                                            onClick={() => {}}
-                                        >
-                                            <EyeIcon />
-                                        </Table.Td>
-                                    )}
+                                    </Table.Tr>
+                                ))
+                            ) : (
+                                <Table.Tr>
+                                    <Table.Td colSpan={6} className="text-center py-4">
+                                        No data available
+                                    </Table.Td>
                                 </Table.Tr>
-                            ))}
+                            )}
                         </Table.Tbody>
                     </Table>
                 </Table.ScrollContainer>
+
+                {totalPages > 1 && (
+                    <div className="mt-4 flex justify-end">
+                        <Pagination
+                            totalPages={totalPages}
+                            activePage={activePage}
+                            setActivePage={setActivePage}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
