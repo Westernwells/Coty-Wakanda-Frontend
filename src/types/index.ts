@@ -199,13 +199,13 @@ export interface Subcategory {
 }
 
 export interface Filters {
-  search: string;
+  search?: string;
   category_id?: string;
-  brand_id: string;
-  sub_brand_id: string;
-  distributor_id: string;
-  region_id: string;
-  market_id: string;
+  brand_id?: string;
+  sub_brand_id?: string;
+  distributor_id?: string;
+  region_id?: string;
+  market_id?: string;
   division?: string;
   brand_type?: string;
   is_innovation_product?: boolean;
@@ -384,11 +384,12 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number"
+    "id" | "brand" | "material_description" | "offering_number" 
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
   monthly_average: Record<string, DateValues>;
+  forecast_deadline: string;
 }
 
 export interface ProductDistributor {

@@ -2,6 +2,7 @@ import React from "react";
 import { Grid } from "@mantine/core";
 import CombinedInnovationTables from "../../CombinedInnovationTables";
 import { OfferingMappedProduct, DistributorData, BRAND_TYPE_MASS } from "../types";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 import { Product } from "@/types";
 
 interface ProductTableContentProps {
@@ -19,6 +20,7 @@ interface ProductTableContentProps {
   isDeleteMode: boolean;
   brandOptions: Array<{ value: string; label: string }>;
   brandPillarOptions: Array<{ value: string; label: string }>;
+  productListData?: InnovationProduct[];
 }
 
 export const ProductTableContent: React.FC<ProductTableContentProps> = ({
@@ -36,6 +38,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
   isDeleteMode,
   brandOptions,
   brandPillarOptions,
+  productListData
 }) => {
   const mappedProducts = products.map((p) => ({
     id: p.id || 0,
@@ -135,7 +138,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
       name: p.subcategory?.name || "",
       created_at: p.subcategory?.created_at || "",
     },
-    price_benchmark: null,
+    price_benchmark: p?.price_benchmark || null,
     documents: [],
     distributor_pricing: [],
     gmm_category: {
@@ -189,6 +192,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
           onLocalEdit={onLocalEdit}
           onLocalDelete={onLocalDelete}
           isDeleteMode={isDeleteMode}
+          productListData={productListData}
         />
       </Grid.Col>
     </Grid>
