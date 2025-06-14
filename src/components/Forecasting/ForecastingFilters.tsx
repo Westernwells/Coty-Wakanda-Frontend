@@ -21,29 +21,36 @@ import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import DateIcon from "../Icons/DateIcon";
 import FileDownloadIcon from "../Icons/FileDownloadIcon";
 import SearchIcon from "../Icons/SearchIcon";
+import { useEffect, useMemo } from "react";
 
 const ForecastingFilters = ({
   setFilters,
+  filters,
 }: {
   setFilters: React.Dispatch<React.SetStateAction<ForecastFilters>>;
+  filters: ForecastFilters;
 }) => {
   const form = useForm({
-    initialValues: {
+    initialValues: useMemo(() => {
+      return ({
       search: "",
       start_date: "",
       end_date: "",
       launch_id: "",
-      brand_id: "",
+      brand_id: filters?.brand_id || "",
       sub_brand_id: "",
-      distributor_id: "",
+      distributor_id: filters?.distributor_id || "",
       brand_type: "",
-    },
+    })}, [filters]),
 
     onValuesChange: (values) => {
       setFilters(values);
     },
   });
 
+  useEffect(() => {
+    form.setFieldValue("distributor_id", filters?.distributor_id || "");
+  }, [filters?.distributor_id, form]);
   const [
     { data: brandsData, error: brandsError },
     { data: brandPillarsData, error: brandPillarsError },
@@ -75,8 +82,6 @@ const ForecastingFilters = ({
       value: dist.id.toString(),
       label: dist.name,
     })) || [];
-
-  // Update parent filters when any field changes
 
   const hasError = brandsError || brandPillarsError || distributorsError;
 
