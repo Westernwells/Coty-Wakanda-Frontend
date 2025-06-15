@@ -53,7 +53,6 @@ const Navbar = () => {
           { link: "/innovations", label: "Innovations", icon: LightBulbIcon },
           { link: "/distributors", label: "Distributors", icon: GroupIcon },
           { link: "/products", label: "Products", icon: ShoppingCart },
-          { link: "/royalties", label: "Royalties", icon: PlusIcon },
 
           { link: "/orders", label: "Orders", icon: BoxIcon },
           { link: "/reporting", label: "Reporting", icon: FileDocumentIcon },

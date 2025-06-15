@@ -23,18 +23,11 @@ import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import PlusIcon from "../Icons/PlusIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
 import TrashIcon from "../Icons/TrashIcon";
 import ErrorCard from "../Shared/ErrorCard";
-import { selectStyles } from "../Shared/Styles";
 import { FormSection } from "../Shared/Form/Section";
+import { selectStyles } from "../Shared/Styles";
 
-const royalties = [
-  {
-    brand: "hel",
-    percentage: "00",
-  },
-];
 
 const RoyaltiesTable = () => {
   const [opened, { open, close }] = useDisclosure(false);
@@ -258,10 +251,10 @@ const RoyaltiesTable = () => {
                     Cancel
                   </Button>
                   <Button
-                    leftSection={<RefreshIcon />}
+                    leftSection={<TrashIcon className="w-full h-full" />}
                     type="submit"
                     variant="outline"
-                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 hover:text-primary transition-all ease-in-out duration-300"
                     onClick={() => {
                       deleteRoyaltyMutation.mutate(id);
                       closeDelete();
@@ -353,13 +346,14 @@ const RoyaltiesTable = () => {
                     Cancel
                   </Button>
                   <Button
-                    leftSection={<RefreshIcon />}
+                    leftSection={id ? <PencilIcon className="w-full h-full" /> : <PlusIcon className="w-full h-full" />}
                     type="submit"
                     variant="outline"
-                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40  hover:text-primary transition-all ease-in-out duration-300"
                     onClick={() => {
-                      if (!form.validate().errors.length) return;
+                      if (form.validate().errors.length) return;
                       if (id) {
+                        console.log("are you getting fired 2")
                         updateRoyaltyMutation.mutate({
                           data: {
                             ...form.getValues(),
@@ -369,6 +363,7 @@ const RoyaltiesTable = () => {
                         setId(0);
                         form.reset();
                       } else {
+                        console.log("are you getting fired")
                         addRoyaltyMutation.mutate({ data: form.getValues() });
                         form.reset();
                       }

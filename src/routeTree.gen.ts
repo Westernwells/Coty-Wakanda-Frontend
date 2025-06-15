@@ -17,7 +17,6 @@ import { Route as AuthImport } from './routes/_auth'
 import { Route as AuthIndexImport } from './routes/_auth/index'
 import { Route as AuthStockOnHandImport } from './routes/_auth/stock-on-hand'
 import { Route as AuthSalesImport } from './routes/_auth/sales'
-import { Route as AuthRoyaltiesImport } from './routes/_auth/royalties'
 import { Route as AuthProfileImport } from './routes/_auth/profile'
 import { Route as AuthProductListImport } from './routes/_auth/product-list'
 import { Route as AuthOrdersImport } from './routes/_auth/orders'
@@ -79,12 +78,6 @@ const AuthStockOnHandRoute = AuthStockOnHandImport.update({
 const AuthSalesRoute = AuthSalesImport.update({
   id: '/sales',
   path: '/sales',
-  getParentRoute: () => AuthRoute,
-} as any)
-
-const AuthRoyaltiesRoute = AuthRoyaltiesImport.update({
-  id: '/royalties',
-  path: '/royalties',
   getParentRoute: () => AuthRoute,
 } as any)
 
@@ -389,13 +382,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthProfileImport
       parentRoute: typeof AuthImport
     }
-    '/_auth/royalties': {
-      id: '/_auth/royalties'
-      path: '/royalties'
-      fullPath: '/royalties'
-      preLoaderRoute: typeof AuthRoyaltiesImport
-      parentRoute: typeof AuthImport
-    }
     '/_auth/sales': {
       id: '/_auth/sales'
       path: '/sales'
@@ -522,7 +508,6 @@ interface AuthRouteChildren {
   AuthOrdersRoute: typeof AuthOrdersRoute
   AuthProductListRoute: typeof AuthProductListRoute
   AuthProfileRoute: typeof AuthProfileRoute
-  AuthRoyaltiesRoute: typeof AuthRoyaltiesRoute
   AuthSalesRoute: typeof AuthSalesRoute
   AuthStockOnHandRoute: typeof AuthStockOnHandRoute
   AuthIndexRoute: typeof AuthIndexRoute
@@ -556,7 +541,6 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthOrdersRoute: AuthOrdersRoute,
   AuthProductListRoute: AuthProductListRoute,
   AuthProfileRoute: AuthProfileRoute,
-  AuthRoyaltiesRoute: AuthRoyaltiesRoute,
   AuthSalesRoute: AuthSalesRoute,
   AuthStockOnHandRoute: AuthStockOnHandRoute,
   AuthIndexRoute: AuthIndexRoute,
@@ -597,7 +581,6 @@ export interface FileRoutesByFullPath {
   '/orders': typeof AuthOrdersRoute
   '/product-list': typeof AuthProductListRoute
   '/profile': typeof AuthProfileRoute
-  '/royalties': typeof AuthRoyaltiesRoute
   '/sales': typeof AuthSalesRoute
   '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
@@ -633,7 +616,6 @@ export interface FileRoutesByTo {
   '/orders': typeof AuthOrdersRoute
   '/product-list': typeof AuthProductListRoute
   '/profile': typeof AuthProfileRoute
-  '/royalties': typeof AuthRoyaltiesRoute
   '/sales': typeof AuthSalesRoute
   '/stock-on-hand': typeof AuthStockOnHandRoute
   '/': typeof AuthIndexRoute
@@ -671,7 +653,6 @@ export interface FileRoutesById {
   '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/product-list': typeof AuthProductListRoute
   '/_auth/profile': typeof AuthProfileRoute
-  '/_auth/royalties': typeof AuthRoyaltiesRoute
   '/_auth/sales': typeof AuthSalesRoute
   '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
   '/_auth/': typeof AuthIndexRoute
@@ -709,7 +690,6 @@ export interface FileRouteTypes {
     | '/orders'
     | '/product-list'
     | '/profile'
-    | '/royalties'
     | '/sales'
     | '/stock-on-hand'
     | '/'
@@ -744,7 +724,6 @@ export interface FileRouteTypes {
     | '/orders'
     | '/product-list'
     | '/profile'
-    | '/royalties'
     | '/sales'
     | '/stock-on-hand'
     | '/'
@@ -780,7 +759,6 @@ export interface FileRouteTypes {
     | '/_auth/orders'
     | '/_auth/product-list'
     | '/_auth/profile'
-    | '/_auth/royalties'
     | '/_auth/sales'
     | '/_auth/stock-on-hand'
     | '/_auth/'
@@ -844,7 +822,6 @@ export const routeTree = rootRoute
         "/_auth/orders",
         "/_auth/product-list",
         "/_auth/profile",
-        "/_auth/royalties",
         "/_auth/sales",
         "/_auth/stock-on-hand",
         "/_auth/",
@@ -926,10 +903,6 @@ export const routeTree = rootRoute
     },
     "/_auth/profile": {
       "filePath": "_auth/profile.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/royalties": {
-      "filePath": "_auth/royalties.tsx",
       "parent": "/_auth"
     },
     "/_auth/sales": {
