@@ -575,7 +575,7 @@ const EditInnovationForm = forwardRef<
               label="Status"
               placeholder="Select status"
               data={[
-                { value: "pre_active", label: "Pre active" },
+                { value: "pre-active", label: "Pre-Active" },
                 { value: "active", label: "Active" },
                 { value: "cancelled", label: "Cancelled" },
                 { value: "archived", label: "Archived" },
