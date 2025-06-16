@@ -13,7 +13,9 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
 import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
-import useProductData from "./Offering/hooks/useProductData";
+import useProductData, { mapOfferingProducts } from "./Offering/hooks/useProductData";
+import { OfferingProductData } from "@/api/products/get-offering-products";
+// import { OfferingProductData } from "./Offering/types";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -378,7 +380,7 @@ function CombinedInnovationTables({
           const res = await fOP( Number(offeringId));
           if (!res) return;
           console.log("Products fetched successfully:", res);
-          setLocalProducts(res?.products || []);
+          setLocalProducts(res?.products ? mapOfferingProducts(res.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
          
         },
       }
