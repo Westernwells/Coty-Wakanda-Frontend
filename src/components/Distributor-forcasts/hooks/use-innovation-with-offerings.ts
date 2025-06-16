@@ -15,9 +15,9 @@ export const useInnovationsWithOfferrings = (activePage: number, itemsPerPage: n
         
         return innovationsData.data.filter((innovation: InnovationWithStatus) => {
             if (activeTab === "upcoming") {
-                return innovation.status === "active";
+                return innovation.status === "active" || innovation.status === "pre-active";
             } else if (activeTab === "archived") {
-                return innovation.status === "archived" || innovation.status === "cancelled";
+                return innovation.status === "archived" || innovation.status === "cancelled" || innovation.status === "completed";
             }
             return true;
         });
