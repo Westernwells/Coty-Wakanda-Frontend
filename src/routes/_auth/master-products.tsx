@@ -1,13 +1,14 @@
-import { getMasterData } from "@/api/products/master-data";
+import { useMasterData } from "@/api/products/master-data";
 import MasterDataViewModal from "@/components/Distributors/MasterDataViewModal";
 import MasterProductFilters from "@/components/Distributors/MasterProductsFilter";
 import Headline from "@/components/Shared/Headline";
 import type { MasterProductFilters as MasterProductFiltersType } from "@/types";
+import { mergeByIdConcatData } from "@/utils/masterData";
 import { Button, Loader } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronDownIcon } from "lucide-react";
 import { useState } from "react";
+
 
 export const Route = createFileRoute("/_auth/master-products")({
   component: RouteComponent,
@@ -20,15 +21,17 @@ function RouteComponent() {
     brand_id: "",
     distributor_id: "",
   });
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["masterData", filter],
-    queryFn: () =>
-      getMasterData({
-        cursor: 1,
-        page_size: 20,
-        filter,
-      }),
+ 
+
+  const {data, fetchNextPage, hasNextPage, error, isFetchingNextPage, isLoading} = useMasterData({
+    cursor: 1,
+    page_size: 20,
+    filter,
   });
+
+  const datafFromMd = data?.pages?.flatMap((page) => page?.data) || [];
+  const products     = datafFromMd?.flatMap(p => p?.products)     ?? [];
+  const distributors = datafFromMd?.flatMap(p => p?.distributors) ?? [];
 
   if (error || (!isLoading && !data)) {
     return (
@@ -67,9 +70,14 @@ function RouteComponent() {
           </div>
         ) : (
           <MasterDataViewModal
-            initialData={data.data}
-            initialMeta={data.meta}
             filters={filter}
+            hasNextPage={hasNextPage}
+            fetchNextPage={fetchNextPage}
+            products={products}
+            distributors={mergeByIdConcatData(distributors)}
+            isLoading={isLoading}
+            error={error}
+            isFetchingNextPage={isFetchingNextPage}
           />
         )}
       </section>

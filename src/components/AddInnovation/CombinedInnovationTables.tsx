@@ -13,6 +13,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
 import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
+import useProductData from "./Offering/hooks/useProductData";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -84,6 +85,7 @@ function CombinedInnovationTables({
   productListData
 }: CombinedInnovationTablesProps) {
   const { fetchOfferingProducts } = useOfferingProducts(innovationId);
+  const {fetchOfferingProducts: fOP} = useProductData(innovationId)
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
   const [editingPrice, setEditingPrice] = useState<{
     irc: string;
@@ -365,12 +367,20 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setBenchmarkProduct(null);
+          const grenn = fetchOfferingProducts(Number(offeringId));
+          console.log("Product updated successfully:", grenn);
+          const res = await fOP( Number(offeringId));
+          if (!res) return;
+          console.log("Products fetched successfully:", res);
+          setLocalProducts(res?.products || []);
+         
         },
       }
     );
 }
+
   return (
     <div className="flex flex-col h-full">
       <div className="relative grid grid-cols-6 max-h-[calc(100vh-28rem)]">
@@ -433,6 +443,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                     </Table.Th>
                     <Table.Th>Benchmarked</Table.Th>
                     <Table.Th>IRC</Table.Th>
+                    <Table.Th>Benchmark IRC</Table.Th>
                     <Table.Th>Brand</Table.Th>
                     <Table.Th>Brand Type</Table.Th>
                     <Table.Th>Brand Pillar</Table.Th>
@@ -582,6 +593,17 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                           }}
                         >
                           {product.irc}
+                        </Table.Td>
+                        {/* comming soon from  product?.price_benchmark?.irc */}
+                        <Table.Td
+                          className="max-h-[42px]"
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                         ---
                         </Table.Td>
                         <Table.Td
                           className="max-h-[42px]"
