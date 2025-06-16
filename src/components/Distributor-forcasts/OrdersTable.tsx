@@ -10,6 +10,7 @@ import { UseFormReturnType } from "@mantine/form";
 import get from "lodash.get";
 import { useInView } from "react-intersection-observer";
 import clsx from "clsx";
+import { array } from "zod";
 
 function OrdersTable({
     data,
@@ -138,14 +139,14 @@ function OrdersTable({
                     >
                         <Table.Thead>
                             <Table.Tr className="bg-primary text-white">
-                                <Table.Th className="rounded-ss-xl">
+                                <Table.Th className="rounded-ss-xl border-r-2 " rowSpan={2}>
                                     Brand
                                 </Table.Th>
-                                <Table.Th>Brand Pillar</Table.Th>
-                                <Table.Th>SKU</Table.Th>
-                                <Table.Th>Cost</Table.Th>
+                                <Table.Th className="border-r-2" rowSpan={2}>Brand Pillar</Table.Th>
+                                <Table.Th className="border-r-2" rowSpan={2}>SKU</Table.Th>
+                                <Table.Th className="border-r-2" rowSpan={2}>Cost</Table.Th>
                                 {Object.keys(data[0].items).map((date) => (
-                                    <Table.Th key={date} colSpan={2}>
+                                    <Table.Th key={date} colSpan={2} className={"border-r-2"}>
                                         {date}
                                     </Table.Th>
                                 ))}
@@ -156,11 +157,15 @@ function OrdersTable({
                         </Table.Thead>
                         <Table.Thead>
                             <Table.Tr className="bg-primary text-white">
-                                <Table.Th colSpan={4}></Table.Th>
-                                {Object.keys(data[0].items).map((date) => (
+                                {Array.from({ length: 4 }).map((_, index) => (
+                                    <Fragment key={index}>
+                                        <Table.Th className={index !== 3 ? "border-r-2" : ""}></Table.Th>
+                                    </Fragment>
+                                ))}
+                                {Object.keys(data[0].items).map((date, index) => (
                                     <Fragment key={date}>
-                                        <Table.Th>Forecast</Table.Th>
-                                        <Table.Th>Order</Table.Th>
+                                        <Table.Th className="border-l-2">Forecast</Table.Th>
+                                        <Table.Th className={Object.keys(data[0].items)?.length == index+1 ? "border-r-2" : ""}>Order</Table.Th>
                                     </Fragment>
                                 ))}
                                 <Table.Th></Table.Th>

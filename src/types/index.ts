@@ -212,10 +212,10 @@ export interface Filters {
 }
 
 export interface MasterProductFilters {
-  search: string;
-  house: string;
-  brand_id: string;
-  distributor_id: string;
+  search?: string;
+  house?: string;
+  brand_id?: string;
+  distributor_id?: string;
 }
 
 export interface BillingListFilters {
