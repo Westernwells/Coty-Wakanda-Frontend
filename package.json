@@ -19,6 +19,7 @@
     "@tabler/icons-react": "^3.31.0",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-router": "^1.85.0",
+    "@tanstack/react-table": "^8.21.3",
     "@types/lodash.get": "^4.4.9",
     "@types/papaparse": "^5.3.16",
     "axios": "^1.7.8",
