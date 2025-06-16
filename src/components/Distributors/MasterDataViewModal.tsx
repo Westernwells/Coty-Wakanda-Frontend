@@ -82,7 +82,7 @@ const MasterDataViewModal = ({
                 products={products ?? []}
                 selectedRow={selectedRow}
                 setSelectedRow={setSelectedRow}
-                fetchMoreData={fetchNextPage}
+                fetchMoreData={() => { fetchNextPage?.(); }}
                 hasMore={hasNextPage ?? false}
                 isLoadingMore={isFetchingNextPage ?? false}
                 scrollTop={scrollTop}

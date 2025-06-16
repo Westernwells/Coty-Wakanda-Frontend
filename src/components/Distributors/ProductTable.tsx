@@ -8,7 +8,7 @@ interface ProductTableProps {
   products: MasterProduct[];
   selectedRow: string | null;
   setSelectedRow: React.Dispatch<React.SetStateAction<string | null>>;
-  fetchMoreData: () => Promise<void>;
+  fetchMoreData: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   scrollTop: number;

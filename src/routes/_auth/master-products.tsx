@@ -2,7 +2,7 @@ import { useMasterData } from "@/api/products/master-data";
 import MasterDataViewModal from "@/components/Distributors/MasterDataViewModal";
 import MasterProductFilters from "@/components/Distributors/MasterProductsFilter";
 import Headline from "@/components/Shared/Headline";
-import type { MasterProductFilters as MasterProductFiltersType } from "@/types";
+import type { MasterDistributor, MasterProduct, MasterProductFilters as MasterProductFiltersType, Product } from "@/types";
 import { mergeByIdConcatData } from "@/utils/masterData";
 import { Button, Loader } from "@mantine/core";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -73,8 +73,8 @@ function RouteComponent() {
             filters={filter}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}
-            products={products}
-            distributors={mergeByIdConcatData(distributors)}
+            products={products as unknown as MasterProduct[]}
+            distributors={mergeByIdConcatData(distributors) as MasterDistributor[]}
             isLoading={isLoading}
             error={error}
             isFetchingNextPage={isFetchingNextPage}
