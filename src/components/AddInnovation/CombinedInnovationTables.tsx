@@ -81,7 +81,7 @@ function CombinedInnovationTables({
   // Local edit and delete props
   onLocalEdit,
   onLocalDelete,
-  productListData
+  productListData,
 }: CombinedInnovationTablesProps) {
   const { fetchOfferingProducts } = useOfferingProducts(innovationId);
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
@@ -114,14 +114,14 @@ function CombinedInnovationTables({
     new Set()
   );
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
-  const [benchmarkProduct, setBenchmarkProduct] = useState<Product &{
-    icp_cost?: number;
-  } | null>(
-    null
-  );
- 
-  const productData = useMemo(() => {
+  const [benchmarkProduct, setBenchmarkProduct] = useState<
+    | (Product & {
+        icp_cost?: number;
+      })
+    | null
+  >(null);
 
+  const productData = useMemo(() => {
     return {
       ...benchmarkProduct,
       product_type: benchmarkProduct?.product_type as
@@ -143,7 +143,6 @@ function CombinedInnovationTables({
           : benchmarkProduct?.discontinue_date,
     };
   }, [benchmarkProduct]);
-
 
   const currentDistributor = distributors[currentDistributorIndex] || null;
 
@@ -344,8 +343,7 @@ function CombinedInnovationTables({
     return <p>No products available</p>;
   }
 
-
-function handleSave(productId: number, localValue?: PriceBenchmark | null) {
+  function handleSave(productId: number, localValue?: PriceBenchmark | null) {
     updateProduct.mutate(
       {
         innovationId,
@@ -357,11 +355,13 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
           icp_cost: productData?.icp_cost ?? 0,
           price: productData.price ?? 0,
           currency: productData.currency ?? "USD",
-          brand_id: String(productData?.brand?.id) || "",  
+          brand_id: String(productData?.brand?.id) || "",
           product_type: productData.product_type ?? "saleable",
           pref: productData.pref ?? "pref",
           grouping: productData.grouping ?? "1",
-          ...(localValue ? {price_benchmark: localValue} : {price_benchmark: null}),
+          ...(localValue
+            ? { price_benchmark: localValue }
+            : { price_benchmark: null }),
         },
       },
       {
@@ -370,10 +370,10 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
         },
       }
     );
-}
+  }
   return (
-    <div className="flex flex-col h-full">
-      <div className="relative grid grid-cols-6 max-h-[calc(100vh-28rem)]">
+    <div className="">
+      <div className="relative grid grid-cols-6 max-h-fit h-full">
         {/* Products Table */}
         <div className="col-span-4 mb-4">
           <div className="flex">
@@ -683,7 +683,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
           <div className="flex items-center justify-between gap-4">
             {currentDistributor && (
               <>
-                <h3 className="text-lg font-semibold text-primary">
+                <h3 className="text-lg font-semibold text-primary truncate">
                   Distributor Prices
                 </h3>
                 <div className="flex items-center space-x-1">
@@ -755,17 +755,13 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                       <Table.Tr
                         key={product.id}
                         onClick={(e) => handleRowClick(e, product)}
-                        style={{
-                          height: "42px !important",
-                          paddingTop: "0px",
-                          paddingBottom: "0px",
-                        }}
                         className={cn(
                           "cursor-pointer hover:bg-primary/10",
                           selectedRow === product.irc
                             ? "bg-primary/30"
-                            : " odd:bg-white even:bg-[#F2F4F6]"
+                            : " odd:bg-white even:bg-[#F2F4F6] max-h-[42px]"
                         )}
+                        style={{ padding: "0px", height: "42px" }}
                       >
                         {/* Distributor Price Cells */}
                         <Table.Td
@@ -799,7 +795,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                   setEditingPrice(null);
                                 }}
                                 autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm min-h-[22px]"
+                                className="w-20 border border-gray-300 rounded text-sm"
                                 step="0.01"
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -812,7 +808,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     price: distributorPrice.billing_price,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
                               >
                                 ${distributorPrice.billing_price.toFixed(2)}
                               </div>
@@ -865,7 +861,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>
@@ -918,7 +914,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>
@@ -971,7 +967,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>
@@ -1024,7 +1020,7 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
                                     rrsp: distributorPrice.rrsp,
                                   });
                                 }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded min-h-[42px]"
+                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
                               >
                                 ${distributorPrice.rrsp.toFixed(2)}
                               </div>
@@ -1094,56 +1090,58 @@ function handleSave(productId: number, localValue?: PriceBenchmark | null) {
 
       {benchmarkProduct && (
         <>
-        <PriceBenchmarkModal
-          opened={isBenchmarkModalOpen}
-          onClose={() => {
-            setIsBenchmarkModalOpen(false);
-            setBenchmarkProduct(null);
-          }}
-          onSave={(benchmark) => {
-            handleSave(benchmarkProduct.id, benchmark);
-          }}
-          initialValue={benchmarkProduct?.price_benchmark} // or pass existing benchmark if available
-          isEditMode={true}
-          productData={{
-            ...benchmarkProduct,
-            product_type: benchmarkProduct.product_type as
-              | "saleable"
-              | "non-saleable",
-            pref: benchmarkProduct.pref as "pref" | "non-pref",
-            grouping: benchmarkProduct.grouping as unknown as "1" | "2" | "3",
-            currency: (benchmarkProduct.currency === "EUR" ? "EUR" : "USD") as
-              | "EUR"
-              | "USD",
-            price: benchmarkProduct.price ? Number(benchmarkProduct.price) : 0,
-            launch_date:
-              benchmarkProduct.launch_date instanceof Date
-                ? benchmarkProduct.launch_date.toISOString().split("T")[0]
-                : benchmarkProduct.launch_date,
-            discontinue_date:
-              benchmarkProduct.discontinue_date instanceof Date
-                ? benchmarkProduct.discontinue_date.toISOString().split("T")[0]
-                : benchmarkProduct.discontinue_date,
-          }}
-          productListData={productListData}
-        />
-      <ConfirmationModal 
-        open={removeBenchmark}
-        title="Remove Benchmark"
-        subtext="Are you sure you want to remove the benchmark for this product?"
-        confirmLabel="Remove"
-        cancelLabel="Cancel"
-        onCancel={() => setRemoveBenchmark(false)}
-        onConfirm={() => {
-          handleSave(benchmarkProduct.id, null);
-        }}
-        confirmButtonClassName="bg-red-500 text-white hover:bg-red-600 transition-all ease-in-out duration-300"
-        cancelButtonClassName="border-red-500 text-red-500 hover:bg-red-100 transition-all ease-in-out duration-300"
-      />
-      </>
+          <PriceBenchmarkModal
+            opened={isBenchmarkModalOpen}
+            onClose={() => {
+              setIsBenchmarkModalOpen(false);
+              setBenchmarkProduct(null);
+            }}
+            onSave={(benchmark) => {
+              handleSave(benchmarkProduct.id, benchmark);
+            }}
+            initialValue={benchmarkProduct?.price_benchmark} // or pass existing benchmark if available
+            isEditMode={true}
+            productData={{
+              ...benchmarkProduct,
+              product_type: benchmarkProduct.product_type as
+                | "saleable"
+                | "non-saleable",
+              pref: benchmarkProduct.pref as "pref" | "non-pref",
+              grouping: benchmarkProduct.grouping as unknown as "1" | "2" | "3",
+              currency: (benchmarkProduct.currency === "EUR"
+                ? "EUR"
+                : "USD") as "EUR" | "USD",
+              price: benchmarkProduct.price
+                ? Number(benchmarkProduct.price)
+                : 0,
+              launch_date:
+                benchmarkProduct.launch_date instanceof Date
+                  ? benchmarkProduct.launch_date.toISOString().split("T")[0]
+                  : benchmarkProduct.launch_date,
+              discontinue_date:
+                benchmarkProduct.discontinue_date instanceof Date
+                  ? benchmarkProduct.discontinue_date
+                      .toISOString()
+                      .split("T")[0]
+                  : benchmarkProduct.discontinue_date,
+            }}
+            productListData={productListData}
+          />
+          <ConfirmationModal
+            open={removeBenchmark}
+            title="Remove Benchmark"
+            subtext="Are you sure you want to remove the benchmark for this product?"
+            confirmLabel="Remove"
+            cancelLabel="Cancel"
+            onCancel={() => setRemoveBenchmark(false)}
+            onConfirm={() => {
+              handleSave(benchmarkProduct.id, null);
+            }}
+            confirmButtonClassName="bg-red-500 text-white hover:bg-red-600 transition-all ease-in-out duration-300"
+            cancelButtonClassName="border-red-500 text-red-500 hover:bg-red-100 transition-all ease-in-out duration-300"
+          />
+        </>
       )}
-  
-     
     </div>
   );
 }
