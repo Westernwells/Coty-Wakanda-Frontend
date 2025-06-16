@@ -6,9 +6,12 @@ import { useQuery } from "@tanstack/react-query";
 import { getInnovations } from "@/api/innovations/get-innovations";
 import ErrorCard from "../Shared/ErrorCard";
 import { Loader } from "lucide-react";
-import get from "lodash.get";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "@tanstack/react-router";
+import { Innovation } from "@/types";
+import { filterByStatus } from "@/utils/filter-by-status";
+import EyeIcon from "../Icons/EyeIcon";
+import { sortOptions } from "@/constants/sort-options";
 
 function InnovationsTable() {
   const navigate = useNavigate();
@@ -28,30 +31,29 @@ function InnovationsTable() {
     trackVisibility: true,
   });
 
+  const handleForecastClick = (row: Innovation) => {
+    const isActive = row.status === "active";
+    
+    if (isActive) {
+        navigate({
+            to: "/edit-innovation/$innovationId",
+            params: { innovationId: row.id.toString() }
+        });
+    } else {
+        navigate({
+            to: "/innovation-forcasts-submit/$forecastId",
+            params: { forecastId: row.id.toString() }
+        });
+    }
+}
+
   const totalPages = Math.ceil((data?.data.length || 0) / itemsPerPage);
 
-  const sortOptions = [
-    { value: "brand", label: "Brand" },
-    { value: "offeringNumber", label: "Offering number" },
-    { value: "status", label: "Status" },
-  ];
 
-  // Filter data based on search and filters
-  const filteredData = useMemo(() => {
-    if (!data) return [];
-    if (sortBy) {
-      return [...data.data].sort((a, b) =>
-        get(a, sortBy) > get(b, sortBy)
-          ? 1
-          : get(b, sortBy) > get(a, sortBy)
-            ? -1
-            : 0
-      );
-    }
-    return data.data;
-  }, [sortBy, data]);
 
-  // Load more data dynamically
+    const filteredData = filterByStatus(data?.data || [], activeTab);
+
+
   const paginatedData = useMemo(() => {
     return filteredData.slice(0, activePage * itemsPerPage);
   }, [filteredData, activePage]);
@@ -122,11 +124,13 @@ function InnovationsTable() {
               <Table.Thead>
                 <Table.Tr className="bg-primary text-white">
                   <Table.Th className="rounded-ss-xl">Brand</Table.Th>
-                  <Table.Th>Offering Number</Table.Th>
-                  <Table.Th>Global ICW</Table.Th>
-                  <Table.Th>Global OCD</Table.Th>
+                  <Table.Th>Launch Name</Table.Th>
+                  <Table.Th>Launch Id</Table.Th>
+                  <Table.Th>Launch Reference</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th className="rounded-se-xl"></Table.Th>
+                  
+                  
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -138,22 +142,15 @@ function InnovationsTable() {
                     <Table.Td className="first:rounded-es-xl">
                       {element.brand.name}
                     </Table.Td>
-                    <Table.Td>{element.launch_id}</Table.Td>
                     <Table.Td>{element.launch_name}</Table.Td>
+                    <Table.Td>{element.launch_id}</Table.Td>
                     <Table.Td>{element.launch_ref}</Table.Td>
-                    <Table.Td>{element.forecast_deadline}</Table.Td>
+                    <Table.Td>{element.status}</Table.Td>
                     <Table.Td
                       className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                      onClick={() => {
-                        navigate({
-                          to: "/edit-innovation/$innovationId",
-                          params: {
-                            innovationId: element.id.toString(),
-                          },
-                        });
-                      }}
+                      onClick={() => handleForecastClick(element)}
                     >
-                      <PencilIcon />
+                      {element.status === "active" ? <PencilIcon /> : <EyeIcon />}
                     </Table.Td>
                   </Table.Tr>
                 ))}

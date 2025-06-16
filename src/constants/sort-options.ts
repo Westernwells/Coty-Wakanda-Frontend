@@ -1,6 +1,8 @@
 export const sortOptions = [
     { value: "brand", label: "Brand" },
-    { value: "offeringNumber", label: "Offering number" },
+    { value: "launch_name", label: "Launch Name" },
+    { value: "launch_id", label: "Launch Id" },
+    { value: "launch_ref", label: "Launch Reference" },
     { value: "status", label: "Status" },
 ];
 

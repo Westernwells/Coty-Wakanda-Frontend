@@ -7,10 +7,8 @@ import { useNavigate } from "@tanstack/react-router";
 import Pagination from "./Pagination";
 import { Loader } from "@mantine/core";
 import { showOptions, sortOptions } from "@/constants/sort-options";
-import { FlattenedOffering } from "@/components/Distributor-forcasts/types/types";
-import { sortData } from "@/components/Distributor-forcasts/utils/sort-data-innovations";
+import { InnovationWithStatus } from "@/components/Distributor-forcasts/types/types";
 import { useInnovationsWithOfferrings } from "./hooks/use-innovation-with-offerings";
-
 
 function InnovationsForecastsTable() {
     const [activePage, setActivePage] = useState(1);
@@ -18,21 +16,30 @@ function InnovationsForecastsTable() {
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
     const [itemsPerPage, setItemsPerPage] = useState("5");
     const [activeTab, setActiveTab] = useState<string | null>("upcoming");
-    const { flatData, isLoading, totalPages } = useInnovationsWithOfferrings(activePage, Number(itemsPerPage), activeTab);
-
+    
+    const { innovationsData, isLoading, totalPages } = useInnovationsWithOfferrings(
+        activePage, 
+        Number(itemsPerPage), 
+        activeTab
+    );
 
     const navigate = useNavigate();
 
-    const handleForecastClick = (row: FlattenedOffering) => {
-        navigate({
-            to: "/innovation-forcasts-submit/$forecastId",
-            params: { forecastId: row.innovationId.toString() },
-        })
+    const handleForecastClick = (row: InnovationWithStatus) => {
+        const isActive = row.status === "active";
+        
+        if (isActive) {
+            navigate({
+                to: "/edit-innovation/$innovationId",
+                params: { innovationId: row.id.toString() }
+            });
+        } else {
+            navigate({
+                to: "/innovation-forcasts-submit/$forecastId",
+                params: { forecastId: row.id.toString() }
+            });
+        }
     }
-
-    const sortedData = useMemo(() => {
-        return sortData(flatData, sortBy, sortDirection);
-    }, [sortBy, sortDirection, flatData]);
 
     const handleSort = (value: string | null) => {
         if (value === sortBy) {
@@ -102,21 +109,21 @@ function InnovationsForecastsTable() {
                         <Table.Thead>
                             <Table.Tr className="bg-primary text-white">
                                 <Table.Th className="rounded-ss-xl">Brand</Table.Th>
-                                <Table.Th>Offering Number</Table.Th>
-                                <Table.Th>Global ICW</Table.Th>
-                                <Table.Th>Global OCD</Table.Th>
+                                <Table.Th>Launch Name</Table.Th>
+                                <Table.Th>Launch Id</Table.Th>
+                                <Table.Th>Launch Reference</Table.Th>
                                 <Table.Th>Status</Table.Th>
                                 <Table.Th className="rounded-se-xl"></Table.Th>
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                            {sortedData.length > 0 ? (
-                                sortedData.map((row: FlattenedOffering) => (
-                                    <Table.Tr key={row.number}>
+                            {innovationsData?.data?.length ? (
+                                innovationsData.data.map((row: InnovationWithStatus) => (
+                                    <Table.Tr key={row.id}>
                                         <Table.Td className="first:rounded-es-xl">{row.brand?.name}</Table.Td>
-                                        <Table.Td>{row.number}</Table.Td>
-                                        <Table.Td>{row.icw ?? "–"}</Table.Td>
-                                        <Table.Td>{row.ocd ?? "–"}</Table.Td>
+                                        <Table.Td>{row.launch_name}</Table.Td>
+                                        <Table.Td>{row.launch_id}</Table.Td>
+                                        <Table.Td>{row.launch_ref}</Table.Td>
                                         <Table.Td>{row.status}</Table.Td>
                                         <Table.Td
                                             className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
