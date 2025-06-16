@@ -22,6 +22,7 @@ function RouteComponent() {
   const [opened, { open, close }] = useDisclosure(false);
   const params = useParams({ from: "/_auth/innovation-forcasts-submit/$forecastId" });
   const [selectedType, setSelectedType] = useState<string>("all");
+  
 
   const {
     forecastResponse,
@@ -44,6 +45,8 @@ function RouteComponent() {
   if (isLoading) return <div>Loading...</div>
 
   if (error) return <div>Error loading forecast details</div>
+
+  console.log(forecastResponse, 'forecastResponse')
 
   return (
     <div className="w-full">

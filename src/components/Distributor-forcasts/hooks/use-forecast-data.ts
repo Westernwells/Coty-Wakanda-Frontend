@@ -1,22 +1,32 @@
 import { getForecastDetails } from "@/api/forecasts/get-forecast-details";
+import { getInnovation } from "@/api/innovations/get-innovation";
 import { getOfferings } from "@/api/innovations/offerings/get-offerings";
 import { useOfferingProducts } from "./use-offering-products";
 import { useQuery } from "@tanstack/react-query";
 
-export const useForecastData = (forecastId: string) => {
+export const useForecastData = (id: string) => {
+
+  const { data: innovation, isLoading: isInnovationLoading, error: innovationError } = useQuery({
+    queryKey: ['innovation', id],
+    queryFn: () => getInnovation(id)
+  });
+  console.log(innovation)
+
     const { data: forecastResponse, isLoading: isForecastLoading, error: forecastError } = useQuery({
-      queryKey: ['forecast-details', forecastId],
-      queryFn: () => getForecastDetails(forecastId)
+      queryKey: ['forecast-details', innovation?.data?.id],
+      queryFn: () => getForecastDetails(innovation?.data?.id?.toString() || '')
     });
   
     const { data: offerings, isLoading: isOfferingsLoading } = useQuery({
-      queryKey: ['offerings', forecastId],
-      queryFn: () => getOfferings(Number(forecastId))
+      queryKey: ['offerings', innovation?.data?.id],
+      queryFn: () => getOfferings(Number(innovation?.data?.id))
     });
   
     const { offeringProducts, isLoading: isProductsLoading, isError: isProductsError } = 
-      useOfferingProducts(forecastId, offerings);
+      useOfferingProducts(innovation?.data?.id?.toString() || '', offerings);
   
+
+      console.log(offeringProducts, 'forecastResponse')
     return {
       forecastResponse,
       offerings,

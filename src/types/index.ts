@@ -425,6 +425,7 @@ export interface Innovation {
   created_at: string;
   brand: Pick<Brand, "id" | "name">;
   brand_pillar: BrandPillar;
+  status?: string;
 }
 
 export interface InnovationInput {
