@@ -212,10 +212,10 @@ export interface Filters {
 }
 
 export interface MasterProductFilters {
-  search: string;
-  house: string;
-  brand_id: string;
-  distributor_id: string;
+  search?: string;
+  house?: string;
+  brand_id?: string;
+  distributor_id?: string;
 }
 
 export interface BillingListFilters {
@@ -425,6 +425,7 @@ export interface Innovation {
   created_at: string;
   brand: Pick<Brand, "id" | "name">;
   brand_pillar: BrandPillar;
+  status?: string;
 }
 
 export interface InnovationInput {

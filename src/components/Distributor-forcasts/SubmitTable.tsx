@@ -35,29 +35,37 @@ const SubmitTable = ({ title = "Offering", forecast, months = [] }: SubmitTableP
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {forecast.map((element, index) => {
-                const subtotal = months.reduce((sum, month) => {
-                  return sum + (Number(element[month]) || 0);
-                }, 0);
+              {forecast.length === 0 ? (
+                <Table.Tr>
+                  <Table.Td colSpan={months.length + 7} className="text-center py-8 text-gray-500 text-lg">
+                    No elements
+                  </Table.Td>
+                </Table.Tr>
+              ) : (
+                forecast.map((element, index) => {
+                  const subtotal = months.reduce((sum, month) => {
+                    return sum + (Number(element[month]) || 0);
+                  }, 0);
 
-                return (
-                  <Table.Tr key={index}>
-                    <Table.Td className="first:rounded-es-xl">
-                      {element.brand}
-                    </Table.Td>
-                    <Table.Td>{element.pillar}</Table.Td>
-                    <Table.Td>{element.sku}</Table.Td>
-                    <Table.Td>{element.launchId}</Table.Td>
-                    <Table.Td>{element.cost}</Table.Td>
-                    {months.map((month) => (
-                      <Table.Td key={month}>{element[month]}</Table.Td>
-                    ))}
-                    <Table.Td className="last:rounded-ee-xl text-center !pr-2">
-                      ${subtotal}
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              })}
+                  return ( 
+                    <Table.Tr key={index}>
+                      <Table.Td className="first:rounded-es-xl">
+                        {element.brand}
+                      </Table.Td>
+                      <Table.Td>{element.pillar}</Table.Td>
+                      <Table.Td>{element.sku}</Table.Td>
+                      <Table.Td>{element.launchId}</Table.Td>
+                      <Table.Td>{element.cost}</Table.Td>
+                      {months.map((month) => (
+                        <Table.Td key={month}>{element[month]}</Table.Td>
+                      ))}
+                      <Table.Td className="last:rounded-ee-xl text-center !pr-2">
+                        ${subtotal}
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                })
+              )}
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
