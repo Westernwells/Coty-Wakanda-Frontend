@@ -49,6 +49,7 @@ export interface OfferingProductFormValues {
   line: string;
   line_id: string | number | undefined;
   article_type: string;
+  article_sub_type?: string; // Optional field for article subtype
   offering_number: string | number | undefined;
   launch_date: Date | null;
   discontinue_date: Date | null;
@@ -71,6 +72,11 @@ export interface OfferingProductFormValues {
   net_weight: string | number | undefined;
   units: string | number | undefined;
   price?: number; // Add price field to match API expectations
+  cssp_trex_eur?:         string,
+  cssp_trex_usd?:         string,
+  shade?:                 string,
+  material_tr?: string;
+  material?: string; // Optional field for material
 }
 
 interface AddProductToOfferingModalProps {

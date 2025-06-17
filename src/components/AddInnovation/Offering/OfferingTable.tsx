@@ -150,14 +150,13 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
   const { mutate: importCsv } = useImportProducts({
       mutationConfig: {
         onError: (err) => toast.error(`Error importing products: ${err}`),
-        onSuccess: () => {
-          toast.success("Products imported successfully");
-          setRows([]);
+        onSuccess: async (data, variables, context) => {
+          const { offeringId } = variables as { offeringId: number };
+          console.log("CSV import successful:", data);
+          await fetchOfferingProducts(offeringId);
         }
       },
     })
-
-
 
   const { handleFileUpload } = useCsvProductBulkUploader((parsedRows) => {
     setRows(parsedRows);

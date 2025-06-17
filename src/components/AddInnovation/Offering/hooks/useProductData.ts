@@ -1,6 +1,7 @@
-import { useState } from "react";
 import { getOfferingProducts, OfferingProductData } from "@/api/products/get-offering-products";
-import { OfferingMappedProduct, DistributorData } from "../types";
+import { queryClient } from "@/main";
+import { useState } from "react";
+import { DistributorData, OfferingMappedProduct } from "../types";
 
 export const useProductData = (innovationId: string) => {
   const [offeringProducts, setOfferingProducts] = useState<
@@ -18,7 +19,12 @@ export const useProductData = (innovationId: string) => {
 
     setLoadingOfferings((prev) => new Set(prev).add(offeringId));
     try {
-      const response = await getOfferingProducts(innovationId, offeringId);
+
+      const response = await queryClient.fetchQuery({
+        queryKey: ["offering-products", innovationId, offeringId],
+        queryFn: () => getOfferingProducts(innovationId, offeringId),
+      }
+      );
       const { products, distributors } = response.data;
 
       const mappedProducts: OfferingMappedProduct[] = products.map((p) => ({
