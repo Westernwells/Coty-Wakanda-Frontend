@@ -46,8 +46,6 @@ function RouteComponent() {
 
   if (error) return <div>Error loading forecast details</div>
 
-  console.log(forecastResponse, 'forecastResponse')
-
   return (
     <div className="w-full">
       <Headline title={forecastResponse?.data?.product?.offering_number?.toString() || 'Forecast Details'} />

@@ -8,31 +8,30 @@ export const useForecastData = (id: string) => {
 
   const { data: innovation, isLoading: isInnovationLoading, error: innovationError } = useQuery({
     queryKey: ['innovation', id],
-    queryFn: () => getInnovation(id)
+    queryFn: () => getInnovation(id),
+    enabled: !!id
   });
-  console.log(innovation)
 
-    const { data: forecastResponse, isLoading: isForecastLoading, error: forecastError } = useQuery({
-      queryKey: ['forecast-details', innovation?.data?.id],
-      queryFn: () => getForecastDetails(innovation?.data?.id?.toString() || '')
-    });
-  
-    const { data: offerings, isLoading: isOfferingsLoading } = useQuery({
-      queryKey: ['offerings', innovation?.data?.id],
-      queryFn: () => getOfferings(Number(innovation?.data?.id))
-    });
-  
-    const { offeringProducts, isLoading: isProductsLoading, isError: isProductsError } = 
-      useOfferingProducts(innovation?.data?.id?.toString() || '', offerings);
-  
+  const { data: forecastResponse, isLoading: isForecastLoading, error: forecastError } = useQuery({
+    queryKey: ['forecast-details', innovation?.data?.id],
+    queryFn: () => getForecastDetails(innovation?.data?.id?.toString() || ''),
+    enabled: !!innovation?.data?.id
+  });
 
-      console.log(offeringProducts, 'forecastResponse')
-    return {
-      forecastResponse,
-      offerings,
-      offeringProducts,
-      isLoading: isForecastLoading || isOfferingsLoading || isProductsLoading,
-      error: forecastError || isProductsError
-    };
+  const { data: offerings, isLoading: isOfferingsLoading } = useQuery({
+    queryKey: ['offerings', innovation?.data?.id],
+    queryFn: () => getOfferings(Number(innovation?.data?.id)),
+    enabled: !!innovation?.data?.id
+  });
+
+  const { offeringProducts, isLoading: isProductsLoading, isError: isProductsError } =
+    useOfferingProducts(innovation?.data?.id?.toString() || '', offerings);
+
+  return {
+    forecastResponse,
+    offerings,
+    offeringProducts,
+    isLoading: isForecastLoading || isOfferingsLoading || isProductsLoading,
+    error: forecastError || isProductsError
   };
-  
+};
