@@ -12,6 +12,7 @@ interface AddBillingListProductTableProps {
   hasMore: boolean;
   isLoadingMore: boolean;
   onPriceChange: (irc: string, newPrice: number) => void;
+  isEditing?: boolean;
 }
 
 const TableLoader = () => (
@@ -28,6 +29,7 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
   hasMore,
   isLoadingMore,
   onPriceChange,
+  isEditing = false,
 }) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +55,7 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
       <div
         id="addBillingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[1400px]"
+        className="flex-grow overflow-y-auto max-h-[800px]"
       >
         <InfiniteScroll
           dataLength={products.length}
@@ -140,13 +142,13 @@ const AddBillingListProductTable: React.FC<AddBillingListProductTableProps> = ({
                           ? ""
                           : String(product.price)
                       }
-                      onChange={(e) => handlePriceInputChange(product.irc, e)}
-                      onFocus={() => setSelectedRow(product.irc)}
+                      onChange={(e) => handlePriceInputChange(isEditing ? String(product.id) :product.irc, e)}
+                      onFocus={() => setSelectedRow( product.irc)}
                       className={cn(
                         "w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-1",
                         selectedRow === product.irc
-                          ? "bg-white"
-                          : "bg-transparent border-none pointer-events-none"
+                           ? "bg-white"
+                            : "bg-gray-100"
                       )}
                       readOnly={selectedRow !== product.irc}
                       onClick={(e) => e.stopPropagation()}

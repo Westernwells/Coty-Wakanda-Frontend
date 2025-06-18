@@ -736,12 +736,24 @@ export function AddProductToOfferingModal({
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <TextInput
+                <Select
+                    name="product_type"
+                    label="Article Type"
+                    placeholder="Enter Article Type"
+                    data={[
+                      { value: "non-saleable", label: "Non-Saleable" },
+                      { value: "saleable", label: "Saleable" },
+                    ]}
+                    {...form.getInputProps("product_type")}
+                    classNames={selectStyles}
+                    clearable
+                  />
+                  {/* <TextInput
                     label="Article Type"
                     placeholder="Enter Article Type"
                     {...form.getInputProps("article_type")}
                     classNames={textInputStyles}
-                  />
+                  /> */}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <NumberInput
