@@ -3,7 +3,7 @@ import { getOfferingProducts } from '@/api/products/get-offering-products';
 import { Offering } from '@/components/AddInnovation/Offering/types';
 import { OfferingProductData } from '@/api/products/get-offering-products';
 
-interface OfferingProductsMap {
+export interface OfferingProductsMap {
   [key: string]: OfferingProductData[];
 }
 

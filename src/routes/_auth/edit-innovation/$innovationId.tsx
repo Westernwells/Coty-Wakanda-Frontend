@@ -9,6 +9,13 @@ import Headline from "@/components/Shared/Headline";
 import { useQuery } from "@tanstack/react-query";
 import { getInnovation } from "@/api/innovations/get-innovation";
 import LoadingSpinner from "@/components/Shared/LoadingSpinner";
+import { useUserStore } from "@/stores/userStore";
+import InnovationsForecastTableDist from "@/components/Distributor-forcasts/InnovationsForecastTableDist";
+import { useForecastData } from "@/components/Distributor-forcasts/hooks/use-forecast-data";
+import { ForecastDetailsData, ForecastSubmitInput } from "@/types";
+import { useSubmitForecast } from "@/api/forecasts/submit-forcast";
+import { useUpdateInnovation } from "@/api/innovations/update-innovation";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/_auth/edit-innovation/$innovationId")({
   component: RouteComponent,
@@ -18,9 +25,26 @@ function RouteComponent() {
   const { innovationId } = Route.useParams();
   const navigate = useNavigate();
   const formRef = useRef<{ submit: () => void; isSubmitting: boolean }>(null);
+  const forecastTableRef = useRef<{ submit: () => { forecast: ForecastSubmitInput[] } | null; isSubmitting: boolean }>(null);
+
   const { data, isLoading } = useQuery({
     queryKey: ["innovations", innovationId],
     queryFn: () => getInnovation(innovationId),
+  });
+
+  const { forecastResponse,offeringProducts } = useForecastData(innovationId);
+  const role = useUserStore((state) => state.user)?.role;
+  const isDistributor = role === "distributor";
+
+  const { mutate: updateInnovation, isPending: isUpdatingInnovation } = useUpdateInnovation({
+    mutationConfig: {
+      onSuccess: () => {
+        toast.success("Innovation updated successfully!");
+      },
+      onError: () => {
+        toast.error("Error updating innovation!");
+      },
+    },
   });
 
   if (isLoading) {
@@ -72,19 +96,65 @@ function RouteComponent() {
           <Button
             variant="default"
             className="border-none w-28 bg-primary border-s-e rounded-ee-xl text-white text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
-            onClick={() => formRef.current?.submit()}
-            loading={formRef.current?.isSubmitting}
-            disabled={formRef.current?.isSubmitting}
+            onClick={() => {
+              if (isDistributor) {
+                const forecastData = forecastTableRef.current?.submit();
+                if (forecastData) {
+                  const validForecast = forecastData.forecast.filter(item => {
+                    if (!item.product_id || item.product_id <= 0) {
+                      return false;
+                    }
+                    if (!item.items || item.items.length === 0) {
+                      return false;
+                    }
+                    return true;
+                  });
+
+                  if (validForecast.length === 0) {
+                    toast.error("No valid forecast data to save!");
+                    return;
+                  }
+
+                  const updateData = {
+                    brand_id: data.data.brand.id.toString(),
+                    sub_brand_id: data.data.brand_pillar.id.toString(),
+                    year: data.data.year,
+                    format: data.data.format,
+                    launch_name: data.data.launch_name,
+                    reference_names: [data.data.launch_ref],
+                    status: data.data.status || "active",
+                    forecast_deadline: data.data.forecast_deadline,
+                    forecast: validForecast
+                  };
+                  
+                  updateInnovation({ data: updateData, innovationId: Number(innovationId) });
+                } else {
+                  toast.error("Error saving forecast!");
+                }
+              } else {
+                formRef.current?.submit();
+              }
+            }}
+            loading={isDistributor ? isUpdatingInnovation : formRef.current?.isSubmitting}
+            disabled={isDistributor ? isUpdatingInnovation : formRef.current?.isSubmitting}
           >
-            {formRef.current?.isSubmitting ? "Saving..." : "Save"}
+            {(isDistributor ? isUpdatingInnovation : formRef.current?.isSubmitting) ? "Saving..." : "Save"}
           </Button>
         </div>
       </section>
-      <EditInnovationForm
-        ref={formRef}
-        innovationData={data.data}
-        innovationId={innovationId}
-      />
+      {isDistributor ? (
+        <InnovationsForecastTableDist
+          ref={forecastTableRef}
+          offeringProducts={offeringProducts}
+          data={forecastResponse?.data as ForecastDetailsData}
+        />
+      ) : (
+        <EditInnovationForm
+          ref={formRef}
+          innovationData={data.data}
+          innovationId={innovationId}
+        />
+      )}
     </div>
   );
 }

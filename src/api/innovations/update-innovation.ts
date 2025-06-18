@@ -1,9 +1,11 @@
 import { axios } from "@/lib/axios";
 import { MutationConfig } from "@/lib/react-query";
-import { InnovationInput } from "@/types";
+import { InnovationInput, ForecastSubmitInput } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-export type UpdateInnovationDTO = Omit<InnovationInput, "offerings">;
+export type UpdateInnovationDTO = Omit<InnovationInput, "offerings"> & {
+  forecast?: ForecastSubmitInput[];
+};
 
 export const updateInnovation = ({
   data,
