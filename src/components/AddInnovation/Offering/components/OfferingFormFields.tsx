@@ -56,7 +56,7 @@ export const OfferingFormFields: React.FC<OfferingFormFieldsProps> = ({
           }
         />
       </Grid.Col>
-      <Grid.Col span={{ sm: 6, base: 12 }}>
+      {/* <Grid.Col span={{ sm: 6, base: 12 }}>
         <DateInput
           value={offeringForm.deadline}
           onChange={(date) =>
@@ -71,8 +71,8 @@ export const OfferingFormFields: React.FC<OfferingFormFieldsProps> = ({
           rightSection={<DateIcon />}
           classNames={textInputStyles}
         />
-      </Grid.Col>
-      <Grid.Col span={{ sm: 4, base: 12 }}>
+      </Grid.Col> */}
+      <Grid.Col span={{ sm: 6, base: 12 }}>
         <DateInput
           value={offeringForm.icw}
           onChange={(date) =>
@@ -88,7 +88,7 @@ export const OfferingFormFields: React.FC<OfferingFormFieldsProps> = ({
           classNames={textInputStyles}
         />
       </Grid.Col>
-      <Grid.Col span={{ sm: 4, base: 12 }}>
+      <Grid.Col span={{ sm: 6, base: 12 }}>
         <DateInput
           value={offeringForm.ocd}
           onChange={(date) =>
@@ -104,7 +104,7 @@ export const OfferingFormFields: React.FC<OfferingFormFieldsProps> = ({
           classNames={textInputStyles}
         />
       </Grid.Col>
-      <Grid.Col span={{ sm: 4, base: 12 }}>
+      <Grid.Col span={{ sm: 6, base: 12 }}>
         <Select
           value={offeringForm.type}
           onChange={(value) => {

@@ -87,9 +87,13 @@ export interface MetaX {
 }
 
 export interface MasterDataResponse {
-  message: string;
-  data: MasterDataPayload;
-  meta: MetaX;
+  pageParams: number[];
+  pages:{
+    message: string;
+    data: MasterDataPayload;
+    meta: MetaX;
+
+  }[]
 }
 export const useMasterData = (
   params: GetProductsParams,
@@ -124,9 +128,9 @@ export const useMasterData = (
           ...(params.filter?.distributor_id && { distributor_id: params.filter.distributor_id }),
           ...(params.filter?.house && { house: params.filter.house }),
         },
-      }),
-    getNextPageParam: (lastPage) =>
-      lastPage.meta.has_next ? lastPage.meta.cursor : undefined,
+      }) as unknown  as Promise<MasterDataResponse>,
+    getNextPageParam: (lastPage:any) =>
+      lastPage?.meta?.has_next ? lastPage?.meta?.cursor : undefined,
     initialPageParam: 1,
     // keepPreviousData: true,
     ...options,
