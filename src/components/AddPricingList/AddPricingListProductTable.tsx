@@ -16,6 +16,7 @@ interface AddPricingListProductTableProps {
     product_id: string;
     price: string | number;
   }>;
+  isEditing?: boolean;
 }
 
 const TableLoader = () => (
@@ -33,6 +34,7 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
   isLoadingMore,
   onPriceChange,
   selectedProductsWithPrices,
+  isEditing = false,  
 }) => {
   const scrollableRef = useRef<HTMLDivElement>(null);
 
@@ -58,7 +60,7 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
       <div
         id="addPricingListProductTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[1400px]"
+        className="flex-grow overflow-y-auto max-h-[800px]"
       >
         <InfiniteScroll
           dataLength={products.length}
@@ -152,8 +154,8 @@ const AddPricingListProductTable: React.FC<AddPricingListProductTableProps> = ({
                             ? ""
                             : String(priceValue)
                         }
-                        onChange={(e) => handlePriceInputChange(product.irc, e)}
-                        onFocus={() => setSelectedRow(product.irc)}
+                        onChange={(e) => handlePriceInputChange(isEditing ? String(product.id) : String(product.irc), e)}
+                        onFocus={() => setSelectedRow(isEditing ? String(product.id) : String(product.irc))}
                         className={cn(
                           "w-24 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm p-1",
                           selectedRow === product.irc
