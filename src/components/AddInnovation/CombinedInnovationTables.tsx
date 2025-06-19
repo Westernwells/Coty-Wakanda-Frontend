@@ -2,7 +2,9 @@
 
 import { useDeleteOfferingProduct } from "@/api/innovations/offerings/products/delete-product";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
+import { OfferingProductData } from "@/api/products/get-offering-products";
 import { cn } from "@/lib/utils";
+import { queryClient } from "@/main";
 import { PriceBenchmark, Product } from "@/types";
 import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 import { Button, Checkbox, Group, Loader, Modal, Table } from "@mantine/core";
@@ -14,8 +16,6 @@ import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBench
 import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
 import useProductData, { mapOfferingProducts } from "./Offering/hooks/useProductData";
-import { OfferingProductData } from "@/api/products/get-offering-products";
-// import { OfferingProductData } from "./Offering/types";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -109,10 +109,10 @@ function CombinedInnovationTables({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [localProducts, setLocalProducts] = useState<Product[]>([]);
-  useEffect(() => {
-    setLocalProducts(products);
-  }, [products]);
+  const [localProducts, setLocalProducts] = useState<Product[]>(products);
+  // useEffect(() => {
+  //   setLocalProducts(products);
+  // }, [products]);
 
   const [benchmarkedProducts, setBenchmarkedProducts] = useState<Set<number>>(
     new Set()
@@ -375,16 +375,17 @@ function CombinedInnovationTables({
       {
         onSuccess: async () => {
           setBenchmarkProduct(null);
-          const grenn = fetchOfferingProducts(Number(offeringId));
-          console.log("Product updated successfully:", grenn);
-          const res = await fOP( Number(offeringId));
-          if (!res) return;
-          console.log("Products fetched successfully:", res);
-          setLocalProducts(res?.products ? mapOfferingProducts(res.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
+          queryClient.invalidateQueries({
+            queryKey: ["offering-products", innovationId, offeringId],
+          });
+          const data = await fetchOfferingProducts(Number(offeringId));
+
+          setLocalProducts(data?.products ? mapOfferingProducts(data.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
          
         },
       }
     );
+
 }
 
   return (
