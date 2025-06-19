@@ -169,29 +169,19 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
         <CombinedInnovationTables
           products={mappedProducts}
           isEdit={isEdit}
-          setIsEdit={setIsEdit}
           onProductSelect={onProductSelect}
-          brandOptions={brandOptions}
+          selectedProducts={selectedProducts}
+          onSelectedProductsChange={onSelectedProductsChange}
           brandPillarOptions={brandPillarOptions}
           onBulkUpdate={(products) => {
             console.log("Bulk update:", products);
           }}
-          selectedProducts={selectedProducts}
-          onSelectedProductsChange={onSelectedProductsChange}
+          isDeleteMode={isDeleteMode}
           distributors={distributors}
-          tableHeader={["Distributor IRC", "Price", "RRSP"]}
-          tableFields={["irc", "billing_price", "rrsp"]}
-          onPriceEdit={(irc, price) => {
-            console.log("Price edit:", irc, price);
-          }}
-          onRRSPEdit={(irc, rrsp) => {
-            console.log("RRSP edit:", irc, rrsp);
-          }}
           innovationId={innovationId}
           offeringId={offeringId.toString()}
           onLocalEdit={onLocalEdit}
           onLocalDelete={onLocalDelete}
-          isDeleteMode={isDeleteMode}
           productListData={productListData}
         />
       </Grid.Col>
