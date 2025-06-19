@@ -111,7 +111,7 @@ function EditPricingListComponent() {
         pricingId: pricingListId.toString(),
         brandType: form.values.type,
         cursor: 1,
-        pageSize: PAGE_SIZE,
+        pageSize:  PAGE_SIZE,
         brandIds: form.values.brands?.map(Number),
       }),
     enabled: !isCsvMode && !!pricingListId && !!form.values.type,
@@ -165,11 +165,12 @@ function EditPricingListComponent() {
         type: existingPricingListData.type,
         description: existingPricingListData.description || "",
         brands: currentValues.brands,
-        selectedProductsWithPrices:
-          existingPricingListData.products?.map((p) => ({
-            product_id: String(p.id),
-            price: p.price,
-          })) || [],
+        // selectedProductsWithPrices:
+        //   existingPricingListData.products?.map((p) => ({
+        //     product_id: String(p.id),
+        //     price: p.price,
+        //   })) || [],
+        selectedProductsWithPrices: [],
       }));
     }
   }, [existingPricingListData, form.setValues]);
@@ -181,7 +182,7 @@ function EditPricingListComponent() {
 
   const handleSubmit = (values: PricingListFormValues) => {
     const { name, type, description } = values;
-
+    console.log("Submitting form with values:", values);
     updatePricingListMutation.mutate(
       {
         data: {
@@ -189,6 +190,10 @@ function EditPricingListComponent() {
           name,
           type,
           description,
+          products: values.selectedProductsWithPrices.map((p) => ({
+            product_id: p.product_id,
+            price: String(p.price),
+          })),
         },
       },
       {
@@ -197,11 +202,19 @@ function EditPricingListComponent() {
           queryClient.invalidateQueries({
             queryKey: ["pricingList", pricingListId],
           });
-          navigate({
-            to: "/settings",
-            search: { tab: "pricing" },
-            replace: true,
+          queryClient.invalidateQueries({
+            queryKey: [
+              "pricingListProducts",
+              pricingListId,
+              form.values.type,
+              form.values.brands,
+            ],
           });
+          // navigate({
+          //   to: "/settings",
+          //   search: { tab: "pricing" },
+          //   replace: true,
+          // });
         },
         onError: (error) => {
           console.error("Error updating pricing list:", error);
@@ -342,26 +355,28 @@ function EditPricingListComponent() {
 
   // Add price change handler for table
   const handlePriceChange = useCallback(
-    (irc: string, newPrice: number) => {
+    (id: string, newPrice: number) => {
       setProductsData((currentProducts) =>
         currentProducts.map((p) =>
-          p.irc === irc ? { ...p, price: String(newPrice) } : p
+          p.id == Number(id) ? { ...p, price: String(newPrice) } : p
         )
       );
       const exists = form.values.selectedProductsWithPrices.some(
-        (sp) => sp.product_id === irc
+        (sp) => sp.product_id === id
       );
       if (exists) {
         form.setFieldValue(
           "selectedProductsWithPrices",
-          form.values.selectedProductsWithPrices.map((sp) =>
-            sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+          form.values.selectedProductsWithPrices.map((sp) => {
+            console.log("sp", sp);
+          return  sp.product_id === id ? { ...sp, price: String(newPrice) } : sp
+          }
           )
         );
       } else {
         form.setFieldValue("selectedProductsWithPrices", [
           ...form.values.selectedProductsWithPrices,
-          { product_id: irc, price: String(newPrice) },
+          { product_id: id, price: String(newPrice) },
         ]);
       }
     },
@@ -543,6 +558,7 @@ function EditPricingListComponent() {
                       selectedProductsWithPrices={
                         form.values.selectedProductsWithPrices
                       }
+                      isEditing={true}
                     />
                   </div>
                 </div>
