@@ -290,6 +290,24 @@ const currentDistributorPrices = useMemo(() => {
                         </td>
                       );
                     }
+                    if (field === "c1") {
+                      return (
+                        <td key={field} className="text-sm text-gray-900">
+                             <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRRSPEdit(
+                                  price.irc as string,
+                                  Number(value)
+                                );
+                              }}
+                              className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
+                            >
+                              ${Number(value).toFixed(2)}
+                            </div>
+                        </td>
+                      );
+                    }
 
                     return (
                       <td key={field} className="text-sm text-gray-900">

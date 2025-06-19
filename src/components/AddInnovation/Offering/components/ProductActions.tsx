@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Button, Group } from "@mantine/core";
 import { PlusIcon, DownloadIcon, UploadIcon } from "lucide-react";
 import { downloadSampleProductCsv } from "@/lib/utils/downloadSampleProductCsv";
+import { useDownloadTemplateMutation } from "@/api/products/download-template";
 
 interface ProductActionsProps {
   onAddProduct: () => void;
@@ -32,12 +33,16 @@ export const ProductActions: React.FC<ProductActionsProps> = ({
     inputRef.current?.click();
   };
 
+  const {mutate} = useDownloadTemplateMutation();
+
   return (
     <Group mt="md" mb="lg">
       <Button
         leftSection={<DownloadIcon size={16} />}
         className="bg-primary text-white hover:bg-primary/90 rounded-lg"
-        onClick={downloadSampleProductCsv}
+        onClick={() => {
+          mutate();
+        }}
       >
         Download Sample
       </Button>

@@ -77,6 +77,7 @@ export interface OfferingProductFormValues {
   shade?:                 string,
   material_tr?: string;
   material?: string; // Optional field for material
+  line_number?: string; // Optional field for line number
 }
 
 interface AddProductToOfferingModalProps {

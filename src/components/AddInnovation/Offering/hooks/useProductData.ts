@@ -93,6 +93,8 @@ export const useProductData = (innovationId: string) => {
         id: d.id,
         name: d.name,
         data: d.data.map((pricing) => ({
+          ...pricing,
+          c1: Number(pricing.c1) || 0,
           irc: pricing.irc,
           billing_price: Number(pricing.billing_price || 0),
           rrsp: Number(pricing.rrsp || 0),
