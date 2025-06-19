@@ -70,9 +70,9 @@ const AddProductForm = forwardRef(function AddProductForm(
       market_id: market?.id?.toString(),
       segment_id: segment?.id?.toString(),
       country_id: country.id?.toString(),
-      category_id: category.id.toString(),
-      subcategory_id: subcategory.id.toString(),
-      sub_brand_id: brand_pillar.id.toString(),
+      category_id: category?.id?.toString(),
+      subcategory_id: subcategory?.id?.toString(),
+      sub_brand_id: brand_pillar?.id?.toString(),
       gmm_category_id: gmm_category?.id?.toString(),
       gmm_market_id: gmm_market?.id?.toString(),
       gmm_segment_id: gmm_segment?.id?.toString(),
@@ -80,7 +80,6 @@ const AddProductForm = forwardRef(function AddProductForm(
       launch_date: new Date(product.launch_date),
       discontinue_date: new Date(product.discontinue_date),
       grouping: product.grouping?.toString(),
-
       price_benchmark: {
         ...flatProduct.price_benchmark,
         brand_id: product.price_benchmark?.brand?.id.toString(),
