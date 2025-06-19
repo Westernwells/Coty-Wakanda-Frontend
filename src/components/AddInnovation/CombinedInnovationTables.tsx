@@ -16,14 +16,14 @@ import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBench
 import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
 import useProductData, { mapOfferingProducts } from "./Offering/hooks/useProductData";
+import { useDeleteBenchmark } from "@/api/products/delete-benchmark";
+import { on } from "events";
 
 interface CombinedInnovationTablesProps {
   // Products table props
   products: Product[];
   isEdit: boolean;
-  setIsEdit: React.Dispatch<React.SetStateAction<boolean>>;
   onProductSelect?: (product: Product) => void;
-  brandOptions: { value: string; label: string }[];
   brandPillarOptions: { value: string; label: string }[];
   onBulkUpdate?: (products: Product[]) => void;
   onDeleteProducts?: (productIds: number[]) => void;
@@ -39,13 +39,9 @@ interface CombinedInnovationTablesProps {
       irc: string;
       billing_price: number;
       rrsp: number;
+      c1: number
     }[];
   }[];
-  tableHeader: string[];
-  tableFields: string[];
-  onPriceEdit?: (irc: string, price: number) => void;
-  onRRSPEdit?: (irc: string, rrsp: number) => void;
-
   // New props
   innovationId: string;
   offeringId: string;
@@ -60,23 +56,13 @@ function CombinedInnovationTables({
   // Products table props
   products,
   isEdit,
-  setIsEdit,
   onProductSelect,
-  brandOptions,
-  brandPillarOptions,
-  onBulkUpdate,
-  onDeleteProducts,
   selectedProducts = [],
   onSelectedProductsChange,
   isDeleteMode,
 
   // Distributor prices props
   distributors,
-  tableHeader,
-  tableFields,
-  onPriceEdit,
-  onRRSPEdit,
-
   // New props
   innovationId,
   offeringId,
@@ -87,19 +73,29 @@ function CombinedInnovationTables({
   productListData,
 }: CombinedInnovationTablesProps) {
   const { fetchOfferingProducts } = useOfferingProducts(innovationId);
-  const {fetchOfferingProducts: fOP} = useProductData(innovationId)
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
-  const [editingPrice, setEditingPrice] = useState<{
-    irc: string;
-    price: number;
-  } | null>(null);
-  const [editingRRSP, setEditingRRSP] = useState<{
-    irc: string;
-    rrsp: number;
-  } | null>(null);
+  const [localProducts, setLocalProducts] = useState<Product[]>(products);
+
+  const [removeBenchmark, setRemoveBenchmark] = useState(false);
+  const [benchmarkProduct, setBenchmarkProduct] = useState<
+  | (Product & {
+      icp_cost?: number;
+    })
+  | null
+>(null);
+  const {mutate:removeBenchmarkProduct, isPending} = useDeleteBenchmark({
+    onSuccess:async () => {
+      queryClient.invalidateQueries({
+        queryKey: ["offering-products", Number(offeringId)],
+      });
+      setRemoveBenchmark(false);
+      setBenchmarkProduct(null);
+      const data = await fetchOfferingProducts(Number(offeringId));
+      setLocalProducts(data?.products ? mapOfferingProducts(data.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
+    }
+  });
 
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
-  const [removeBenchmark, setRemoveBenchmark] = useState(false);
   const updateProduct = useUpdateOfferingProduct();
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -109,7 +105,6 @@ function CombinedInnovationTables({
     { open: openDeleteModal, close: closeDeleteModal },
   ] = useDisclosure(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [localProducts, setLocalProducts] = useState<Product[]>(products);
   // useEffect(() => {
   //   setLocalProducts(products);
   // }, [products]);
@@ -118,12 +113,7 @@ function CombinedInnovationTables({
     new Set()
   );
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
-  const [benchmarkProduct, setBenchmarkProduct] = useState<
-    | (Product & {
-        icp_cost?: number;
-      })
-    | null
-  >(null);
+
 
   const productData = useMemo(() => {
     return {
@@ -147,8 +137,8 @@ function CombinedInnovationTables({
           : benchmarkProduct?.discontinue_date,
     };
   }, [benchmarkProduct]);
-
   const currentDistributor = distributors[currentDistributorIndex] || null;
+  console.log("CombinedInnovationTables productData:", currentDistributor);
 
   const updateProductMutation = useUpdateOfferingProduct({
     mutationConfig: {
@@ -350,7 +340,6 @@ function CombinedInnovationTables({
   if (!localProducts || localProducts.length === 0) {
     return <p>No products available</p>;
   }
-
   function handleSave(productId: number, localValue?: PriceBenchmark | null) {
     updateProduct.mutate(
       {
@@ -610,7 +599,7 @@ function CombinedInnovationTables({
                             paddingBottom: "0px",
                           }}
                         >
-                         ---
+                         {product?.price_benchmark?.product_irc || "-"}
                         </Table.Td>
                         <Table.Td
                           className="max-h-[42px]"
@@ -780,6 +769,8 @@ function CombinedInnovationTables({
                       (price) => price.irc === product.irc
                     );
 
+                    console.log("distributor Price", distributorPrice);
+
                     return (
                       <Table.Tr
                         key={product.id}
@@ -801,47 +792,7 @@ function CombinedInnovationTables({
                           }}
                         >
                           {distributorPrice ? (
-                            editingPrice?.irc === product.irc ? (
-                              <input
-                                type="number"
-                                value={editingPrice.price}
-                                onChange={(e) => {
-                                  const newPrice = parseFloat(e.target.value);
-                                  if (!isNaN(newPrice)) {
-                                    setEditingPrice({
-                                      ...editingPrice,
-                                      price: newPrice,
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingPrice) {
-                                    onPriceEdit?.(
-                                      editingPrice.irc,
-                                      editingPrice.price
-                                    );
-                                  }
-                                  setEditingPrice(null);
-                                }}
-                                autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm"
-                                step="0.01"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingPrice({
-                                    irc: product.irc,
-                                    price: distributorPrice.billing_price,
-                                  });
-                                }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
-                              >
-                                ${distributorPrice.billing_price.toFixed(2)}
-                              </div>
-                            )
+                            <> ${distributorPrice.billing_price.toFixed(2)}  </>
                           ) : (
                             "-"
                           )}
@@ -854,47 +805,9 @@ function CombinedInnovationTables({
                           }}
                         >
                           {distributorPrice ? (
-                            editingRRSP?.irc === product.irc ? (
-                              <input
-                                type="number"
-                                value={editingRRSP.rrsp}
-                                onChange={(e) => {
-                                  const newRRSP = parseFloat(e.target.value);
-                                  if (!isNaN(newRRSP)) {
-                                    setEditingRRSP({
-                                      ...editingRRSP,
-                                      rrsp: newRRSP,
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingRRSP) {
-                                    onRRSPEdit?.(
-                                      editingRRSP.irc,
-                                      editingRRSP.rrsp
-                                    );
-                                  }
-                                  setEditingRRSP(null);
-                                }}
-                                autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm"
-                                step="0.01"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingRRSP({
-                                    irc: product.irc,
-                                    rrsp: distributorPrice.rrsp,
-                                  });
-                                }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
-                              >
-                                ${distributorPrice.rrsp.toFixed(2)}
-                              </div>
-                            )
+                           <>
+                              ${distributorPrice.rrsp.toFixed(2)}
+                           </>
                           ) : (
                             "-"
                           )}
@@ -907,47 +820,9 @@ function CombinedInnovationTables({
                           }}
                         >
                           {distributorPrice ? (
-                            editingRRSP?.irc === product.irc ? (
-                              <input
-                                type="number"
-                                value={editingRRSP.rrsp}
-                                onChange={(e) => {
-                                  const newRRSP = parseFloat(e.target.value);
-                                  if (!isNaN(newRRSP)) {
-                                    setEditingRRSP({
-                                      ...editingRRSP,
-                                      rrsp: newRRSP,
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingRRSP) {
-                                    onRRSPEdit?.(
-                                      editingRRSP.irc,
-                                      editingRRSP.rrsp
-                                    );
-                                  }
-                                  setEditingRRSP(null);
-                                }}
-                                autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm"
-                                step="0.01"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingRRSP({
-                                    irc: product.irc,
-                                    rrsp: distributorPrice.rrsp,
-                                  });
-                                }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
-                              >
-                                ${distributorPrice.rrsp.toFixed(2)}
-                              </div>
-                            )
+                                <>
+                                ${distributorPrice.c1?.toFixed(2)}
+                                </>
                           ) : (
                             "-"
                           )}
@@ -960,47 +835,7 @@ function CombinedInnovationTables({
                           }}
                         >
                           {distributorPrice ? (
-                            editingRRSP?.irc === product.irc ? (
-                              <input
-                                type="number"
-                                value={editingRRSP.rrsp}
-                                onChange={(e) => {
-                                  const newRRSP = parseFloat(e.target.value);
-                                  if (!isNaN(newRRSP)) {
-                                    setEditingRRSP({
-                                      ...editingRRSP,
-                                      rrsp: newRRSP,
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingRRSP) {
-                                    onRRSPEdit?.(
-                                      editingRRSP.irc,
-                                      editingRRSP.rrsp
-                                    );
-                                  }
-                                  setEditingRRSP(null);
-                                }}
-                                autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm"
-                                step="0.01"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingRRSP({
-                                    irc: product.irc,
-                                    rrsp: distributorPrice.rrsp,
-                                  });
-                                }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
-                              >
-                                ${distributorPrice.rrsp.toFixed(2)}
-                              </div>
-                            )
+                           <>${distributorPrice.rrsp.toFixed(2)}</>
                           ) : (
                             "-"
                           )}
@@ -1013,47 +848,7 @@ function CombinedInnovationTables({
                           }}
                         >
                           {distributorPrice ? (
-                            editingRRSP?.irc === product.irc ? (
-                              <input
-                                type="number"
-                                value={editingRRSP.rrsp}
-                                onChange={(e) => {
-                                  const newRRSP = parseFloat(e.target.value);
-                                  if (!isNaN(newRRSP)) {
-                                    setEditingRRSP({
-                                      ...editingRRSP,
-                                      rrsp: newRRSP,
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (editingRRSP) {
-                                    onRRSPEdit?.(
-                                      editingRRSP.irc,
-                                      editingRRSP.rrsp
-                                    );
-                                  }
-                                  setEditingRRSP(null);
-                                }}
-                                autoFocus
-                                className="w-20 border border-gray-300 rounded text-sm"
-                                step="0.01"
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            ) : (
-                              <div
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingRRSP({
-                                    irc: product.irc,
-                                    rrsp: distributorPrice.rrsp,
-                                  });
-                                }}
-                                className="cursor-pointer hover:bg-gray-100 flex items-center  rounded max-h-[42px]"
-                              >
-                                ${distributorPrice.rrsp.toFixed(2)}
-                              </div>
-                            )
+                                <>{`$${distributorPrice.rrsp.toFixed(2)}`}</>
                           ) : (
                             "-"
                           )}
@@ -1164,7 +959,9 @@ function CombinedInnovationTables({
             cancelLabel="Cancel"
             onCancel={() => setRemoveBenchmark(false)}
             onConfirm={() => {
-              handleSave(benchmarkProduct.id, null);
+              // handleSave(benchmarkProduct.id, null);
+              removeBenchmarkProduct(benchmarkProduct.id);
+
             }}
             confirmButtonClassName="bg-red-500 text-white hover:bg-red-600 transition-all ease-in-out duration-300"
             cancelButtonClassName="border-red-500 text-red-500 hover:bg-red-100 transition-all ease-in-out duration-300"

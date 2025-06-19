@@ -260,10 +260,12 @@ export interface Document {
 export interface PriceBenchmark {
   brand_id: string | number;
   product_id: string | number;
+  product_irc?: string | number
   index_value: string | number;
   comment: string;
   brand?: Pick<Brand, "id" | "name">;
   product?: Pick<Product, "id">;
+  category?:  Pick<Category, "id" | "name">;
 }
 
 export interface DistributerPricing {
