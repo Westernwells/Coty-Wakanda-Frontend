@@ -1,7 +1,7 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { getCountries } from "@/api/get-countries";
+import { getHouses } from "@/api/get-houses";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { getSegments } from "@/api/listManagement/segments/get-segments";
@@ -26,6 +26,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
@@ -131,7 +132,12 @@ const AddProductForm = forwardRef(function AddProductForm(
         },
     validate: zodResolver(addProductSchema),
   });
+  useEffect(() => {
+   if(Number(product?.brand?.id) !== Number(form.getValues()?.brand_id)){
+     form.setFieldValue("line", "");
+   }
 
+  }, [form, form.values.brand_id, product?.brand?.id]);
   const [
     { data: marketsData, isLoading: marketsLoading },
     { data: segmentsData, isLoading: segmentsLoading },
@@ -141,9 +147,11 @@ const AddProductForm = forwardRef(function AddProductForm(
     { data: brandsData, isLoading: brandsLoading },
     { data: countriesData, isLoading: countriesLoading },
     // { data: currenciesData },
-    { isLoading: brandPillarsLoading },
+    { data:brandPillarsData, isLoading: brandPillarsLoading },
     { data: productsListData, isLoading: productsLoading },
     { data: productDistributorsData, isLoading: productDistrubutorsLoading },
+    { data: housesData, error: housesError },
+
   ] = useQueries({
     queries: [
       {
@@ -208,6 +216,10 @@ const AddProductForm = forwardRef(function AddProductForm(
           ),
         enabled: !!form.getValues().brand_id && !!form.getValues().pref,
       },
+      {
+        queryKey: ["houses"],
+        queryFn: () => getHouses(),
+      },
     ],
   });
 
@@ -244,6 +256,7 @@ const AddProductForm = forwardRef(function AddProductForm(
       queryKey: ["product-distributor"],
       refetchType: "all",
     });
+    
   });
 
   form.watch("pref", () => {
@@ -272,6 +285,10 @@ const AddProductForm = forwardRef(function AddProductForm(
       form.setFieldValue("brand_type", value);
     }
   });
+
+
+
+  // …
 
   if (
     isEdit &&
@@ -603,10 +620,21 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+            {/* <TextInput
               {...form.getInputProps("house")}
               label="House"
               classNames={textInputStyles}
+            /> */}
+             <Select
+              {...form.getInputProps("house")}
+              label="House"
+              data={
+                housesData?.data?.map((house) => ({
+                  value: house.toString(),
+                  label: house.toString(),
+                })) || []
+              }
+              classNames={selectStyles}
             />
           </Grid.Col>
           <Grid.Col
@@ -652,10 +680,22 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+            {/* <TextInput
               {...form.getInputProps("line")}
               label="Line"
               classNames={textInputStyles}
+            /> */}
+             <Select
+              {...form.getInputProps("line")}
+              data={
+                brandPillarsData?.data?.map((brand) => ({
+                  value: brand.id.toString(),
+                  label: brand.name,
+                })) || []
+              }
+              label="Line"
+              classNames={selectStyles}
+              disabled={!form.getValues().brand_id}
             />
           </Grid.Col>
           <Grid.Col
@@ -844,7 +884,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="ICP_EUR"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           </Grid.Col>
@@ -859,7 +899,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="ICP_USD"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           </Grid.Col>
