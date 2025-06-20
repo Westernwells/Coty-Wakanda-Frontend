@@ -2,6 +2,7 @@ import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { getCountries } from "@/api/get-countries";
 import { getHouses } from "@/api/get-houses";
+import { getArticles } from "@/api/listManagement/articles/get-articles";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { getSegments } from "@/api/listManagement/segments/get-segments";
@@ -26,7 +27,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
@@ -131,13 +132,10 @@ const AddProductForm = forwardRef(function AddProductForm(
           brand_category: "",
         },
     validate: zodResolver(addProductSchema),
+   
   });
-  useEffect(() => {
-   if(Number(product?.brand?.id) !== Number(form.getValues()?.brand_id)){
-     form.setFieldValue("line", "");
-   }
 
-  }, [form, form.values.brand_id, product?.brand?.id]);
+
   const [
     { data: marketsData, isLoading: marketsLoading },
     { data: segmentsData, isLoading: segmentsLoading },
@@ -151,6 +149,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     { data: productsListData, isLoading: productsLoading },
     { data: productDistributorsData, isLoading: productDistrubutorsLoading },
     { data: housesData, error: housesError },
+    { data: articlesData, error: articlesError },
 
   ] = useQueries({
     queries: [
@@ -219,6 +218,10 @@ const AddProductForm = forwardRef(function AddProductForm(
       {
         queryKey: ["houses"],
         queryFn: () => getHouses(),
+      },
+      {
+        queryKey: ["articles"],
+        queryFn: () => getArticles(),
       },
     ],
   });
@@ -351,9 +354,10 @@ const AddProductForm = forwardRef(function AddProductForm(
               },
               {
                 onSuccess: () => {
+       
                   queryClient.invalidateQueries({
                     queryKey: ["products"],
-                    refetchType: "all",
+                    // refetchType: "all",
                   });
                   navigate({ to: "/products" });
                 },
@@ -373,6 +377,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                   price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
                   division: values.division,
+                  sub_brand_id: 123
                 },
               },
               {
@@ -695,7 +700,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               }
               label="Line"
               classNames={selectStyles}
-              disabled={!form.getValues().brand_id}
+              disabled={!form.getValues()?.brand_id}
             />
           </Grid.Col>
           <Grid.Col
@@ -734,11 +739,23 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+                     <Select
+              {...form.getInputProps("article_type")}
+              data={
+                articlesData?.data?.map((article) => ({
+                  value: article.toString(),
+                  label: article.toString(),
+                })) || []
+              }
+              label="Article Type"
+              classNames={selectStyles}
+              // disabled={!form.getValues().brand_id}
+            />
+            {/* <TextInput
               {...form.getInputProps("article_type")}
               label="Article type"
               classNames={textInputStyles}
-            />
+            /> */}
           </Grid.Col>
           {/* <Grid.Col
             span={{
