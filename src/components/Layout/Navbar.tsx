@@ -53,27 +53,26 @@ const Navbar = () => {
           { link: "/innovations", label: "Innovations", icon: LightBulbIcon },
           { link: "/distributors", label: "Distributors", icon: GroupIcon },
           { link: "/products", label: "Products", icon: ShoppingCart },
-          { link: "/royalties", label: "Royalties", icon: PlusIcon },
 
-          { link: "orders", label: "Orders", icon: BoxIcon },
-          { link: "reporting", label: "Reporting", icon: FileDocumentIcon },
+          { link: "/orders", label: "Orders", icon: BoxIcon },
+          { link: "/reporting", label: "Reporting", icon: FileDocumentIcon },
         ]
       : [
           { link: "/", label: "Dashboard", icon: DashboardIcon },
           {
-            link: "innovation-forecasts",
+            link: "/innovation-forecasts",
             label: "Innovation forecasts",
             icon: LightBulbIcon,
           },
           {
-            link: "base-forecasts",
+            link: "/base-forecasts",
             label: "Base forecasts",
             icon: LightBulbIcon,
           },
-          { link: "products", label: "Products", icon: ShoppingCart },
-          { link: "orders", label: "Orders", icon: BoxIcon },
-          { link: "stock-on-hand", label: "Stock On Hand", icon: BoxIcon },
-          { link: "sales", label: "Sales", icon: BoxIcon },
+          { link: "/products", label: "Products", icon: ShoppingCart },
+          { link: "/orders", label: "Orders", icon: BoxIcon },
+          { link: "/stock-on-hand", label: "Stock On Hand", icon: BoxIcon },
+          { link: "/sales", label: "Sales", icon: BoxIcon },
         ];
 
   return (

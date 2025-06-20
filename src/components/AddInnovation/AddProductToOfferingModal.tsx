@@ -49,6 +49,7 @@ export interface OfferingProductFormValues {
   line: string;
   line_id: string | number | undefined;
   article_type: string;
+  article_sub_type?: string; // Optional field for article subtype
   offering_number: string | number | undefined;
   launch_date: Date | null;
   discontinue_date: Date | null;
@@ -71,6 +72,12 @@ export interface OfferingProductFormValues {
   net_weight: string | number | undefined;
   units: string | number | undefined;
   price?: number; // Add price field to match API expectations
+  cssp_trex_eur?:         string,
+  cssp_trex_usd?:         string,
+  shade?:                 string,
+  material_tr?: string;
+  material?: string; // Optional field for material
+  line_number?: string; // Optional field for line number
 }
 
 interface AddProductToOfferingModalProps {
@@ -730,12 +737,24 @@ export function AddProductToOfferingModal({
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <TextInput
+                <Select
+                    name="product_type"
+                    label="Article Type"
+                    placeholder="Enter Article Type"
+                    data={[
+                      { value: "non-saleable", label: "Non-Saleable" },
+                      { value: "saleable", label: "Saleable" },
+                    ]}
+                    {...form.getInputProps("product_type")}
+                    classNames={selectStyles}
+                    clearable
+                  />
+                  {/* <TextInput
                     label="Article Type"
                     placeholder="Enter Article Type"
                     {...form.getInputProps("article_type")}
                     classNames={textInputStyles}
-                  />
+                  /> */}
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <NumberInput

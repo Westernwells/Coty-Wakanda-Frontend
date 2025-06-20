@@ -199,23 +199,23 @@ export interface Subcategory {
 }
 
 export interface Filters {
-  search: string;
+  search?: string;
   category_id?: string;
-  brand_id: string;
-  sub_brand_id: string;
-  distributor_id: string;
-  region_id: string;
-  market_id: string;
+  brand_id?: string;
+  sub_brand_id?: string;
+  distributor_id?: string;
+  region_id?: string;
+  market_id?: string;
   division?: string;
   brand_type?: string;
   is_innovation_product?: boolean;
 }
 
 export interface MasterProductFilters {
-  search: string;
-  house: string;
-  brand_id: string;
-  distributor_id: string;
+  search?: string;
+  house?: string;
+  brand_id?: string;
+  distributor_id?: string;
 }
 
 export interface BillingListFilters {
@@ -260,10 +260,12 @@ export interface Document {
 export interface PriceBenchmark {
   brand_id: string | number;
   product_id: string | number;
+  product_irc?: string | number
   index_value: string | number;
   comment: string;
   brand?: Pick<Brand, "id" | "name">;
   product?: Pick<Product, "id">;
+  category?:  Pick<Category, "id" | "name">;
 }
 
 export interface DistributerPricing {
@@ -384,11 +386,12 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number"
+    "id" | "brand" | "material_description" | "offering_number" 
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
   monthly_average: Record<string, DateValues>;
+  forecast_deadline: string;
 }
 
 export interface ProductDistributor {
@@ -424,6 +427,7 @@ export interface Innovation {
   created_at: string;
   brand: Pick<Brand, "id" | "name">;
   brand_pillar: BrandPillar;
+  status?: string;
 }
 
 export interface InnovationInput {

@@ -3,6 +3,7 @@ import { Collapse } from "@mantine/core";
 import { OfferingMappedProduct, DistributorData } from "../types";
 import ProductActions from "./ProductActions";
 import ProductTableContent from "./ProductTableContent";
+import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 import { Product } from "@/types";
 
 interface ExpandableOfferingContentProps {
@@ -25,6 +26,7 @@ interface ExpandableOfferingContentProps {
   isEdit: boolean;
   setIsEdit: (isEdit: boolean | ((prevState: boolean) => boolean)) => void;
   onBulkProductUpload: (e:React.ChangeEvent<HTMLInputElement>) => void;
+  productListData?: InnovationProduct[]; // Optional prop for product list data
 }
 
 export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps> = ({
@@ -46,7 +48,8 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
   brandPillarOptions,
   isEdit,
   setIsEdit,
-  onBulkProductUpload
+  onBulkProductUpload,
+  productListData
 }) => {
   return (
     <Collapse in={isExpanded}>
@@ -82,6 +85,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
                 isDeleteMode={isDeleteMode}
                 brandOptions={brandOptions}
                 brandPillarOptions={brandPillarOptions}
+                productListData={productListData} // Pass product list data if available
               />
             </>
           )

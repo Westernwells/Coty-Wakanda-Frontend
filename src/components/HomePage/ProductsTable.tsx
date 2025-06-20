@@ -28,7 +28,6 @@ function ProductsTable({
 }) {
   const navigate = useNavigate();
   const role = useUserStore((state) => state.user)?.role;
-
   const [products, setProducts] = useState<Product[]>(initialData);
   const [meta, setMeta] = useState<Meta>(initialMeta);
   const [hasMore, setHasMore] = useState(initialMeta.has_next);
@@ -36,8 +35,8 @@ function ProductsTable({
     product_id: product.id,
     icp_eur: product.icp_eur,
     icp_usd: product.icp_usd,
-    brand_id: product.brand.id.toString(),
-    brand_type: product.brand.type,
+    brand_id: product.brand?.id?.toString(),
+    brand_type: product.brand?.type,
     brand_pillar_id: product.brand_pillar?.id || "",
     sub_brand_id: product.subcategory?.id || "",
     material_description: product.material_description ?? "",
@@ -147,11 +146,11 @@ function ProductsTable({
       response.data.map((product) =>
         form.insertListItem("products", {
           product_id: product.id,
-          brand_id: product.brand.id.toString(),
+          brand_id: product.brand?.id.toString(),
           division: product.division,
           icp_eur: product.icp_eur,
           icp_usd: product.icp_usd,
-          brand_type: product.brand.type,
+          brand_type: product.brand?.type,
           brand_pillar_id: product.brand_pillar?.id?.toString() || "",
           sub_brand_id: product.subcategory?.id || "",
           material_description: product.material_description ?? "",
@@ -269,7 +268,7 @@ function ProductsTable({
                           <div className="w-full h-10 bg-gray-100 rounded animate-pulse" />
                         )
                       ) : (
-                        product.brand.name
+                        product.brand?.name
                       )}
                     </Table.Td>
                     <Table.Td>
@@ -298,7 +297,7 @@ function ProductsTable({
                           )}
                         />
                       ) : (
-                        product.brand.type
+                        product.brand?.type
                       )}
                     </Table.Td>
                     <Table.Td>

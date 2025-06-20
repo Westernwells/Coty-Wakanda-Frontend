@@ -8,7 +8,7 @@ interface ProductTableProps {
   products: MasterProduct[];
   selectedRow: string | null;
   setSelectedRow: React.Dispatch<React.SetStateAction<string | null>>;
-  fetchMoreData: () => Promise<void>;
+  fetchMoreData: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   scrollTop: number;
@@ -16,7 +16,7 @@ interface ProductTableProps {
   scrollSource: "product" | "distributor" | null;
 }
 
-const TableLoader = () => (
+export const TableLoader = () => (
   <div className="text-center self-center w-full ">
     <Loader size="md" className="text-center" />
   </div>
@@ -71,7 +71,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       <div
         id="productTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-35rem)]"
         onScroll={handleScroll}
       >
         <InfiniteScroll

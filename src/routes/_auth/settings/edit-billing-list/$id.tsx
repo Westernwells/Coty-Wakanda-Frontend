@@ -134,13 +134,14 @@ function EditBillingListComponent() {
           type: existingBillingListData.type,
           description: existingBillingListData.description || "",
           brand: [],
-          selectedProductsWithPrices:
-            existingBillingListData.products
-              ?.filter((p) => p && typeof p.product_id === "number")
-              .map((p) => ({
-                product_id: p.product_id.toString(),
-                price: p.price,
-              })) || [],
+          // selectedProductsWithPrices:
+          //   existingBillingListData.products
+          //     ?.filter((p) => p && typeof p.product_id === "number")
+          //     .map((p) => ({
+          //       product_id: p.product_id.toString(),
+          //       price: p.price,
+          //     })) || [],
+          selectedProductsWithPrices: [],
         });
         setFormInitializedForId(billingListId);
       }
@@ -276,7 +277,12 @@ function EditBillingListComponent() {
           name,
           type,
           description,
-          products: productsPayload,
+          products: values.selectedProductsWithPrices.map(
+            (sp) => ({
+              product_id: sp.product_id,
+              price: Number(sp.price), // Ensure price is a number
+            })
+          )
         },
       },
       {
@@ -288,11 +294,11 @@ function EditBillingListComponent() {
           queryClient.invalidateQueries({
             queryKey: ["billingListProductsById", billingListId],
           });
-          navigate({
-            to: "/settings",
-            search: { tab: "billing" },
-            replace: true,
-          });
+          // navigate({
+          //   to: "/settings",
+          //   search: { tab: "billing" },
+          //   replace: true,
+          // });
         },
         onError: (error) => {
           console.error("Error updating billing list:", error);
@@ -417,19 +423,47 @@ function EditBillingListComponent() {
   ]);
 
   const handlePriceChange = useCallback(
-    (irc: string, newPrice: number) => {
+    (id: string, newPrice: number) => {
       setProductsData((currentProducts) =>
         currentProducts.map((p) =>
-          p.irc === irc ? { ...p, price: String(newPrice) } : p
+          p.id == Number(id) ? { ...p, price: String(newPrice) } : p
         )
       );
+
+      console.log(
+        `Price for product with IRC ${id} updated to ${newPrice}`
+      );
+      console.log(
+        "Updated productsData:",
+        productsData
+      );
+
       // Also update the form's selectedProductsWithPrices if needed
-      form.setFieldValue(
-        "selectedProductsWithPrices",
-        form.values.selectedProductsWithPrices.map((sp) =>
-          sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
-        )
+      // form.setFieldValue(
+      //   "selectedProductsWithPrices",
+      //   form.values.selectedProductsWithPrices.map((sp) =>
+      //     sp.product_id === irc ? { ...sp, price: String(newPrice) } : sp
+      //   )
+      // );
+
+      const exists = form.values.selectedProductsWithPrices.some(
+        (sp) => sp.product_id === id
       );
+      if (exists) {
+        form.setFieldValue(
+          "selectedProductsWithPrices",
+          form.values.selectedProductsWithPrices.map((sp) => {
+            console.log("sp", sp);
+          return  sp.product_id === id ? { ...sp, price: String(newPrice) } : sp
+          }
+          )
+        );
+      } else {
+        form.setFieldValue("selectedProductsWithPrices", [
+          ...form.values.selectedProductsWithPrices,
+          { product_id: id, price: String(newPrice) },
+        ]);
+      }
     },
     [form.values.selectedProductsWithPrices] // Ensure form is a dependency if its state is used
   );
@@ -623,6 +657,7 @@ function EditBillingListComponent() {
                       hasMore={productsHasMore}
                       isLoadingMore={productsIsLoadingMore}
                       onPriceChange={handlePriceChange}
+                      isEditing={true}
                     />
                   </div>
                 </div>

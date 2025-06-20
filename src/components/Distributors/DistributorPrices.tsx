@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import { MasterDistributor } from "@/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { Table } from "@mantine/core";
+import { TableLoader } from "./ProductTable";
 
 interface DistributorPricesProps {
   distributors: MasterDistributor[];
@@ -14,6 +14,8 @@ interface DistributorPricesProps {
   scrollTop: number;
   setScrollTop: (scrollTop: number) => void;
   scrollSource: "product" | "distributor" | null;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
 }
 
 const DistributorPrices: React.FC<DistributorPricesProps> = ({
@@ -25,6 +27,8 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
   scrollTop,
   setScrollTop,
   scrollSource,
+  isLoadingMore = false,
+  hasMore = true,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editingPrice, setEditingPrice] = useState<{
@@ -36,37 +40,12 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
     rrsp: number;
   } | null>(null);
 
-  // Infinite scroll state for distributor prices
-  const PAGE_SIZE = 20;
-  type PriceType = MasterDistributor["data"][number];
-  const [currentDistributorPrices, setCurrentDistributorPrices] = useState<
-    PriceType[]
-  >([]);
-  const [hasMorePrices, setHasMorePrices] = useState(true);
-  const [isLoadingMorePrices, setIsLoadingMorePrices] = useState(false);
 
-  // Update prices when distributor changes
-  useEffect(() => {
-    if (distributors[currentIndex]) {
-      setCurrentDistributorPrices(
-        distributors[currentIndex].data.slice(0, PAGE_SIZE)
-      );
-      setHasMorePrices(distributors[currentIndex].data.length > PAGE_SIZE);
-    }
-  }, [currentIndex, distributors]);
 
-  // Fetch more prices for infinite scroll
-  const fetchMoreDistributorPrices = async () => {
-    if (!distributors[currentIndex]) return;
-    setIsLoadingMorePrices(true);
-    // Simulate async fetch
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    const allPrices = distributors[currentIndex].data;
-    const nextLength = currentDistributorPrices.length + PAGE_SIZE;
-    setCurrentDistributorPrices(allPrices.slice(0, nextLength));
-    setHasMorePrices(allPrices.length > nextLength);
-    setIsLoadingMorePrices(false);
-  };
+const currentDistributorPrices = useMemo(() => {
+    return distributors[currentIndex]?.data || [];
+  }
+  , [currentIndex, distributors]);
 
   const nextDistributor = () => {
     setCurrentIndex((prev) => (prev + 1) % (distributors.length || 1));
@@ -195,20 +174,16 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
       <div
         id="distributorTableScrollable"
         ref={scrollableRef}
-        className="flex-grow overflow-y-auto max-h-[calc(100vh-28rem)]"
+        className="flex-grow overflow-y-auto max-h-[calc(100vh-35rem)]"
         onScroll={handleScroll}
       >
         <InfiniteScroll
           dataLength={currentDistributorPrices.length}
-          next={fetchMoreDistributorPrices}
-          hasMore={hasMorePrices}
+          next={()=>{}}
+          hasMore={hasMore}
           loader={
-            isLoadingMorePrices ? (
-              <tr>
-                <td colSpan={tableHeader.length} className="text-center py-2">
-                  Loading...
-                </td>
-              </tr>
+            isLoadingMore ? (
+              <TableLoader />
             ) : null
           }
           scrollableTarget="distributorTableScrollable"
@@ -312,6 +287,24 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                               ${Number(value).toFixed(2)}
                             </div>
                           )}
+                        </td>
+                      );
+                    }
+                    if (field === "c1") {
+                      return (
+                        <td key={field} className="text-sm text-gray-900">
+                             <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRRSPEdit(
+                                  price.irc as string,
+                                  Number(value)
+                                );
+                              }}
+                              className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
+                            >
+                              ${Number(value).toFixed(2)}
+                            </div>
                         </td>
                       );
                     }

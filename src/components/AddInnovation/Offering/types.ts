@@ -146,6 +146,7 @@ export interface DistributorPrice {
   irc: string;
   billing_price: number;
   rrsp: number;
+  c1: number;
 }
 
 export interface DistributorData {
