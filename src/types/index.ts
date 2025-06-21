@@ -179,6 +179,7 @@ export interface Product {
   gmm_market: Market;
   gmm_segment: Segment;
   status?: string;
+  sub_brand_id?: string;
 }
 
 export interface Country {
@@ -200,22 +201,22 @@ export interface Subcategory {
 
 export interface Filters {
   search?: string;
-  category_id?: string;
-  brand_id?: string;
-  sub_brand_id?: string;
-  distributor_id?: string;
-  region_id?: string;
-  market_id?: string;
-  division?: string;
+  category_id?: string | null | number;
+  brand_id?: string | null;
+  sub_brand_id?: string | null;
+  distributor_id?: string | null;
+  region_id?: string | null;
+  market_id?: string | null;
+  division?: string | null;
   brand_type?: string;
   is_innovation_product?: boolean;
 }
 
 export interface MasterProductFilters {
   search?: string;
-  house?: string;
-  brand_id?: string;
-  distributor_id?: string;
+  house?: string | null;
+  brand_id?: string | null;
+  distributor_id?: string | null;
 }
 
 export interface BillingListFilters {

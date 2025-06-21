@@ -20,33 +20,58 @@ import SearchIcon from "../Icons/SearchIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import { CustomSelect } from "./CustomSelect";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
+const distributorKeys = ["search", "region_id", "market_id"] as const;
+const productKeys = [
+  "brand_id",
+  "sub_brand_id",
+  "distributor_id",
+  "search",
+  "division",
+  "brand_type",
+] as const;
 const Filter = ({
   setFilters,
   isProductsPage = false,
+  filters
 }: {
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   isProductsPage?: boolean;
+  filters?: Filters;
 }) => {
   // const isDistributor = useUserStore((state) => state.user?.role === "admin");
   // Transform data for select components
-  const form = useForm({
-    initialValues: {
-      search: "",
-      region_id: "",
-      market_id: "",
-      brand_id: "",
-      sub_brand_id: "",
-      distributor_id: "",
-      division: "",
-      brand_type: "all",
-      is_innovation_product: false, 
-    },
+  const form =  useForm<Filters> ({
+    initialValues: !isProductsPage ? {
+      search: filters?.search || "",
+      region_id: filters?.region_id || "",
+      market_id: filters?.market_id || "",
+    } : {      search: filters?.search || "",
+      brand_id: filters?.brand_id || "",
+      sub_brand_id: filters?.sub_brand_id || "",
+      distributor_id: filters?.distributor_id || "",
+      division: filters?.division || "",
+      brand_type: filters?.brand_type || "all", // default to "all"
+      is_innovation_product: filters?.is_innovation_product ||   false, },
 
     onValuesChange: (values) => {
       setFilters(values);
     },
   });
+
+   // compute “any value?” based on those keys only
+   const hasAnyValue = useMemo(() => {
+     const keysToCheck = isProductsPage ? [...productKeys, ...(form.values.is_innovation_product === true ? ["is_innovation_product"] : [])] : distributorKeys;
+     return keysToCheck.some((key) => {
+       const v = form.values[key as keyof Filters];
+       if (typeof v === "string") return v.trim() !== "";
+       if (typeof v === "boolean") return v === true;
+       if (Array.isArray(v)) return v.length > 0;
+       // covers number | null | undefined | object
+       return v != null;
+     });
+   }, [form.values, isProductsPage]);
 
   const [
     { data: marketsData, error: marketsError },
@@ -122,7 +147,7 @@ const Filter = ({
   }
   function handleInnovationChange(value: boolean) {
     form.setFieldValue("is_innovation_product", value);
-    setFilters({ ...form.values, is_innovation_product: value });
+    setFilters({ ...form.values, is_innovation_product: value === true ? true : undefined });
   }
 
 
@@ -144,21 +169,40 @@ const Filter = ({
         <Button
           rightSection={<ExitIcon />}
           onClick={() => {
-            setFilters({
-              search: "",
-              region_id: "",
-              market_id: "",
-              brand_id: "",
-              sub_brand_id: "",
-              distributor_id: "",
-              division: "",
-              brand_type: "all",
-              is_innovation_product: false,
-            });
-            form.reset();
+            if(isProductsPage){
+              setFilters({
+                search: "",
+                brand_id: "",
+                sub_brand_id: "",
+                distributor_id: "",
+                division: "",
+                brand_type: "all",
+                is_innovation_product: false,
+              });
+              form.reset();
+              form.setFieldValue("search", "");
+              form.setFieldValue("brand_id", null);
+              form.setFieldValue("sub_brand_id", null);
+              form.setFieldValue("distributor_id", null);
+              form.setFieldValue("division", null);
+              form.setFieldValue("brand_type", "all");
+              form.setFieldValue("is_innovation_product", false);
+            }else{
+              setFilters({
+                search: "",
+                region_id: "",
+                market_id: "",
+              });
+              form.reset();
+              form.setFieldValue("search", "");
+              form.setFieldValue("market_id", null);
+              form.setFieldValue("region_id", null);
+            }
+       
+            
           }}
           variant="outline"
-          className="border-primary  border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+          className={twMerge("border-primary  border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300",!hasAnyValue && "hidden")}
         >
           Clear filters
         </Button>
@@ -176,10 +220,10 @@ const Filter = ({
           type="button"
           className={twMerge(
             "flex items-center gap-x-2 cursor-pointer group",
-            !form.getValues().search.length && "invisible"
+            !form?.getValues()?.search?.length && "invisible"
           )}
           onClick={() => {
-            form.reset();
+            form.setFieldValue("search", "");
           }}
         >
           <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
@@ -190,10 +234,10 @@ const Filter = ({
       </div>
       <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
       <div className={cn("grid grid-cols-1", gridColsClass, "gap-4 w-full")}>
-        {isProductsPage ? (
+        {isProductsPage  ? (
           <>
             <CustomSelect
-              value={form.values.brand_id}
+              value={form.values?.brand_id  ?? ""}
               options={brandOptions}
               onChange={(val) => form.setFieldValue("brand_id", val)}
               placeholder="Filter brands"
@@ -201,7 +245,7 @@ const Filter = ({
               noBorder
             />
             <CustomSelect
-              value={form.values.sub_brand_id}
+              value={form.values?.sub_brand_id ?? ""}
               options={brandPillarOptions}
               onChange={(val) => form.setFieldValue("sub_brand_id", val)}
               placeholder="Filter brand pillars"
@@ -209,7 +253,7 @@ const Filter = ({
               noBorder
             />
             <CustomSelect
-              value={form.values.distributor_id}
+              value={form.values?.distributor_id ?? ""}
               options={distributorOptions}
               onChange={(val) => form.setFieldValue("distributor_id", val)}
               placeholder="Filter distributors"
@@ -217,10 +261,10 @@ const Filter = ({
               noBorder
             />
           </>
-        ) : (
+        ) :   (
           <>
             <CustomSelect
-              value={form.values.region_id}
+              value={form.values?.region_id ?? ""}
               options={regionOptions}
               onChange={(val) => form.setFieldValue("region_id", val)}
               placeholder="Filter by region"
@@ -228,7 +272,7 @@ const Filter = ({
               noBorder
             />
             <CustomSelect
-              value={form.values.market_id}
+              value={form.values?.market_id ?? ""}
               options={marketOptions}
               onChange={(val) => form.setFieldValue("market_id", val)}
               placeholder="Filter by market"
@@ -236,9 +280,10 @@ const Filter = ({
               noBorder
             />
           </>
-        )}
+        ) 
+      }
       </div>
-      {isProductsPage && (
+      {isProductsPage && (filters && "brand_id" in filters) && (
         <Group gap={24} w="100%" className="mt-6">
           <div className="flex items-center gap-6 mt-4">
             <Checkbox

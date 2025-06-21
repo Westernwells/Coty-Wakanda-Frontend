@@ -1,7 +1,8 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
 import { getCountries } from "@/api/get-countries";
+import { getHouses } from "@/api/get-houses";
+import { getArticles } from "@/api/listManagement/articles/get-articles";
 import { getCategories } from "@/api/listManagement/coreCategories/get-categories";
 import { getMarkets } from "@/api/listManagement/markets/get-markets";
 import { getSegments } from "@/api/listManagement/segments/get-segments";
@@ -26,6 +27,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
@@ -130,7 +132,9 @@ const AddProductForm = forwardRef(function AddProductForm(
           brand_category: "",
         },
     validate: zodResolver(addProductSchema),
+   
   });
+
 
   const [
     { data: marketsData, isLoading: marketsLoading },
@@ -141,14 +145,17 @@ const AddProductForm = forwardRef(function AddProductForm(
     { data: brandsData, isLoading: brandsLoading },
     { data: countriesData, isLoading: countriesLoading },
     // { data: currenciesData },
-    { isLoading: brandPillarsLoading },
+    { data:brandPillarsData, isLoading: brandPillarsLoading },
     { data: productsListData, isLoading: productsLoading },
     { data: productDistributorsData, isLoading: productDistrubutorsLoading },
+    { data: housesData, error: housesError },
+    { data: articlesData, error: articlesError },
+
   ] = useQueries({
     queries: [
       {
         queryKey: ["markets"],
-        queryFn: () => getMarkets({ page_size: 999999, type: "core" }),
+        queryFn: () => getMarkets({ page_size: 9999, type: "core" }),
       },
       {
         queryKey: ["segments"],
@@ -208,6 +215,14 @@ const AddProductForm = forwardRef(function AddProductForm(
           ),
         enabled: !!form.getValues().brand_id && !!form.getValues().pref,
       },
+      {
+        queryKey: ["houses"],
+        queryFn: () => getHouses(),
+      },
+      {
+        queryKey: ["articles"],
+        queryFn: () => getArticles(),
+      },
     ],
   });
 
@@ -244,6 +259,7 @@ const AddProductForm = forwardRef(function AddProductForm(
       queryKey: ["product-distributor"],
       refetchType: "all",
     });
+    
   });
 
   form.watch("pref", () => {
@@ -272,6 +288,10 @@ const AddProductForm = forwardRef(function AddProductForm(
       form.setFieldValue("brand_type", value);
     }
   });
+
+
+
+  // …
 
   if (
     isEdit &&
@@ -334,9 +354,10 @@ const AddProductForm = forwardRef(function AddProductForm(
               },
               {
                 onSuccess: () => {
+       
                   queryClient.invalidateQueries({
                     queryKey: ["products"],
-                    refetchType: "all",
+                    // refetchType: "all",
                   });
                   navigate({ to: "/products" });
                 },
@@ -353,9 +374,11 @@ const AddProductForm = forwardRef(function AddProductForm(
                   discontinue_date: values.discontinue_date
                     ?.toISOString()
                     .split("T")[0],
-                  price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
+                  // price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
                   division: values.division,
+                  sub_brand_id: values.line,
+                  price_benchmark: null,
                 },
               },
               {
@@ -603,10 +626,21 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+            {/* <TextInput
               {...form.getInputProps("house")}
               label="House"
               classNames={textInputStyles}
+            /> */}
+             <Select
+              {...form.getInputProps("house")}
+              label="House"
+              data={
+                housesData?.data?.map((house) => ({
+                  value: house.toString(),
+                  label: house.toString(),
+                })) || []
+              }
+              classNames={selectStyles}
             />
           </Grid.Col>
           <Grid.Col
@@ -652,10 +686,22 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+            {/* <TextInput
               {...form.getInputProps("line")}
               label="Line"
               classNames={textInputStyles}
+            /> */}
+             <Select
+              {...form.getInputProps("line")}
+              data={
+                brandPillarsData?.data?.map((brand) => ({
+                  value: brand.id.toString(),
+                  label: brand.name,
+                })) || []
+              }
+              label="Line"
+              classNames={selectStyles}
+              disabled={!form.getValues()?.brand_id}
             />
           </Grid.Col>
           <Grid.Col
@@ -694,11 +740,23 @@ const AddProductForm = forwardRef(function AddProductForm(
               base: 12,
             }}
           >
-            <TextInput
+                     <Select
+              {...form.getInputProps("article_type")}
+              data={
+                articlesData?.data?.map((article) => ({
+                  value: article.toString(),
+                  label: article.toString(),
+                })) || []
+              }
+              label="Article Type"
+              classNames={selectStyles}
+              // disabled={!form.getValues().brand_id}
+            />
+            {/* <TextInput
               {...form.getInputProps("article_type")}
               label="Article type"
               classNames={textInputStyles}
-            />
+            /> */}
           </Grid.Col>
           {/* <Grid.Col
             span={{
@@ -844,7 +902,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="ICP_EUR"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           </Grid.Col>
@@ -859,7 +917,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="ICP_USD"
               classNames={textInputStyles}
               hideControls
-              allowDecimal={false}
+              allowDecimal={true}
               allowNegative={false}
             />
           </Grid.Col>

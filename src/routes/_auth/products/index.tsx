@@ -1,8 +1,11 @@
 import { getProducts } from "@/api/products/get-products";
+import BulkActionsDropdown from "@/components/HomePage/BulkActionsDropdown";
 import Filter from "@/components/HomePage/Filter";
 import ProductsTable from "@/components/HomePage/ProductsTable";
+import { useBulkProductCsvDownload } from "@/components/HomePage/useBulkProductCsvDownload";
 import PlusIcon from "@/components/Icons/PlusIcon";
 import Headline from "@/components/Shared/Headline";
+import { useLocalFilters } from "@/lib/hooks/useLocalFilters";
 import { useUserStore } from "@/stores/userStore";
 import { Filters } from "@/types";
 import { Button, Group, Loader } from "@mantine/core";
@@ -10,33 +13,34 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { CSVLink } from "react-csv";
-import { useBulkProductCsvDownload } from "@/components/HomePage/useBulkProductCsvDownload";
-import BulkActionsDropdown from "@/components/HomePage/BulkActionsDropdown";
 
 export const Route = createFileRoute("/_auth/products/")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const userData = useUserStore((state) => state.user);
-  const [isEdit, setIsEdit] = useState(false);
-  const [filter, setFilter] = useState<Filters>({
+    const storageKey = `filters:${window.location.pathname}`;
+
+  // define shape + defaults
+  const [filters, setFilters] = useLocalFilters<Filters>(storageKey,{
     search: "",
-    region_id: "",
-    market_id: "",
     brand_id: "",
     sub_brand_id: "",
     distributor_id: "",
     division: "",
-  });
+    brand_type: "",
+  })  
+  const userData = useUserStore((state) => state.user);
+  const [isEdit, setIsEdit] = useState(false);
+
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["products", filter], // ✅ Filters trigger refetch
+    queryKey: ["products", filters],
     queryFn: () =>
       getProducts({
         cursor: 1,
         page_size: 20,
-        filter,
+        filter: filters,
       }),
   });
 
@@ -49,9 +53,9 @@ function RouteComponent() {
   };
 
   // Bulk CSV download logic for main button
-  const mainCsv = useBulkProductCsvDownload(filter);
+  const mainCsv = useBulkProductCsvDownload(filters);
   // Bulk CSV download logic for dropdown
-  const bulkCsv = useBulkProductCsvDownload(filter);
+  const bulkCsv = useBulkProductCsvDownload(filters);
 
   if (error || (!isLoading && !data)) {
     return (
@@ -144,7 +148,7 @@ function RouteComponent() {
           )}
         </Group>
 
-        <Filter isProductsPage setFilters={setFilter} />
+        <Filter isProductsPage setFilters={setFilters} filters={filters} />
 
         {isLoading || !data ? (
           <div className="mt-5 p-6 bg-white rounded-lg flex justify-center">
@@ -154,7 +158,7 @@ function RouteComponent() {
           <ProductsTable
             initialData={data.data}
             initialMeta={data.meta}
-            filters={filter}
+            filters={filters}
             isEdit={isEdit}
             setIsEdit={setIsEdit}
           />
