@@ -155,7 +155,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     queries: [
       {
         queryKey: ["markets"],
-        queryFn: () => getMarkets({ page_size: 999999, type: "core" }),
+        queryFn: () => getMarkets({ page_size: 9999, type: "core" }),
       },
       {
         queryKey: ["segments"],
@@ -374,10 +374,11 @@ const AddProductForm = forwardRef(function AddProductForm(
                   discontinue_date: values.discontinue_date
                     ?.toISOString()
                     .split("T")[0],
-                  price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
+                  // price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
                   division: values.division,
-                  sub_brand_id: 123
+                  sub_brand_id: values.line,
+                  price_benchmark: null,
                 },
               },
               {
