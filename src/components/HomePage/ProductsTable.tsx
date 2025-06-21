@@ -524,7 +524,8 @@ function ProductsTable({
                 onClick={() => {
                   const changed = getChangedProducts();
                   bulkUpdate(
-                    { data: { products: changed.products } },
+                    { data: { products: changed.products?.map((product) => ({ ...product, sub_brand_id: product.sub_brand_id ? String(product.sub_brand_id) : undefined })) } },
+
                     {
                       onSuccess: () => {
                         setIsEdit(false);

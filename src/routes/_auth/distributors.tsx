@@ -1,37 +1,39 @@
-import { Button, Group, Loader } from "@mantine/core";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { getDistributors } from "@/api/distributors/get-distributors";
 import DistributorsTable from "@/components/Distributors/DistributorsTable";
 import Filter from "@/components/HomePage/Filter";
-import Headline from "@/components/Shared/Headline";
 import ImportIcon from "@/components/Icons/ImportIcon";
 import PlusIcon from "@/components/Icons/PlusIcon";
-import { getDistributors } from "@/api/distributors/get-distributors";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import Headline from "@/components/Shared/Headline";
+import { useLocalFilters } from "@/lib/hooks/useLocalFilters";
 import { Filters } from "@/types";
+import { Button, Group, Loader } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/distributors")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const [filter, setFilter] = useState<Filters>({
-    search: "",
-    region_id: "",
-    market_id: "",
-    brand_id: "",
-    sub_brand_id: "",
-    distributor_id: "",
-    brand_type: "",
-  });
+  const storageKey = `filters:${window.location.pathname}`;
+    const [filters, setFilters] = useLocalFilters<Filters>(storageKey,{
+      search: "",
+      region_id: "",
+      market_id: "",
+      brand_id: "",
+      sub_brand_id: "",
+      distributor_id: "",
+      brand_type: "",
+    });
+
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["distributors", filter], // ✅ Filters trigger refetch
+    queryKey: ["distributors", filters], 
     queryFn: () =>
       getDistributors({
         cursor: 1,
         page_size: 20,
-        filter,
+        filter: filters,
       }),
   });
 
@@ -82,7 +84,7 @@ function RouteComponent() {
           </Button>
         </Group>
 
-        <Filter setFilters={setFilter} />
+        <Filter setFilters={setFilters} filters={filters} />
 
         {isLoading || !data ? (
           <div className="mt-5 p-6 bg-white rounded-lg flex justify-center">
@@ -92,7 +94,7 @@ function RouteComponent() {
           <DistributorsTable
             initialData={data.data}
             initialMeta={data.meta}
-            filters={filter}
+            filters={filters}
           />
         )}
       </section>

@@ -16,27 +16,35 @@ import SearchIcon from "../Icons/SearchIcon";
 import ExitIcon from "../Icons/ExitIcon";
 import { getHouses } from "@/api/get-houses";
 import { CustomSelect } from "../HomePage/CustomSelect";
+import { useMemo } from "react";
 
 const MasterProductFilters = ({
   setFilters,
+  filters
 }: {
   setFilters: React.Dispatch<React.SetStateAction<MasterProductFilters>>;
+  filters: MasterProductFilters;
 }) => {
-  // const isDistributor = useUserStore((state) => state.user?.role === "admin");
-  // Transform data for select components
-  const form = useForm({
+
+  const form = useForm<MasterProductFilters>({
     initialValues: {
-      search: "",
-      brand_id: "",
-      distributor_id: "",
-      house: "",
+      search: filters.search || "",
+      brand_id: filters.brand_id || "",
+      distributor_id: filters.distributor_id || "",
+      house: filters.house || "",
     },
 
     onValuesChange: (values) => {
       setFilters(values);
     },
   });
-
+  const hasAnyValue = useMemo(() => {
+    return Object.values(form.values).some((v) => {
+      if (typeof v === "string") return v !== "";
+      if (Array.isArray(v)) return v?.length > 0;
+      return v != null; 
+    });
+  }, [form.values]);
   const [
     { data: brandsData, error: brandsError },
     { data: distributorsData, error: distributorsError },
@@ -101,9 +109,13 @@ const MasterProductFilters = ({
               house: "",
             });
             form.reset();
+            form.setFieldValue("search", "");
+            form.setFieldValue("brand_id", null);
+            form.setFieldValue("distributor_id", null);
+            form.setFieldValue("house", null);
           }}
           variant="outline"
-          className="border-primary  border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300"
+          className={twMerge("border-primary  border-s-e rounded-ee-xl text-primary text-sm font-medium px-[14px] hover:bg-opacity-90 transition-all ease-in-out duration-300",!hasAnyValue && "hidden")}
         >
           Clear filters
         </Button>
@@ -121,15 +133,16 @@ const MasterProductFilters = ({
           type="button"
           className={twMerge(
             "flex items-center gap-x-2 cursor-pointer group",
-            !form.getValues().search.length && "invisible"
+            !form?.getValues()?.search?.length && "invisible"
           )}
           onClick={() => {
-            form.reset();
+            // form.reset();
+            form.setFieldValue("search", "");
           }}
         >
           <CloseButton className="group-hover:text-[#00EBB2] transition-all ease-in-out duration-300" />
           <span className="hidden sm:inline text-nowrap text-primary font-medium group-hover:text-[#00EBB2] transition-all ease-in-out duration-300">
-            Clear all
+            Clear search
           </span>
         </button>
       </div>
@@ -147,7 +160,7 @@ const MasterProductFilters = ({
           /> */}
 
           <CustomSelect
-            value={form.values.brand_id}
+            value={form?.values?.brand_id ?? ""}
             options={brandOptions}
             onChange={(val) => form.setFieldValue("brand_id", val)}
             placeholder="Filter by brand"
@@ -156,7 +169,7 @@ const MasterProductFilters = ({
           />
 
           <CustomSelect
-            value={form.values.house}
+            value={form?.values?.house ?? ""}
             options={houseOptions}
             onChange={(val) => form.setFieldValue("house", val)}
             placeholder="Filter by house"
@@ -165,7 +178,7 @@ const MasterProductFilters = ({
           />
 
           <CustomSelect
-            value={form.values.distributor_id}
+            value={form?.values?.distributor_id ?? ""}
             options={distributorOptions}
             onChange={(val) => form.setFieldValue("distributor_id", val)}
             placeholder="Filter by distributor"

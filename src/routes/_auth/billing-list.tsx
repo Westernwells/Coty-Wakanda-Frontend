@@ -2,6 +2,7 @@ import { useMasterData } from "@/api/products/master-data";
 import MasterDataViewModal from "@/components/Distributors/MasterDataViewModal";
 import MasterProductFilters from "@/components/Distributors/MasterProductsFilter";
 import Headline from "@/components/Shared/Headline";
+import { useLocalFilters } from "@/lib/hooks/useLocalFilters";
 import type { MasterDistributor, MasterProduct, MasterProductFilters as MasterProductFiltersType } from "@/types";
 import { mergeByIdConcatData } from "@/utils/masterData";
 import { Button, Loader } from "@mantine/core";
@@ -14,7 +15,9 @@ export const Route = createFileRoute("/_auth/billing-list")({
 });
 
 function RouteComponent() {
-  const [filter, setFilter] = useState<MasterProductFiltersType>({
+  const storageKey = `filters:${window.location.pathname}`;
+
+  const [filters, setFilters] = useLocalFilters<MasterProductFiltersType>(storageKey, {
     search: "",
     house: "",
     brand_id: "",
@@ -23,7 +26,7 @@ function RouteComponent() {
   const {data, fetchNextPage, hasNextPage, error, isFetchingNextPage, isLoading} = useMasterData({
     cursor: 1,
     page_size: 20,
-    filter,
+    filter: filters,
   });
 
   const datafFromMd = data?.pages?.flatMap((page) => page?.data) || [];
@@ -59,7 +62,7 @@ function RouteComponent() {
         </Button>
       </section>
       <section className="mt-3 sm:mt-8">
-        <MasterProductFilters setFilters={setFilter} />
+        <MasterProductFilters setFilters={setFilters} filters={filters} />
 
         {isLoading || !data ? (
           <div className="mt-5 p-6 bg-white rounded-lg flex justify-center">
@@ -74,7 +77,7 @@ function RouteComponent() {
             isLoading={isLoading}
             error={error}
             isFetchingNextPage={isFetchingNextPage}
-            filters={filter}
+            filters={filters}
             tableHeader={[
               "Regional Billing Prices USD",
               "Regional Billing Prices EUR",
