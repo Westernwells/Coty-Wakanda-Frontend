@@ -1,6 +1,9 @@
+"use client";
+
 import { FormSection } from "../Shared/Form/Section";
 import { Table } from "@mantine/core";
 import DateSwitch from "./DateSwitch";
+import { useState } from "react";
 
 interface SubmitTableProps {
   title?: string;

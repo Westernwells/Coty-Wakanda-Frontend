@@ -5,7 +5,7 @@ import RefreshIcon from "../Icons/RefreshIcon";
 const SubmitModal = ({
   opened,
   close,
-  title = "Submit",
+  title = "Submit Forcast",
   onSubmit,
 }: {
   opened: boolean;
@@ -38,15 +38,15 @@ const SubmitModal = ({
                 <Button
                   variant="outline"
                   className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
-                  leftSection={<ExitIcon />}
+                  // leftSection={<ExitIcon />}
                   onClick={() => {
                     close();
                   }}
                 >
-                  Cancel
+                  No, go back
                 </Button>
                 <Button
-                  leftSection={<RefreshIcon />}
+                  // leftSection={<RefreshIcon />}
                   type="submit"
                   variant="outline"
                   className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
@@ -58,7 +58,7 @@ const SubmitModal = ({
                     close();
                   }}
                 >
-                  Submit
+                  Yes, Submit
                 </Button>
               </Group>
             </div>
