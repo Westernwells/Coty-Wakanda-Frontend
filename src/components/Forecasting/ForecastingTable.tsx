@@ -13,41 +13,40 @@ import { useField } from "@mantine/form";
 import { useState } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { Table as ReusableTable } from "../Shared/Table";
+import { SetFieldValue } from "node_modules/@mantine/form/lib/types";
+import { ColumnDef } from "@tanstack/react-table";
 
 function ForecastingTable({
-  filters,
   fetchMore,
   hasMore,
-  setFilters,
   forecasts,
   activeTab,
   setActiveTab,
   isLoading,
-  isFetchingNextPage
+  isFetchingNextPage,
+  setFieldValue,
+  filters
 
 }: {
-  filters: ForecastFilters;
   fetchMore: () => void;
   hasMore: boolean;
-  setFilters: (filters: ForecastFilters) => void;
   forecasts: Forecast[];
-  activeTab: string | null;
-  setActiveTab: (tab: string) => void;
+  activeTab: "base" | "innovation";
+  setActiveTab: (tab: "base" | "innovation") => void;
   isLoading?: boolean;
   isFetchingNextPage?: boolean;
+  setFieldValue: SetFieldValue<ForecastFilters>;
+  filters: ForecastFilters;
 }) {
   const { Panel } = Tabs;
-  const [sortBy, setSortBy] = useState<string | null>(""); // ✅ Sorting state
-  const forecastTypeField = useField<string>({ initialValue: "" });
+  const [sortBy, setSortBy] = useState<string | null>(filters?.sort ?? ""); // ✅ Sorting state
+  const forecastTypeField = useField<string>({ initialValue: filters.type || "all" });
 
   const handleForecastTypeChange = (
-    value: "all" | "saleable" | "nonSaleable"
+    value: "all" | "saleable" | "non-saleable"
   ) => {
     forecastTypeField.setValue(value);
-    setFilters({
-      ...filters,
-      type: value === "all" ? "" : value, // Update filters based on selection
-    });
+  setFieldValue("type", value); // Update the form state
   };
 
   const sortOptions = [
@@ -58,7 +57,7 @@ function ForecastingTable({
 
   const columnHeaders = forecasts && forecasts[0]?.items
     ? Object.keys(forecasts[0].items)
-    : ["Red"];
+    : [];
     
   const columns = useForecastTableColumns(columnHeaders);
 
@@ -71,7 +70,11 @@ function ForecastingTable({
           className="text-primary hidden sm:block w-full"
           defaultValue="innovation"
           value={activeTab}
-          onChange={setActiveTab}
+          onChange={(value)=>{
+            if (!value) return;
+            const val = value as "base" | "innovation";
+            setActiveTab(val);
+          }}
         >
           <div className="grid grid-cols-3 gap-4 mb-4">
             <div className="col-start-1 col-end-3 w-full">
@@ -95,10 +98,8 @@ function ForecastingTable({
                   value={sortBy}
                   onChange={(v) => {
                     setSortBy(v);
-                    setFilters({
-                      ...filters,
-                      sort: v === "all" ? "" : v as string, // Update filters based on selection
-                    });
+                    setFieldValue("sort", v === "all" ? "" : v as string); // ✅ Update filters based on selection
+                    
                   }} // ✅ Trigger sorting
                   clearable
                   className="grow w-full"
@@ -118,7 +119,7 @@ function ForecastingTable({
                   <Checkbox
                     label="All"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "all"}
+                    checked={forecastTypeField.getInputProps().value === "all" || forecastTypeField.getInputProps().value === ""}
                     onChange={() => handleForecastTypeChange("all")}
                   />
                   <Checkbox
@@ -130,14 +131,14 @@ function ForecastingTable({
                   <Checkbox
                     label="Non-Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "nonSaleable"}
-                    onChange={() => handleForecastTypeChange("nonSaleable")}
+                    checked={forecastTypeField.getInputProps().value === "non-saleable"}
+                    onChange={() => handleForecastTypeChange("non-saleable")}
                   />
                 </Group>
               </Group>
               <ReusableTable<Forecast>
                 data={forecasts ?? []}
-                columns={columns}
+                columns={columns as unknown as ColumnDef<Forecast, any>[]}
                 rowKey={(row) => row.product.id}
                 fetchMore={fetchMore}
                 hasMore={hasMore}
@@ -157,7 +158,7 @@ function ForecastingTable({
                   <Checkbox
                     label="All"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "all"}
+                    checked={forecastTypeField.getInputProps().value === "all" || forecastTypeField.getInputProps().value === ""}
                     onChange={() => handleForecastTypeChange("all")}
                   />
                   <Checkbox
@@ -169,14 +170,14 @@ function ForecastingTable({
                   <Checkbox
                     label="Non-Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "nonSaleable"}
-                    onChange={() => handleForecastTypeChange("nonSaleable")}
+                    checked={forecastTypeField.getInputProps().value === "non-saleable"}
+                    onChange={() => handleForecastTypeChange("non-saleable")}
                   />
                 </Group>
               </Group>
               <ReusableTable<Forecast>
                 data={forecasts ?? []}
-                columns={columns}
+                columns={columns as unknown as ColumnDef<Forecast, any>[]}
                 rowKey={(row) => row.product.id}
                 fetchMore={fetchMore}
                 hasMore={hasMore}

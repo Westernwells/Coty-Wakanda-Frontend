@@ -243,9 +243,9 @@ export interface ForecastFilters {
   search?: string;
   start_date?: string;
   end_date?: string;
-  brand_id?: number | string;
-  sub_brand_id?: string | number;
-  distributor_id?: string | number;
+  brand_id?: number | string | null;
+  sub_brand_id?: string | number | null;
+  distributor_id?: string | number | null;
   launch_id?: string | number;
   sort?: string;
   type?: string;

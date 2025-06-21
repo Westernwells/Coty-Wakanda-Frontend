@@ -9,10 +9,10 @@ import type { ForecastFilters } from "@/types";
 interface ForecastChartProps {
   filters?: ForecastFilters;
   tab: "base" | "innovation";
+  forecastPeriods?: (periods: { start: string; end: string }) => { start: string; end: string };
 }
 
-const ForecastChart: React.FC<ForecastChartProps> = ({ filters, tab = "base" }) => {
-  // Base forecast query (only when tab==='base')
+const ForecastChart: React.FC<ForecastChartProps> = ({ filters, tab = "base", forecastPeriods }) => {
   const {
     data: baseResponse,
     isLoading: baseLoading,
@@ -65,7 +65,18 @@ if (isLoading) {
     );
   }
   
+  if(!isLoading && (unitData.length === 0 || valueData.length === 0)) {
+      forecastPeriods?.({ start: "", end: "" });
+      return null;
+  }
+if(unitData && unitData.length> 0){
+  forecastPeriods?.({
+    start: unitData[0].date,  
+    end: unitData[unitData.length - 1].date,
+  });
+}
 
+  
   return (
     <div className="flex flex-wrap justify-between gap-4 grow mb-5 font-semibold text-primary">
       <div className="grow p-5">

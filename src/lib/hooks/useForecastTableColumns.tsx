@@ -38,7 +38,7 @@ export const useForecastTableColumns = (columnHeaders: string[]): ColumnDef<Fore
     ...columnHeaders.map((month) => ({
       header: month,
       id: month,
-      accessorFn: (row) => row.items?.[month]?.value ?? 0,
+      accessorFn: (row: any) => row.items?.[month]?.value ?? 0,
       meta: {
         cellClassName: "text-center text-xs",
         headerClassName: "text-xs text-gray-600 text-center",

@@ -6,6 +6,7 @@ import ForecastingTable from "@/components/Forecasting/ForecastingTable";
 import Headline from "@/components/Shared/Headline";
 import { ForecastFilters } from "@/types";
 import { Divider, Tabs } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
@@ -25,32 +26,49 @@ export type Forecast = {
   distributor?: { name: string };
   items: Record<string, { value: number; is_closed: boolean }>;
 };
+export type FieldValue = {
+  search: string;
+  start_date: string;
+  end_date: string;
+  launch_id: string;
+  brand_id: string | null;
+  sub_brand_id: string | null;
+  distributor_id: string | null;
+  brand_type: string;
+}
 function RouteComponent() {
-  const [activeTableTab, setActiveTableTab] = useState<string>("base");
+  const form = useForm<ForecastFilters>({
+    initialValues: useMemo(() => {
+      return ({
+      search: "",
+      start_date: "",
+      end_date: "",
+      launch_id: "",
+      brand_id:  "",
+      sub_brand_id: "",
+      distributor_id: "",
+      brand_type: "",
+      sort: "",
+      type: "",
+    })}, []),
 
-  const [filter, setFilter] = useState<ForecastFilters>({
-    search: "",
-    start_date: "",
-    end_date: "",
-    launch_id: "",
-    brand_id: "",
-    sub_brand_id: "",
-    distributor_id: "",
-    brand_type: "",
   });
+  const [activeTableTab, setActiveTableTab] = useState<"base" | "innovation">("base");
+const filter = form.values as ForecastFilters;
+  
   const { data: distributorData, isLoading: isDistributorsLoading, error: isDistributorError } = useQuery({
     queryKey: ["distributors"],
     queryFn: () => getDistributors({ page_size: 100 }),
   });
-  const [activeTab, setActiveTab] = useState<string | null>("Total");
-  const activeDistributor = useMemo(()=>{
-     
-    const distn = distributorData?.data.find(
-    (distributor) => distributor.id == filter?.distributor_id
-  )
-  return distn?.name || "Total";
 
-}, [distributorData, filter?.distributor_id]);
+  const activeDistributor = useMemo(() => {
+
+    const distn = distributorData?.data.find(
+      (distributor) => distributor.id == filter?.distributor_id
+    )
+    return distn?.name || "ALL";
+
+  }, [distributorData, filter?.distributor_id]);
 
   const {
     data: baseData,
@@ -60,17 +78,17 @@ function RouteComponent() {
     isLoading: isBaseLoading,
   } = useBaseForecasts({
     searchQuery: filter.search,
-    brand_id: filter.brand_id,
-    sub_brand_id: filter.sub_brand_id,
-    distributor_id: filter.distributor_id,
+    brand_id: filter.brand_id ?? undefined,
+    sub_brand_id: filter.sub_brand_id ?? undefined,
+    distributor_id: filter.distributor_id ?? undefined,
     brand_type: filter.brand_type,
     launch_id: filter.launch_id,
     start_date: filter.start_date,
     end_date: filter.end_date,
-    pageSize: 2,
+    pageSize: 20,
     type: filter.type,
     sort: filter.sort,
-  },{
+  }, {
     enabled: activeTableTab === "base",
   });
   const {
@@ -81,21 +99,20 @@ function RouteComponent() {
     isLoading: isInnovationLoading,
   } = useInnovationForecasts({
     searchQuery: filter.search,
-    brand_id: filter.brand_id,
-    sub_brand_id: filter.sub_brand_id,
-    distributor_id: filter.distributor_id,
+    brand_id: filter.brand_id ?? undefined,
+    sub_brand_id: filter.sub_brand_id ?? undefined,
+    distributor_id: filter.distributor_id ?? undefined,
     brand_type: filter.brand_type,
     launch_id: filter.launch_id,
     start_date: filter.start_date,
     end_date: filter.end_date,
-    pageSize: 2,
+    pageSize: 20,
     type: filter.type,
     sort: filter.sort,
-  },{
-   
+  }, {
+
     enabled: activeTableTab === "innovation",
   });
-
 
 
   if (isDistributorError && (!isDistributorsLoading)) {
@@ -110,17 +127,19 @@ function RouteComponent() {
   }
 
   const handleTabChange = (value: string | null) => {
-    setActiveTab(value);
+    if (!value) return;
+    if (value === "ALL") {
+      form.setFieldValue("distributor_id", null);
+    } else {
+   
     const selectedDistributor = distributorData?.data.find(
       (distributor) => distributor.name === value
     );
     if (selectedDistributor) {
-      setFilter((prev) => ({
-        ...prev,
-        distributor_id: selectedDistributor.id.toString(),
-      }));
+      form.setFieldValue("distributor_id", selectedDistributor.id.toString());
     }
   };
+}
 
   return (
     <div className="w-full">
@@ -134,48 +153,48 @@ function RouteComponent() {
         >
           <Tabs.List
             className="flex-nowrap overflow-x-auto whitespace-nowrap flex gap-4 custom-scrollbar"
-            style={{ scrollbarWidth: "auto" }} 
+            style={{ scrollbarWidth: "auto" }}
           >
-            {distributorData?.data.map((distributor) => (
-              <Tabs.Tab
-                key={distributor.id}
-                value={distributor.name}
-                className="shrink-0"
-              >
-                {distributor.name}
-              </Tabs.Tab>
-            ))}
+            {distributorData?.data && (
+              [{ id: "ALL", name: "ALL" }, ...distributorData.data].map((distributor) => (
+                <Tabs.Tab
+                  key={distributor.id}
+                  value={distributor.name}
+                  className="shrink-0"
+                >
+                  {distributor.name}
+                </Tabs.Tab>
+              ))
+            )}
           </Tabs.List>
         </Tabs>
 
-        <ForecastingFilters setFilters={setFilter} filters={filter} />
+        <ForecastingFilters  form={form} />
         <Divider className="my-4 sm:my-6 border-primary border-opacity-50" />
         <ForecastingGraphs filters={filter} tab={activeTableTab} />
-          <>
+        <>
           <ForecastingTable
             filters={filter}
             fetchMore={activeTableTab === "innovation" ? fetchInnovationNextPage : fetchNextPage}
-            hasMore={activeTableTab === "innovation" ? hasInnovationNextPage || false: hasNextPage || false}
-            setFilters={setFilter}
+            hasMore={activeTableTab === "innovation" ? hasInnovationNextPage || false : hasNextPage || false}
+            setFieldValue={form.setFieldValue}
             forecasts={activeTableTab === "innovation" ? innovationData?.pages.flatMap((page) => page.data.forecast) || [] : baseData?.pages.flatMap((page) => page.data.forecast) || []}
-            activeTab={activeTableTab} setActiveTab={(tab)=>{
-              setFilter({ search: "",
-                start_date: "",
-                end_date: "",
-                launch_id: "",
-                brand_id: "",
-                sub_brand_id: "",
-                distributor_id: "",
-                brand_type: "",
-                type: "",
-                sort: "",
-               });
-              setActiveTableTab(tab);
-            }} 
-            isLoading={activeTableTab === "innovation"  ? isInnovationLoading : isBaseLoading}
+            activeTab={activeTableTab} setActiveTab={(tab) => {
+              if (!tab) return;
+              setActiveTableTab((prev) => {
+                if( prev === tab) return prev;
+                form.reset();
+                form.setFieldValue("distributor_id", null);
+                form.setFieldValue("brand_type","")
+                form.setFieldValue("brand_id", null);
+                form.setFieldValue("sub_brand_id", null);
+                return tab;
+              });
+            }}
+            isLoading={activeTableTab === "innovation" ? isInnovationLoading : isBaseLoading}
             isFetchingNextPage={activeTableTab === "innovation" ? isFetchingInnovationNextPage : isFetchingNextPage}
-            />
-            </>
+          />
+        </>
       </section>
     </div>
   );

@@ -82,17 +82,24 @@ export interface ForecastMeta {
   }
   
   export interface ForecastApiResponse {
-    message: string;
-    data: {
-      forecast: ForecastItem[];
-    };
-    meta: ForecastMeta;
+    PageParams: number[];
+    pages:{
+
+      message: string;
+      data: {
+        forecast: ForecastItem[];
+      };
+      meta: ForecastMeta;
+    }[]
   }
 
   export interface InnovationForecastApiResponse {
+  pageParams: number[];
+  pages:{
     message: string;
     data: { forecast: ForecastItem[] };
     meta: ForecastMeta;
+  }[]
   }
 export const getBaseForecasts = async (
     params?: GetForecastsParams
@@ -118,7 +125,7 @@ export const getBaseForecasts = async (
       params: formattedParams,
     });
   
-    return response.data;
+    return response.data 
   };
 
   export const getInnovationForecasts = async (
@@ -159,7 +166,7 @@ export const getBaseForecasts = async (
       "/innovation-forecasts/data",
       { params: formatted }
     );
-    return res.data;
+    return res.data 
   };
 
 type BaseForecastParams = {
@@ -223,10 +230,10 @@ export const useBaseForecasts = (
             ...(filters.type && { type: filters.type }),
             ...(filters.sort && { sort: filters.sort }),
           },
-        });
+        }) as Promise<ForecastApiResponse>;
       },
-      getNextPageParam: (lastPage) => {
-        return lastPage.meta.has_next ? lastPage.meta.cursor : undefined;
+      getNextPageParam: (lastPage: any) => {
+        return lastPage?.meta?.has_next ? lastPage.meta.cursor : undefined;
       },
       initialPageParam: 1,
       ...options,
@@ -265,9 +272,9 @@ export const useBaseForecasts = (
             ...(filters.type && { type: filters.type }),
             ...(filters.sort && { sort: filters.sort }),
           },
-        });
+        }) as Promise<InnovationForecastApiResponse>;
       },
-      getNextPageParam: (lastPage) =>
+      getNextPageParam: (lastPage: any) =>
         lastPage?.meta?.has_next ? lastPage?.meta?.cursor + 1 : undefined,
       initialPageParam: 1,
       ...options,
