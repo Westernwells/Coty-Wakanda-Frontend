@@ -10,7 +10,7 @@ import { useForecastTableColumns } from "@/lib/hooks/useForecastTableColumns";
 import { Forecast } from "@/routes/_auth/forecasting";
 import { ForecastFilters } from "@/types";
 import { useField } from "@mantine/form";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { Table as ReusableTable } from "../Shared/Table";
 import { SetFieldValue } from "node_modules/@mantine/form/lib/types";
@@ -39,11 +39,11 @@ function ForecastingTable({
   filters: ForecastFilters;
 }) {
   const { Panel } = Tabs;
-  const [sortBy, setSortBy] = useState<string | null>(filters?.sort ?? ""); // ✅ Sorting state
-  const forecastTypeField = useField<string>({ initialValue: filters.type || "all" });
+  const [sort, setSortBy] = useState<string | null>(filters?.sort ?? ""); // ✅ Sorting state
+  const forecastTypeField = useField<string>({ initialValue:useMemo(() => filters?.type || "all", [filters?.type]) });
 
   const handleForecastTypeChange = (
-    value: "all" | "saleable" | "non-saleable"
+    value: "all" | "sealable" | "non-sealable"
   ) => {
     forecastTypeField.setValue(value);
   setFieldValue("type", value); // Update the form state
@@ -95,7 +95,7 @@ function ForecastingTable({
                   aria-label="Sort by"
                   placeholder="Sort by"
                   data={sortOptions}
-                  value={sortBy}
+                  value={filters?.sort ?? null}
                   onChange={(v) => {
                     setSortBy(v);
                     setFieldValue("sort", v === "all" ? "" : v as string); // ✅ Update filters based on selection
@@ -119,20 +119,20 @@ function ForecastingTable({
                   <Checkbox
                     label="All"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "all" || forecastTypeField.getInputProps().value === ""}
+                    checked={filters?.type === "all" || filters?.type === ""}
                     onChange={() => handleForecastTypeChange("all")}
                   />
                   <Checkbox
                     label="Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "saleable"}
-                    onChange={() => handleForecastTypeChange("saleable")}
+                    checked={filters?.type === "sealable"}
+                    onChange={() => handleForecastTypeChange("sealable")}
                   />
                   <Checkbox
                     label="Non-Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "non-saleable"}
-                    onChange={() => handleForecastTypeChange("non-saleable")}
+                    checked={filters?.type === "non-sealable"}
+                    onChange={() => handleForecastTypeChange("non-sealable")}
                   />
                 </Group>
               </Group>
@@ -158,20 +158,20 @@ function ForecastingTable({
                   <Checkbox
                     label="All"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "all" || forecastTypeField.getInputProps().value === ""}
+                    checked={filters?.type === "all" || filters?.type === ""}
                     onChange={() => handleForecastTypeChange("all")}
                   />
                   <Checkbox
                     label="Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "saleable"}
-                    onChange={() => handleForecastTypeChange("saleable")}
+                    checked={filters?.type === "sealable"}
+                    onChange={() => handleForecastTypeChange("sealable")}
                   />
                   <Checkbox
                     label="Non-Saleable"
                     size="xs"
-                    checked={forecastTypeField.getInputProps().value === "non-saleable"}
-                    onChange={() => handleForecastTypeChange("non-saleable")}
+                    checked={filters?.type === "non-sealable"}
+                    onChange={() => handleForecastTypeChange("non-sealable")}
                   />
                 </Group>
               </Group>

@@ -104,6 +104,8 @@ const ForecastingFilters = ({
             form.setFieldValue("brand_type","")
             form.setFieldValue("brand_id", null);
             form.setFieldValue("sub_brand_id", null);
+            form.setFieldValue("type", "");
+            form.setFieldValue("sort", null);
           }}
         >
           <CloseButton />
