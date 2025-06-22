@@ -54,7 +54,8 @@ export const ForecastTable = ({
                 <Table.Td>{element.product.sku}</Table.Td>
                 <Table.Td>{element.cost}</Table.Td>
                 <Table.Td>{element.monthly_total}</Table.Td>
-                {Object.keys(element.items).map((item, idx) => (
+                {Object.keys(element.items).map((item, idx) => {
+                  return (
                   <Table.Td key={`${index}-${idx}`}>
                     <NumberInput
                       {...form.getInputProps(
@@ -80,7 +81,8 @@ export const ForecastTable = ({
                       disabled={element.items[item].is_closed}
                     />
                   </Table.Td>
-                ))}
+                )
+              })}
                 <Table.Td className="last:rounded-ee-xl !pr-2">
                   {element.sub_total}
                 </Table.Td>

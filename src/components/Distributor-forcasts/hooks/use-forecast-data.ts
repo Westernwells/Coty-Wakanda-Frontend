@@ -31,7 +31,7 @@ export const useForecastData = (id: string) => {
     forecastResponse,
     offerings,
     offeringProducts,
-    isLoading: isForecastLoading || isOfferingsLoading || isProductsLoading,
+    isLoading: isForecastLoading || isOfferingsLoading || isProductsLoading || isInnovationLoading,
     error: forecastError || isProductsError
   };
 };

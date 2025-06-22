@@ -32,7 +32,7 @@ function RouteComponent() {
     queryFn: () => getInnovation(innovationId),
   });
 
-  const { forecastResponse,offeringProducts } = useForecastData(innovationId);
+  const { forecastResponse,offeringProducts,offerings } = useForecastData(innovationId);
   const role = useUserStore((state) => state.user)?.role;
   const isDistributor = role === "distributor";
 
@@ -145,6 +145,7 @@ function RouteComponent() {
       {isDistributor ? (
         <InnovationsForecastTableDist
           ref={forecastTableRef}
+          offerings={offerings}
           offeringProducts={offeringProducts}
           data={forecastResponse?.data as ForecastDetailsData}
         />
