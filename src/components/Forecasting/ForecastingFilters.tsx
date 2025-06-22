@@ -1,7 +1,6 @@
 import { getDistributors } from "@/api/distributors/get-distributors";
 import { getBrandPillars } from "@/api/get-brandPillars";
 import { getBrands } from "@/api/get-brands";
-import { ForecastFilters } from "@/types";
 import {
   Button,
   CloseButton,
@@ -15,6 +14,7 @@ import {
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { CSVLink } from "react-csv";
 import { twMerge } from "tailwind-merge";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
@@ -23,26 +23,10 @@ import FileDownloadIcon from "../Icons/FileDownloadIcon";
 import SearchIcon from "../Icons/SearchIcon";
 
 const ForecastingFilters = ({
-  setFilters,
+  form
 }: {
-  setFilters: React.Dispatch<React.SetStateAction<ForecastFilters>>;
+  form: ReturnType<typeof useForm>;
 }) => {
-  const form = useForm({
-    initialValues: {
-      search: "",
-      start_date: "",
-      end_date: "",
-      launch_id: "",
-      brand_id: "",
-      sub_brand_id: "",
-      distributor_id: "",
-      brand_type: "",
-    },
-
-    onValuesChange: (values) => {
-      setFilters(values);
-    },
-  });
 
   const [
     { data: brandsData, error: brandsError },
@@ -76,9 +60,15 @@ const ForecastingFilters = ({
       label: dist.name,
     })) || [];
 
-  // Update parent filters when any field changes
-
   const hasError = brandsError || brandPillarsError || distributorsError;
+
+  const hasAnyValue = useMemo(() => {
+    return Object.values(form.values).some((v) => {
+      if (typeof v === "string") return v !== "";
+      if (Array.isArray(v)) return v.length > 0;
+      return v != null;
+    });
+  }, [form?.values]);
 
   if (hasError) {
     return (
@@ -106,9 +96,15 @@ const ForecastingFilters = ({
         <div
           className={twMerge(
             "flex items-center gap-x-2 cursor-pointer",
-            !form.getValues().search.length && "hidden"
+            !hasAnyValue && "hidden"
           )}
-          onClick={() => form.reset()}
+          onClick={() => {
+            form.reset();
+            form.setFieldValue("distributor_id", null);
+            form.setFieldValue("brand_type","")
+            form.setFieldValue("brand_id", null);
+            form.setFieldValue("sub_brand_id", null);
+          }}
         >
           <CloseButton />
           <span className="hidden sm:inline text-nowrap text-primary font-medium">

@@ -55,7 +55,7 @@ const Navbar = () => {
           { link: "/products", label: "Products", icon: ShoppingCart },
 
           { link: "/orders", label: "Orders", icon: BoxIcon },
-          { link: "/reporting", label: "Reporting", icon: FileDocumentIcon },
+          // { link: "/reporting", label: "Reporting", icon: FileDocumentIcon },
         ]
       : [
           { link: "/", label: "Dashboard", icon: DashboardIcon },

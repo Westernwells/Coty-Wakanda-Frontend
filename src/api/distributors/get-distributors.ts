@@ -19,9 +19,9 @@ export const getDistributors = async (
     const formattedParams = {
         cursor: params?.cursor || 1,
         page_size: params?.page_size || 20,
-        search: params?.filter?.search || "",
-        "filter[region_id]": params?.filter?.region_id || "",
-        "filter[market_id]": params?.filter?.market_id || "",
+        ...(params?.filter?.search && { search: params?.filter.search }),
+        ...(params?.filter?.market_id && { "filter[market_id]": params.filter.market_id }),
+        ...(params?.filter?.region_id && { "filter[region_id]": params.filter.region_id }),
     };
     const response = await axios.get("/distributors", {
         params: formattedParams,
