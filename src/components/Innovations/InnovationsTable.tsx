@@ -12,6 +12,7 @@ import { Innovation } from "@/types";
 import { filterByStatus } from "@/utils/filter-by-status";
 import EyeIcon from "../Icons/EyeIcon";
 import { sortOptions } from "@/constants/sort-options";
+import { useUserStore } from "@/stores/userStore";
 
 function InnovationsTable() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function InnovationsTable() {
   const [sortBy, setSortBy] = useState<string | null>("");
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState<string | null>("upcoming");
+  const userData = useUserStore((state) => state.user);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["innovations"],
@@ -32,7 +34,7 @@ function InnovationsTable() {
   });
 
   const handleForecastClick = (row: Innovation) => {
-    const isActive = row.status === "active";
+    const isActive = userData?.role === "admin" ? true : row.status === "active";
     
     if (isActive) {
         navigate({
@@ -150,7 +152,7 @@ function InnovationsTable() {
                       className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
                       onClick={() => handleForecastClick(element)}
                     >
-                      {element.status === "active" ? <PencilIcon /> : <EyeIcon />}
+                      {userData?.role === "admin" ? <EyeIcon /> : element.status === "active" ? <PencilIcon /> : <EyeIcon />}
                     </Table.Td>
                   </Table.Tr>
                 ))}
