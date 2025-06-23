@@ -44,6 +44,7 @@ function RouteComponent() {
 
   // Convert transformed forecasts to the format expected by OfferingTable
   const forecastsByOffering = useMemo(() => {
+
     return transformedForecasts.reduce((acc: Record<string, any[]>, forecast) => {
       acc[forecast.offeringNumber] = forecast.data.map((item: any, index: number) => ({
         product: {
@@ -79,13 +80,11 @@ function RouteComponent() {
     }));
   }, [forecastsByOffering]);
 
-  const form = useMemo(() => {
-    return useForm<{ forecast: ForecastSubmitInput[] }>({
-      initialValues: {
-        forecast: initialForecastValues
-      }
-    });
-  }, [initialForecastValues]);
+  const form = useForm<{ forecast: ForecastSubmitInput[] }>({
+    initialValues: {
+      forecast: initialForecastValues
+    }
+  });
 
   if (isLoading) return <div>Loading...</div>
 
@@ -157,6 +156,7 @@ function RouteComponent() {
           data={forecastResponse?.data as ForecastDetailsData}
           form={form}
           offerings={offerings}
+          status={true}
           forecastsByOffering={forecastsByOffering}
         />
       ))}

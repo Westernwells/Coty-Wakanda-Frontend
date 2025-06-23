@@ -13,11 +13,10 @@ import { useUserStore } from "@/stores/userStore";
 import InnovationsForecastTableDist from "@/components/Distributor-forcasts/InnovationsForecastTableDist";
 import { useForecastData } from "@/components/Distributor-forcasts/hooks/use-forecast-data";
 import { ForecastDetailsData, ForecastSubmitInput } from "@/types";
-import { useSubmitForecast } from "@/api/forecasts/submit-forcast";
-import { useUpdateInnovation } from "@/api/innovations/update-innovation";
 import { toast } from "react-toastify";
 import { useUpdateInnovationForecasts } from "@/api/innovations/update-innovation-forecasts";
 import { updateInnovationForecasts } from "@/api/innovations/update-innovation-forecasts";
+import InnovationsForecastTableDistFinished from "@/components/Distributor-forcasts/InnovationForecastTableDistFinished";
 
 export const Route = createFileRoute("/_auth/edit-innovation-forecasts/$forecastId")({
   component: RouteComponent,
@@ -154,10 +153,11 @@ function RouteComponent() {
           offerings={offerings}
           />
       ) : (
-        <EditInnovationForm
-          ref={formRef}
-          innovationData={data.data}
-          innovationId={forecastId}
+        <InnovationsForecastTableDistFinished
+        ref={forecastTableRef}
+        data={forecastResponse?.data as ForecastDetailsData}
+        offeringProducts={offeringProducts}
+        offerings={offerings}
         />
       )}
     </div>

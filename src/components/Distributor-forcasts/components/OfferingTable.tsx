@@ -3,6 +3,7 @@ import { ForecastData, ForecastDetailsData, ForecastSubmitInput } from "@/types"
 import { ForecastTable } from "./ForecastTable";
 import { UseFormReturnType } from "@mantine/form";
 import { Offering } from "../../AddInnovation/Offering/types";
+import DateSwitch from "../DateSwitch";
 
 interface OfferingTableProps {
   offeringId: string;
@@ -11,6 +12,7 @@ interface OfferingTableProps {
   form: UseFormReturnType<{ forecast: ForecastSubmitInput[] }>;
   forecastsByOffering: Record<string, ForecastData[]>;
   offerings: Offering[];
+  status: boolean;
 }
 
 export const OfferingTable = ({ 
@@ -19,7 +21,8 @@ export const OfferingTable = ({
   data, 
   form, 
   forecastsByOffering,
-  offerings 
+  offerings,
+  status
 }: OfferingTableProps) => {
   const offering = offerings.find(o => o.id === Number(offeringId));
   const offeringNumber = offering?.number || offeringId;
@@ -27,9 +30,12 @@ export const OfferingTable = ({
   return (
     <Card className="mb-6 mt-10" shadow="sm" padding="lg">
       <Stack gap="md">
-        <Text size="lg" fw={600} c="primary">
-          Offering {offeringNumber}
-        </Text>
+        <div className="flex justify-between items-center">
+          <Text size="lg" fw={600} c="primary">
+            Offering {offeringNumber}
+          </Text>
+          <DateSwitch />
+        </div>
         
         {offeringForecasts.length === 0 ? (
           <div className="text-center py-8 ">
@@ -43,7 +49,8 @@ export const OfferingTable = ({
             data={data}
             form={form}
             forecastsByOffering={forecastsByOffering}
-            offeringId={offeringId}
+            offeringId={offeringId} 
+            status={status}
           />
         )}
       </Stack>

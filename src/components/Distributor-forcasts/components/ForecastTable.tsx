@@ -1,4 +1,4 @@
-import { NumberInput, Table } from "@mantine/core";
+import { NumberInput, Table, Text } from "@mantine/core";
 import { ForecastData, ForecastDetailsData, Product, ForecastSubmitInput } from "@/types";
 import clsx from "clsx";
 import { UseFormReturnType } from "@mantine/form";
@@ -9,6 +9,7 @@ interface ForecastTableProps {
   form: UseFormReturnType<{ forecast: ForecastSubmitInput[] }>;
   forecastsByOffering: Record<string, ForecastData[]>;
   offeringId: string;
+        status: boolean;
 }
 
 export const ForecastTable = ({ 
@@ -16,7 +17,8 @@ export const ForecastTable = ({
   data, 
   form, 
   forecastsByOffering, 
-  offeringId 
+  offeringId,
+  status
 }: ForecastTableProps) => (
   <div className="relative border border-primary rounded-xl border-t-0">
     <Table.ScrollContainer minWidth={768}>
@@ -57,7 +59,7 @@ export const ForecastTable = ({
                 {Object.keys(element.items).map((item, idx) => {
                   return (
                   <Table.Td key={`${index}-${idx}`}>
-                    <NumberInput
+                   {status ? <NumberInput
                       {...form.getInputProps(
                         `forecast.${globalIndex}.items.${idx}.value`
                       )}
@@ -79,7 +81,7 @@ export const ForecastTable = ({
                       allowNegative={false}
                       required
                       disabled={element.items[item].is_closed}
-                    />
+                    /> : <>{element.items[item].value}</>}
                   </Table.Td>
                 )
               })}

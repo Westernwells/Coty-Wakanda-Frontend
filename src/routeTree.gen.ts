@@ -8,518 +8,700 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as LayoutRouteImport } from './routes/_layout'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as AuthIndexRouteImport } from './routes/_auth/index'
+import { Route as AuthStockOnHandRouteImport } from './routes/_auth/stock-on-hand'
+import { Route as AuthSalesRouteImport } from './routes/_auth/sales'
+import { Route as AuthProfileRouteImport } from './routes/_auth/profile'
+import { Route as AuthProductListRouteImport } from './routes/_auth/product-list'
+import { Route as AuthOrdersRouteImport } from './routes/_auth/orders'
+import { Route as AuthNotificationsRouteImport } from './routes/_auth/notifications'
+import { Route as AuthMasterProductsRouteImport } from './routes/_auth/master-products'
+import { Route as AuthInnovationsRouteImport } from './routes/_auth/innovations'
+import { Route as AuthInnovationListRouteImport } from './routes/_auth/innovation-list'
+import { Route as AuthInnovationForecastsRouteImport } from './routes/_auth/innovation-forecasts'
+import { Route as AuthForecastingRouteImport } from './routes/_auth/forecasting'
+import { Route as AuthDistributorsRouteImport } from './routes/_auth/distributors'
+import { Route as AuthBillingListRouteImport } from './routes/_auth/billing-list'
+import { Route as AuthBaseForecastsRouteImport } from './routes/_auth/base-forecasts'
+import { Route as AuthAddProductRouteImport } from './routes/_auth/add-product'
+import { Route as AuthAddOfferingRouteImport } from './routes/_auth/add-offering'
+import { Route as AuthAddInnovationRouteImport } from './routes/_auth/add-innovation'
+import { Route as AuthAddDistributorRouteImport } from './routes/_auth/add-distributor'
+import { Route as AuthSettingsIndexRouteImport } from './routes/_auth/settings/index'
+import { Route as AuthProductsIndexRouteImport } from './routes/_auth/products/index'
+import { Route as AuthSettingsAddPricingListsRouteImport } from './routes/_auth/settings/add-pricing-lists'
+import { Route as AuthSettingsAddBillingListRouteImport } from './routes/_auth/settings/add-billing-list'
+import { Route as AuthProductsProductIdRouteImport } from './routes/_auth/products/$productId'
+import { Route as AuthInnovationForcastsSubmitForecastIdRouteImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
+import { Route as AuthForecastDetailsProductIdRouteImport } from './routes/_auth/forecast-details/$productId'
+import { Route as AuthEditProductProductIdRouteImport } from './routes/_auth/edit-product/$productId'
+import { Route as AuthEditInnovationInnovationIdRouteImport } from './routes/_auth/edit-innovation/$innovationId'
+import { Route as AuthEditInnovationForecastsForecastIdRouteImport } from './routes/_auth/edit-innovation-forecasts/$forecastId'
+import { Route as AuthEditDistributorsDistributorIdRouteImport } from './routes/_auth/edit-distributors/$distributorId'
+import { Route as AuthSettingsEditPricingListPricingListIdRouteImport } from './routes/_auth/settings/edit-pricing-list/$pricingListId'
+import { Route as AuthSettingsEditBillingListIdRouteImport } from './routes/_auth/settings/edit-billing-list/$id'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as LoginImport } from './routes/login'
-import { Route as LayoutImport } from './routes/_layout'
-import { Route as AuthImport } from './routes/_auth'
-import { Route as AuthIndexImport } from './routes/_auth/index'
-import { Route as AuthStockOnHandImport } from './routes/_auth/stock-on-hand'
-import { Route as AuthSalesImport } from './routes/_auth/sales'
-import { Route as AuthProfileImport } from './routes/_auth/profile'
-import { Route as AuthProductListImport } from './routes/_auth/product-list'
-import { Route as AuthOrdersImport } from './routes/_auth/orders'
-import { Route as AuthNotificationsImport } from './routes/_auth/notifications'
-import { Route as AuthMasterProductsImport } from './routes/_auth/master-products'
-import { Route as AuthInnovationsImport } from './routes/_auth/innovations'
-import { Route as AuthInnovationListImport } from './routes/_auth/innovation-list'
-import { Route as AuthInnovationForecastsImport } from './routes/_auth/innovation-forecasts'
-import { Route as AuthForecastingImport } from './routes/_auth/forecasting'
-import { Route as AuthDistributorsImport } from './routes/_auth/distributors'
-import { Route as AuthBillingListImport } from './routes/_auth/billing-list'
-import { Route as AuthBaseForecastsImport } from './routes/_auth/base-forecasts'
-import { Route as AuthAddProductImport } from './routes/_auth/add-product'
-import { Route as AuthAddOfferingImport } from './routes/_auth/add-offering'
-import { Route as AuthAddInnovationImport } from './routes/_auth/add-innovation'
-import { Route as AuthAddDistributorImport } from './routes/_auth/add-distributor'
-import { Route as AuthSettingsIndexImport } from './routes/_auth/settings/index'
-import { Route as AuthProductsIndexImport } from './routes/_auth/products/index'
-import { Route as AuthSettingsAddPricingListsImport } from './routes/_auth/settings/add-pricing-lists'
-import { Route as AuthSettingsAddBillingListImport } from './routes/_auth/settings/add-billing-list'
-import { Route as AuthProductsProductIdImport } from './routes/_auth/products/$productId'
-import { Route as AuthInnovationForcastsSubmitForecastIdImport } from './routes/_auth/innovation-forcasts-submit/$forecastId'
-import { Route as AuthForecastDetailsProductIdImport } from './routes/_auth/forecast-details/$productId'
-import { Route as AuthEditProductProductIdImport } from './routes/_auth/edit-product/$productId'
-import { Route as AuthEditInnovationInnovationIdImport } from './routes/_auth/edit-innovation/$innovationId'
-import { Route as AuthEditInnovationForecastsForecastIdImport } from './routes/_auth/edit-innovation-forecasts/$forecastId'
-import { Route as AuthEditDistributorsDistributorIdImport } from './routes/_auth/edit-distributors/$distributorId'
-import { Route as AuthSettingsEditPricingListPricingListIdImport } from './routes/_auth/settings/edit-pricing-list/$pricingListId'
-import { Route as AuthSettingsEditBillingListIdImport } from './routes/_auth/settings/edit-billing-list/$id'
-
-// Create/Update Routes
-
-const LoginRoute = LoginImport.update({
+const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const LayoutRoute = LayoutImport.update({
+const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AuthRoute = AuthImport.update({
+const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AuthIndexRoute = AuthIndexImport.update({
+const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthStockOnHandRoute = AuthStockOnHandImport.update({
+const AuthStockOnHandRoute = AuthStockOnHandRouteImport.update({
   id: '/stock-on-hand',
   path: '/stock-on-hand',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthSalesRoute = AuthSalesImport.update({
+const AuthSalesRoute = AuthSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthProfileRoute = AuthProfileImport.update({
+const AuthProfileRoute = AuthProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthProductListRoute = AuthProductListImport.update({
+const AuthProductListRoute = AuthProductListRouteImport.update({
   id: '/product-list',
   path: '/product-list',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthOrdersRoute = AuthOrdersImport.update({
+const AuthOrdersRoute = AuthOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthNotificationsRoute = AuthNotificationsImport.update({
+const AuthNotificationsRoute = AuthNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthMasterProductsRoute = AuthMasterProductsImport.update({
+const AuthMasterProductsRoute = AuthMasterProductsRouteImport.update({
   id: '/master-products',
   path: '/master-products',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthInnovationsRoute = AuthInnovationsImport.update({
+const AuthInnovationsRoute = AuthInnovationsRouteImport.update({
   id: '/innovations',
   path: '/innovations',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthInnovationListRoute = AuthInnovationListImport.update({
+const AuthInnovationListRoute = AuthInnovationListRouteImport.update({
   id: '/innovation-list',
   path: '/innovation-list',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthInnovationForecastsRoute = AuthInnovationForecastsImport.update({
+const AuthInnovationForecastsRoute = AuthInnovationForecastsRouteImport.update({
   id: '/innovation-forecasts',
   path: '/innovation-forecasts',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthForecastingRoute = AuthForecastingImport.update({
+const AuthForecastingRoute = AuthForecastingRouteImport.update({
   id: '/forecasting',
   path: '/forecasting',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthDistributorsRoute = AuthDistributorsImport.update({
+const AuthDistributorsRoute = AuthDistributorsRouteImport.update({
   id: '/distributors',
   path: '/distributors',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthBillingListRoute = AuthBillingListImport.update({
+const AuthBillingListRoute = AuthBillingListRouteImport.update({
   id: '/billing-list',
   path: '/billing-list',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthBaseForecastsRoute = AuthBaseForecastsImport.update({
+const AuthBaseForecastsRoute = AuthBaseForecastsRouteImport.update({
   id: '/base-forecasts',
   path: '/base-forecasts',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthAddProductRoute = AuthAddProductImport.update({
+const AuthAddProductRoute = AuthAddProductRouteImport.update({
   id: '/add-product',
   path: '/add-product',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthAddOfferingRoute = AuthAddOfferingImport.update({
+const AuthAddOfferingRoute = AuthAddOfferingRouteImport.update({
   id: '/add-offering',
   path: '/add-offering',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthAddInnovationRoute = AuthAddInnovationImport.update({
+const AuthAddInnovationRoute = AuthAddInnovationRouteImport.update({
   id: '/add-innovation',
   path: '/add-innovation',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthAddDistributorRoute = AuthAddDistributorImport.update({
+const AuthAddDistributorRoute = AuthAddDistributorRouteImport.update({
   id: '/add-distributor',
   path: '/add-distributor',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthSettingsIndexRoute = AuthSettingsIndexImport.update({
+const AuthSettingsIndexRoute = AuthSettingsIndexRouteImport.update({
   id: '/settings/',
   path: '/settings/',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthProductsIndexRoute = AuthProductsIndexImport.update({
+const AuthProductsIndexRoute = AuthProductsIndexRouteImport.update({
   id: '/products/',
   path: '/products/',
   getParentRoute: () => AuthRoute,
 } as any)
-
 const AuthSettingsAddPricingListsRoute =
-  AuthSettingsAddPricingListsImport.update({
+  AuthSettingsAddPricingListsRouteImport.update({
     id: '/settings/add-pricing-lists',
     path: '/settings/add-pricing-lists',
     getParentRoute: () => AuthRoute,
   } as any)
-
-const AuthSettingsAddBillingListRoute = AuthSettingsAddBillingListImport.update(
-  {
+const AuthSettingsAddBillingListRoute =
+  AuthSettingsAddBillingListRouteImport.update({
     id: '/settings/add-billing-list',
     path: '/settings/add-billing-list',
     getParentRoute: () => AuthRoute,
-  } as any,
-)
-
-const AuthProductsProductIdRoute = AuthProductsProductIdImport.update({
+  } as any)
+const AuthProductsProductIdRoute = AuthProductsProductIdRouteImport.update({
   id: '/products/$productId',
   path: '/products/$productId',
   getParentRoute: () => AuthRoute,
 } as any)
-
 const AuthInnovationForcastsSubmitForecastIdRoute =
-  AuthInnovationForcastsSubmitForecastIdImport.update({
+  AuthInnovationForcastsSubmitForecastIdRouteImport.update({
     id: '/innovation-forcasts-submit/$forecastId',
     path: '/innovation-forcasts-submit/$forecastId',
     getParentRoute: () => AuthRoute,
   } as any)
-
 const AuthForecastDetailsProductIdRoute =
-  AuthForecastDetailsProductIdImport.update({
+  AuthForecastDetailsProductIdRouteImport.update({
     id: '/forecast-details/$productId',
     path: '/forecast-details/$productId',
     getParentRoute: () => AuthRoute,
   } as any)
-
-const AuthEditProductProductIdRoute = AuthEditProductProductIdImport.update({
-  id: '/edit-product/$productId',
-  path: '/edit-product/$productId',
-  getParentRoute: () => AuthRoute,
-} as any)
-
+const AuthEditProductProductIdRoute =
+  AuthEditProductProductIdRouteImport.update({
+    id: '/edit-product/$productId',
+    path: '/edit-product/$productId',
+    getParentRoute: () => AuthRoute,
+  } as any)
 const AuthEditInnovationInnovationIdRoute =
-  AuthEditInnovationInnovationIdImport.update({
+  AuthEditInnovationInnovationIdRouteImport.update({
     id: '/edit-innovation/$innovationId',
     path: '/edit-innovation/$innovationId',
     getParentRoute: () => AuthRoute,
   } as any)
-
 const AuthEditInnovationForecastsForecastIdRoute =
-  AuthEditInnovationForecastsForecastIdImport.update({
+  AuthEditInnovationForecastsForecastIdRouteImport.update({
     id: '/edit-innovation-forecasts/$forecastId',
     path: '/edit-innovation-forecasts/$forecastId',
     getParentRoute: () => AuthRoute,
   } as any)
-
 const AuthEditDistributorsDistributorIdRoute =
-  AuthEditDistributorsDistributorIdImport.update({
+  AuthEditDistributorsDistributorIdRouteImport.update({
     id: '/edit-distributors/$distributorId',
     path: '/edit-distributors/$distributorId',
     getParentRoute: () => AuthRoute,
   } as any)
-
 const AuthSettingsEditPricingListPricingListIdRoute =
-  AuthSettingsEditPricingListPricingListIdImport.update({
+  AuthSettingsEditPricingListPricingListIdRouteImport.update({
     id: '/settings/edit-pricing-list/$pricingListId',
     path: '/settings/edit-pricing-list/$pricingListId',
     getParentRoute: () => AuthRoute,
   } as any)
-
 const AuthSettingsEditBillingListIdRoute =
-  AuthSettingsEditBillingListIdImport.update({
+  AuthSettingsEditBillingListIdRouteImport.update({
     id: '/settings/edit-billing-list/$id',
     path: '/settings/edit-billing-list/$id',
     getParentRoute: () => AuthRoute,
   } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/login': typeof LoginRoute
+  '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-innovation': typeof AuthAddInnovationRoute
+  '/add-offering': typeof AuthAddOfferingRoute
+  '/add-product': typeof AuthAddProductRoute
+  '/base-forecasts': typeof AuthBaseForecastsRoute
+  '/billing-list': typeof AuthBillingListRoute
+  '/distributors': typeof AuthDistributorsRoute
+  '/forecasting': typeof AuthForecastingRoute
+  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/innovation-list': typeof AuthInnovationListRoute
+  '/innovations': typeof AuthInnovationsRoute
+  '/master-products': typeof AuthMasterProductsRoute
+  '/notifications': typeof AuthNotificationsRoute
+  '/orders': typeof AuthOrdersRoute
+  '/product-list': typeof AuthProductListRoute
+  '/profile': typeof AuthProfileRoute
+  '/sales': typeof AuthSalesRoute
+  '/stock-on-hand': typeof AuthStockOnHandRoute
+  '/': typeof AuthIndexRoute
+  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
+  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
+  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
+  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/products/$productId': typeof AuthProductsProductIdRoute
+  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
+  '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
+  '/products': typeof AuthProductsIndexRoute
+  '/settings': typeof AuthSettingsIndexRoute
+  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
+  '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
+}
+export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
+  '/add-distributor': typeof AuthAddDistributorRoute
+  '/add-innovation': typeof AuthAddInnovationRoute
+  '/add-offering': typeof AuthAddOfferingRoute
+  '/add-product': typeof AuthAddProductRoute
+  '/base-forecasts': typeof AuthBaseForecastsRoute
+  '/billing-list': typeof AuthBillingListRoute
+  '/distributors': typeof AuthDistributorsRoute
+  '/forecasting': typeof AuthForecastingRoute
+  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/innovation-list': typeof AuthInnovationListRoute
+  '/innovations': typeof AuthInnovationsRoute
+  '/master-products': typeof AuthMasterProductsRoute
+  '/notifications': typeof AuthNotificationsRoute
+  '/orders': typeof AuthOrdersRoute
+  '/product-list': typeof AuthProductListRoute
+  '/profile': typeof AuthProfileRoute
+  '/sales': typeof AuthSalesRoute
+  '/stock-on-hand': typeof AuthStockOnHandRoute
+  '/': typeof AuthIndexRoute
+  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
+  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
+  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
+  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/products/$productId': typeof AuthProductsProductIdRoute
+  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
+  '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
+  '/products': typeof AuthProductsIndexRoute
+  '/settings': typeof AuthSettingsIndexRoute
+  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
+  '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/_auth': typeof AuthRouteWithChildren
+  '/_layout': typeof LayoutRoute
+  '/login': typeof LoginRoute
+  '/_auth/add-distributor': typeof AuthAddDistributorRoute
+  '/_auth/add-innovation': typeof AuthAddInnovationRoute
+  '/_auth/add-offering': typeof AuthAddOfferingRoute
+  '/_auth/add-product': typeof AuthAddProductRoute
+  '/_auth/base-forecasts': typeof AuthBaseForecastsRoute
+  '/_auth/billing-list': typeof AuthBillingListRoute
+  '/_auth/distributors': typeof AuthDistributorsRoute
+  '/_auth/forecasting': typeof AuthForecastingRoute
+  '/_auth/innovation-forecasts': typeof AuthInnovationForecastsRoute
+  '/_auth/innovation-list': typeof AuthInnovationListRoute
+  '/_auth/innovations': typeof AuthInnovationsRoute
+  '/_auth/master-products': typeof AuthMasterProductsRoute
+  '/_auth/notifications': typeof AuthNotificationsRoute
+  '/_auth/orders': typeof AuthOrdersRoute
+  '/_auth/product-list': typeof AuthProductListRoute
+  '/_auth/profile': typeof AuthProfileRoute
+  '/_auth/sales': typeof AuthSalesRoute
+  '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
+  '/_auth/': typeof AuthIndexRoute
+  '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
+  '/_auth/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
+  '/_auth/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
+  '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
+  '/_auth/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
+  '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
+  '/_auth/products/$productId': typeof AuthProductsProductIdRoute
+  '/_auth/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
+  '/_auth/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
+  '/_auth/products/': typeof AuthProductsIndexRoute
+  '/_auth/settings/': typeof AuthSettingsIndexRoute
+  '/_auth/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
+  '/_auth/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/login'
+    | '/add-distributor'
+    | '/add-innovation'
+    | '/add-offering'
+    | '/add-product'
+    | '/base-forecasts'
+    | '/billing-list'
+    | '/distributors'
+    | '/forecasting'
+    | '/innovation-forecasts'
+    | '/innovation-list'
+    | '/innovations'
+    | '/master-products'
+    | '/notifications'
+    | '/orders'
+    | '/product-list'
+    | '/profile'
+    | '/sales'
+    | '/stock-on-hand'
+    | '/'
+    | '/edit-distributors/$distributorId'
+    | '/edit-innovation-forecasts/$forecastId'
+    | '/edit-innovation/$innovationId'
+    | '/edit-product/$productId'
+    | '/forecast-details/$productId'
+    | '/innovation-forcasts-submit/$forecastId'
+    | '/products/$productId'
+    | '/settings/add-billing-list'
+    | '/settings/add-pricing-lists'
+    | '/products'
+    | '/settings'
+    | '/settings/edit-billing-list/$id'
+    | '/settings/edit-pricing-list/$pricingListId'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/login'
+    | '/add-distributor'
+    | '/add-innovation'
+    | '/add-offering'
+    | '/add-product'
+    | '/base-forecasts'
+    | '/billing-list'
+    | '/distributors'
+    | '/forecasting'
+    | '/innovation-forecasts'
+    | '/innovation-list'
+    | '/innovations'
+    | '/master-products'
+    | '/notifications'
+    | '/orders'
+    | '/product-list'
+    | '/profile'
+    | '/sales'
+    | '/stock-on-hand'
+    | '/'
+    | '/edit-distributors/$distributorId'
+    | '/edit-innovation-forecasts/$forecastId'
+    | '/edit-innovation/$innovationId'
+    | '/edit-product/$productId'
+    | '/forecast-details/$productId'
+    | '/innovation-forcasts-submit/$forecastId'
+    | '/products/$productId'
+    | '/settings/add-billing-list'
+    | '/settings/add-pricing-lists'
+    | '/products'
+    | '/settings'
+    | '/settings/edit-billing-list/$id'
+    | '/settings/edit-pricing-list/$pricingListId'
+  id:
+    | '__root__'
+    | '/_auth'
+    | '/_layout'
+    | '/login'
+    | '/_auth/add-distributor'
+    | '/_auth/add-innovation'
+    | '/_auth/add-offering'
+    | '/_auth/add-product'
+    | '/_auth/base-forecasts'
+    | '/_auth/billing-list'
+    | '/_auth/distributors'
+    | '/_auth/forecasting'
+    | '/_auth/innovation-forecasts'
+    | '/_auth/innovation-list'
+    | '/_auth/innovations'
+    | '/_auth/master-products'
+    | '/_auth/notifications'
+    | '/_auth/orders'
+    | '/_auth/product-list'
+    | '/_auth/profile'
+    | '/_auth/sales'
+    | '/_auth/stock-on-hand'
+    | '/_auth/'
+    | '/_auth/edit-distributors/$distributorId'
+    | '/_auth/edit-innovation-forecasts/$forecastId'
+    | '/_auth/edit-innovation/$innovationId'
+    | '/_auth/edit-product/$productId'
+    | '/_auth/forecast-details/$productId'
+    | '/_auth/innovation-forcasts-submit/$forecastId'
+    | '/_auth/products/$productId'
+    | '/_auth/settings/add-billing-list'
+    | '/_auth/settings/add-pricing-lists'
+    | '/_auth/products/'
+    | '/_auth/settings/'
+    | '/_auth/settings/edit-billing-list/$id'
+    | '/_auth/settings/edit-pricing-list/$pricingListId'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  AuthRoute: typeof AuthRouteWithChildren
+  LayoutRoute: typeof LayoutRoute
+  LoginRoute: typeof LoginRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthImport
-      parentRoute: typeof rootRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_layout': {
       id: '/_layout'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof LayoutImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof LayoutRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginImport
-      parentRoute: typeof rootRoute
-    }
-    '/_auth/add-distributor': {
-      id: '/_auth/add-distributor'
-      path: '/add-distributor'
-      fullPath: '/add-distributor'
-      preLoaderRoute: typeof AuthAddDistributorImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/add-innovation': {
-      id: '/_auth/add-innovation'
-      path: '/add-innovation'
-      fullPath: '/add-innovation'
-      preLoaderRoute: typeof AuthAddInnovationImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/add-offering': {
-      id: '/_auth/add-offering'
-      path: '/add-offering'
-      fullPath: '/add-offering'
-      preLoaderRoute: typeof AuthAddOfferingImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/add-product': {
-      id: '/_auth/add-product'
-      path: '/add-product'
-      fullPath: '/add-product'
-      preLoaderRoute: typeof AuthAddProductImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/base-forecasts': {
-      id: '/_auth/base-forecasts'
-      path: '/base-forecasts'
-      fullPath: '/base-forecasts'
-      preLoaderRoute: typeof AuthBaseForecastsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/billing-list': {
-      id: '/_auth/billing-list'
-      path: '/billing-list'
-      fullPath: '/billing-list'
-      preLoaderRoute: typeof AuthBillingListImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/distributors': {
-      id: '/_auth/distributors'
-      path: '/distributors'
-      fullPath: '/distributors'
-      preLoaderRoute: typeof AuthDistributorsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/forecasting': {
-      id: '/_auth/forecasting'
-      path: '/forecasting'
-      fullPath: '/forecasting'
-      preLoaderRoute: typeof AuthForecastingImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/innovation-forecasts': {
-      id: '/_auth/innovation-forecasts'
-      path: '/innovation-forecasts'
-      fullPath: '/innovation-forecasts'
-      preLoaderRoute: typeof AuthInnovationForecastsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/innovation-list': {
-      id: '/_auth/innovation-list'
-      path: '/innovation-list'
-      fullPath: '/innovation-list'
-      preLoaderRoute: typeof AuthInnovationListImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/innovations': {
-      id: '/_auth/innovations'
-      path: '/innovations'
-      fullPath: '/innovations'
-      preLoaderRoute: typeof AuthInnovationsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/master-products': {
-      id: '/_auth/master-products'
-      path: '/master-products'
-      fullPath: '/master-products'
-      preLoaderRoute: typeof AuthMasterProductsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/notifications': {
-      id: '/_auth/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof AuthNotificationsImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/orders': {
-      id: '/_auth/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof AuthOrdersImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/product-list': {
-      id: '/_auth/product-list'
-      path: '/product-list'
-      fullPath: '/product-list'
-      preLoaderRoute: typeof AuthProductListImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/profile': {
-      id: '/_auth/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthProfileImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/sales': {
-      id: '/_auth/sales'
-      path: '/sales'
-      fullPath: '/sales'
-      preLoaderRoute: typeof AuthSalesImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/stock-on-hand': {
-      id: '/_auth/stock-on-hand'
-      path: '/stock-on-hand'
-      fullPath: '/stock-on-hand'
-      preLoaderRoute: typeof AuthStockOnHandImport
-      parentRoute: typeof AuthImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_auth/': {
       id: '/_auth/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthIndexImport
-      parentRoute: typeof AuthImport
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/edit-distributors/$distributorId': {
-      id: '/_auth/edit-distributors/$distributorId'
-      path: '/edit-distributors/$distributorId'
-      fullPath: '/edit-distributors/$distributorId'
-      preLoaderRoute: typeof AuthEditDistributorsDistributorIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/stock-on-hand': {
+      id: '/_auth/stock-on-hand'
+      path: '/stock-on-hand'
+      fullPath: '/stock-on-hand'
+      preLoaderRoute: typeof AuthStockOnHandRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/edit-innovation-forecasts/$forecastId': {
-      id: '/_auth/edit-innovation-forecasts/$forecastId'
-      path: '/edit-innovation-forecasts/$forecastId'
-      fullPath: '/edit-innovation-forecasts/$forecastId'
-      preLoaderRoute: typeof AuthEditInnovationForecastsForecastIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/sales': {
+      id: '/_auth/sales'
+      path: '/sales'
+      fullPath: '/sales'
+      preLoaderRoute: typeof AuthSalesRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/edit-innovation/$innovationId': {
-      id: '/_auth/edit-innovation/$innovationId'
-      path: '/edit-innovation/$innovationId'
-      fullPath: '/edit-innovation/$innovationId'
-      preLoaderRoute: typeof AuthEditInnovationInnovationIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/profile': {
+      id: '/_auth/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthProfileRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/edit-product/$productId': {
-      id: '/_auth/edit-product/$productId'
-      path: '/edit-product/$productId'
-      fullPath: '/edit-product/$productId'
-      preLoaderRoute: typeof AuthEditProductProductIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/product-list': {
+      id: '/_auth/product-list'
+      path: '/product-list'
+      fullPath: '/product-list'
+      preLoaderRoute: typeof AuthProductListRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/forecast-details/$productId': {
-      id: '/_auth/forecast-details/$productId'
-      path: '/forecast-details/$productId'
-      fullPath: '/forecast-details/$productId'
-      preLoaderRoute: typeof AuthForecastDetailsProductIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/orders': {
+      id: '/_auth/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthOrdersRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/innovation-forcasts-submit/$forecastId': {
-      id: '/_auth/innovation-forcasts-submit/$forecastId'
-      path: '/innovation-forcasts-submit/$forecastId'
-      fullPath: '/innovation-forcasts-submit/$forecastId'
-      preLoaderRoute: typeof AuthInnovationForcastsSubmitForecastIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/notifications': {
+      id: '/_auth/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthNotificationsRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/products/$productId': {
-      id: '/_auth/products/$productId'
-      path: '/products/$productId'
-      fullPath: '/products/$productId'
-      preLoaderRoute: typeof AuthProductsProductIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/master-products': {
+      id: '/_auth/master-products'
+      path: '/master-products'
+      fullPath: '/master-products'
+      preLoaderRoute: typeof AuthMasterProductsRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/settings/add-billing-list': {
-      id: '/_auth/settings/add-billing-list'
-      path: '/settings/add-billing-list'
-      fullPath: '/settings/add-billing-list'
-      preLoaderRoute: typeof AuthSettingsAddBillingListImport
-      parentRoute: typeof AuthImport
+    '/_auth/innovations': {
+      id: '/_auth/innovations'
+      path: '/innovations'
+      fullPath: '/innovations'
+      preLoaderRoute: typeof AuthInnovationsRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/settings/add-pricing-lists': {
-      id: '/_auth/settings/add-pricing-lists'
-      path: '/settings/add-pricing-lists'
-      fullPath: '/settings/add-pricing-lists'
-      preLoaderRoute: typeof AuthSettingsAddPricingListsImport
-      parentRoute: typeof AuthImport
+    '/_auth/innovation-list': {
+      id: '/_auth/innovation-list'
+      path: '/innovation-list'
+      fullPath: '/innovation-list'
+      preLoaderRoute: typeof AuthInnovationListRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/products/': {
-      id: '/_auth/products/'
-      path: '/products'
-      fullPath: '/products'
-      preLoaderRoute: typeof AuthProductsIndexImport
-      parentRoute: typeof AuthImport
+    '/_auth/innovation-forecasts': {
+      id: '/_auth/innovation-forecasts'
+      path: '/innovation-forecasts'
+      fullPath: '/innovation-forecasts'
+      preLoaderRoute: typeof AuthInnovationForecastsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forecasting': {
+      id: '/_auth/forecasting'
+      path: '/forecasting'
+      fullPath: '/forecasting'
+      preLoaderRoute: typeof AuthForecastingRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/distributors': {
+      id: '/_auth/distributors'
+      path: '/distributors'
+      fullPath: '/distributors'
+      preLoaderRoute: typeof AuthDistributorsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/billing-list': {
+      id: '/_auth/billing-list'
+      path: '/billing-list'
+      fullPath: '/billing-list'
+      preLoaderRoute: typeof AuthBillingListRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/base-forecasts': {
+      id: '/_auth/base-forecasts'
+      path: '/base-forecasts'
+      fullPath: '/base-forecasts'
+      preLoaderRoute: typeof AuthBaseForecastsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/add-product': {
+      id: '/_auth/add-product'
+      path: '/add-product'
+      fullPath: '/add-product'
+      preLoaderRoute: typeof AuthAddProductRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/add-offering': {
+      id: '/_auth/add-offering'
+      path: '/add-offering'
+      fullPath: '/add-offering'
+      preLoaderRoute: typeof AuthAddOfferingRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/add-innovation': {
+      id: '/_auth/add-innovation'
+      path: '/add-innovation'
+      fullPath: '/add-innovation'
+      preLoaderRoute: typeof AuthAddInnovationRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/add-distributor': {
+      id: '/_auth/add-distributor'
+      path: '/add-distributor'
+      fullPath: '/add-distributor'
+      preLoaderRoute: typeof AuthAddDistributorRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/settings/': {
       id: '/_auth/settings/'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof AuthSettingsIndexImport
-      parentRoute: typeof AuthImport
+      preLoaderRoute: typeof AuthSettingsIndexRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_auth/settings/edit-billing-list/$id': {
-      id: '/_auth/settings/edit-billing-list/$id'
-      path: '/settings/edit-billing-list/$id'
-      fullPath: '/settings/edit-billing-list/$id'
-      preLoaderRoute: typeof AuthSettingsEditBillingListIdImport
-      parentRoute: typeof AuthImport
+    '/_auth/products/': {
+      id: '/_auth/products/'
+      path: '/products'
+      fullPath: '/products'
+      preLoaderRoute: typeof AuthProductsIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/add-pricing-lists': {
+      id: '/_auth/settings/add-pricing-lists'
+      path: '/settings/add-pricing-lists'
+      fullPath: '/settings/add-pricing-lists'
+      preLoaderRoute: typeof AuthSettingsAddPricingListsRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/add-billing-list': {
+      id: '/_auth/settings/add-billing-list'
+      path: '/settings/add-billing-list'
+      fullPath: '/settings/add-billing-list'
+      preLoaderRoute: typeof AuthSettingsAddBillingListRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/products/$productId': {
+      id: '/_auth/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof AuthProductsProductIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/innovation-forcasts-submit/$forecastId': {
+      id: '/_auth/innovation-forcasts-submit/$forecastId'
+      path: '/innovation-forcasts-submit/$forecastId'
+      fullPath: '/innovation-forcasts-submit/$forecastId'
+      preLoaderRoute: typeof AuthInnovationForcastsSubmitForecastIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forecast-details/$productId': {
+      id: '/_auth/forecast-details/$productId'
+      path: '/forecast-details/$productId'
+      fullPath: '/forecast-details/$productId'
+      preLoaderRoute: typeof AuthForecastDetailsProductIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/edit-product/$productId': {
+      id: '/_auth/edit-product/$productId'
+      path: '/edit-product/$productId'
+      fullPath: '/edit-product/$productId'
+      preLoaderRoute: typeof AuthEditProductProductIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/edit-innovation/$innovationId': {
+      id: '/_auth/edit-innovation/$innovationId'
+      path: '/edit-innovation/$innovationId'
+      fullPath: '/edit-innovation/$innovationId'
+      preLoaderRoute: typeof AuthEditInnovationInnovationIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/edit-innovation-forecasts/$forecastId': {
+      id: '/_auth/edit-innovation-forecasts/$forecastId'
+      path: '/edit-innovation-forecasts/$forecastId'
+      fullPath: '/edit-innovation-forecasts/$forecastId'
+      preLoaderRoute: typeof AuthEditInnovationForecastsForecastIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/edit-distributors/$distributorId': {
+      id: '/_auth/edit-distributors/$distributorId'
+      path: '/edit-distributors/$distributorId'
+      fullPath: '/edit-distributors/$distributorId'
+      preLoaderRoute: typeof AuthEditDistributorsDistributorIdRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/settings/edit-pricing-list/$pricingListId': {
       id: '/_auth/settings/edit-pricing-list/$pricingListId'
       path: '/settings/edit-pricing-list/$pricingListId'
       fullPath: '/settings/edit-pricing-list/$pricingListId'
-      preLoaderRoute: typeof AuthSettingsEditPricingListPricingListIdImport
-      parentRoute: typeof AuthImport
+      preLoaderRoute: typeof AuthSettingsEditPricingListPricingListIdRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/settings/edit-billing-list/$id': {
+      id: '/_auth/settings/edit-billing-list/$id'
+      path: '/settings/edit-billing-list/$id'
+      fullPath: '/settings/edit-billing-list/$id'
+      preLoaderRoute: typeof AuthSettingsEditBillingListIdRouteImport
+      parentRoute: typeof AuthRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface AuthRouteChildren {
   AuthAddDistributorRoute: typeof AuthAddDistributorRoute
@@ -597,430 +779,11 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-export interface FileRoutesByFullPath {
-  '': typeof LayoutRoute
-  '/login': typeof LoginRoute
-  '/add-distributor': typeof AuthAddDistributorRoute
-  '/add-innovation': typeof AuthAddInnovationRoute
-  '/add-offering': typeof AuthAddOfferingRoute
-  '/add-product': typeof AuthAddProductRoute
-  '/base-forecasts': typeof AuthBaseForecastsRoute
-  '/billing-list': typeof AuthBillingListRoute
-  '/distributors': typeof AuthDistributorsRoute
-  '/forecasting': typeof AuthForecastingRoute
-  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
-  '/innovation-list': typeof AuthInnovationListRoute
-  '/innovations': typeof AuthInnovationsRoute
-  '/master-products': typeof AuthMasterProductsRoute
-  '/notifications': typeof AuthNotificationsRoute
-  '/orders': typeof AuthOrdersRoute
-  '/product-list': typeof AuthProductListRoute
-  '/profile': typeof AuthProfileRoute
-  '/sales': typeof AuthSalesRoute
-  '/stock-on-hand': typeof AuthStockOnHandRoute
-  '/': typeof AuthIndexRoute
-  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
-  '/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
-  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
-  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
-  '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
-  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
-  '/products/$productId': typeof AuthProductsProductIdRoute
-  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
-  '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
-  '/products': typeof AuthProductsIndexRoute
-  '/settings': typeof AuthSettingsIndexRoute
-  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
-  '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
-}
-
-export interface FileRoutesByTo {
-  '': typeof LayoutRoute
-  '/login': typeof LoginRoute
-  '/add-distributor': typeof AuthAddDistributorRoute
-  '/add-innovation': typeof AuthAddInnovationRoute
-  '/add-offering': typeof AuthAddOfferingRoute
-  '/add-product': typeof AuthAddProductRoute
-  '/base-forecasts': typeof AuthBaseForecastsRoute
-  '/billing-list': typeof AuthBillingListRoute
-  '/distributors': typeof AuthDistributorsRoute
-  '/forecasting': typeof AuthForecastingRoute
-  '/innovation-forecasts': typeof AuthInnovationForecastsRoute
-  '/innovation-list': typeof AuthInnovationListRoute
-  '/innovations': typeof AuthInnovationsRoute
-  '/master-products': typeof AuthMasterProductsRoute
-  '/notifications': typeof AuthNotificationsRoute
-  '/orders': typeof AuthOrdersRoute
-  '/product-list': typeof AuthProductListRoute
-  '/profile': typeof AuthProfileRoute
-  '/sales': typeof AuthSalesRoute
-  '/stock-on-hand': typeof AuthStockOnHandRoute
-  '/': typeof AuthIndexRoute
-  '/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
-  '/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
-  '/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
-  '/edit-product/$productId': typeof AuthEditProductProductIdRoute
-  '/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
-  '/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
-  '/products/$productId': typeof AuthProductsProductIdRoute
-  '/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
-  '/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
-  '/products': typeof AuthProductsIndexRoute
-  '/settings': typeof AuthSettingsIndexRoute
-  '/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
-  '/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/_auth': typeof AuthRouteWithChildren
-  '/_layout': typeof LayoutRoute
-  '/login': typeof LoginRoute
-  '/_auth/add-distributor': typeof AuthAddDistributorRoute
-  '/_auth/add-innovation': typeof AuthAddInnovationRoute
-  '/_auth/add-offering': typeof AuthAddOfferingRoute
-  '/_auth/add-product': typeof AuthAddProductRoute
-  '/_auth/base-forecasts': typeof AuthBaseForecastsRoute
-  '/_auth/billing-list': typeof AuthBillingListRoute
-  '/_auth/distributors': typeof AuthDistributorsRoute
-  '/_auth/forecasting': typeof AuthForecastingRoute
-  '/_auth/innovation-forecasts': typeof AuthInnovationForecastsRoute
-  '/_auth/innovation-list': typeof AuthInnovationListRoute
-  '/_auth/innovations': typeof AuthInnovationsRoute
-  '/_auth/master-products': typeof AuthMasterProductsRoute
-  '/_auth/notifications': typeof AuthNotificationsRoute
-  '/_auth/orders': typeof AuthOrdersRoute
-  '/_auth/product-list': typeof AuthProductListRoute
-  '/_auth/profile': typeof AuthProfileRoute
-  '/_auth/sales': typeof AuthSalesRoute
-  '/_auth/stock-on-hand': typeof AuthStockOnHandRoute
-  '/_auth/': typeof AuthIndexRoute
-  '/_auth/edit-distributors/$distributorId': typeof AuthEditDistributorsDistributorIdRoute
-  '/_auth/edit-innovation-forecasts/$forecastId': typeof AuthEditInnovationForecastsForecastIdRoute
-  '/_auth/edit-innovation/$innovationId': typeof AuthEditInnovationInnovationIdRoute
-  '/_auth/edit-product/$productId': typeof AuthEditProductProductIdRoute
-  '/_auth/forecast-details/$productId': typeof AuthForecastDetailsProductIdRoute
-  '/_auth/innovation-forcasts-submit/$forecastId': typeof AuthInnovationForcastsSubmitForecastIdRoute
-  '/_auth/products/$productId': typeof AuthProductsProductIdRoute
-  '/_auth/settings/add-billing-list': typeof AuthSettingsAddBillingListRoute
-  '/_auth/settings/add-pricing-lists': typeof AuthSettingsAddPricingListsRoute
-  '/_auth/products/': typeof AuthProductsIndexRoute
-  '/_auth/settings/': typeof AuthSettingsIndexRoute
-  '/_auth/settings/edit-billing-list/$id': typeof AuthSettingsEditBillingListIdRoute
-  '/_auth/settings/edit-pricing-list/$pricingListId': typeof AuthSettingsEditPricingListPricingListIdRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | ''
-    | '/login'
-    | '/add-distributor'
-    | '/add-innovation'
-    | '/add-offering'
-    | '/add-product'
-    | '/base-forecasts'
-    | '/billing-list'
-    | '/distributors'
-    | '/forecasting'
-    | '/innovation-forecasts'
-    | '/innovation-list'
-    | '/innovations'
-    | '/master-products'
-    | '/notifications'
-    | '/orders'
-    | '/product-list'
-    | '/profile'
-    | '/sales'
-    | '/stock-on-hand'
-    | '/'
-    | '/edit-distributors/$distributorId'
-    | '/edit-innovation-forecasts/$forecastId'
-    | '/edit-innovation/$innovationId'
-    | '/edit-product/$productId'
-    | '/forecast-details/$productId'
-    | '/innovation-forcasts-submit/$forecastId'
-    | '/products/$productId'
-    | '/settings/add-billing-list'
-    | '/settings/add-pricing-lists'
-    | '/products'
-    | '/settings'
-    | '/settings/edit-billing-list/$id'
-    | '/settings/edit-pricing-list/$pricingListId'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | ''
-    | '/login'
-    | '/add-distributor'
-    | '/add-innovation'
-    | '/add-offering'
-    | '/add-product'
-    | '/base-forecasts'
-    | '/billing-list'
-    | '/distributors'
-    | '/forecasting'
-    | '/innovation-forecasts'
-    | '/innovation-list'
-    | '/innovations'
-    | '/master-products'
-    | '/notifications'
-    | '/orders'
-    | '/product-list'
-    | '/profile'
-    | '/sales'
-    | '/stock-on-hand'
-    | '/'
-    | '/edit-distributors/$distributorId'
-    | '/edit-innovation-forecasts/$forecastId'
-    | '/edit-innovation/$innovationId'
-    | '/edit-product/$productId'
-    | '/forecast-details/$productId'
-    | '/innovation-forcasts-submit/$forecastId'
-    | '/products/$productId'
-    | '/settings/add-billing-list'
-    | '/settings/add-pricing-lists'
-    | '/products'
-    | '/settings'
-    | '/settings/edit-billing-list/$id'
-    | '/settings/edit-pricing-list/$pricingListId'
-  id:
-    | '__root__'
-    | '/_auth'
-    | '/_layout'
-    | '/login'
-    | '/_auth/add-distributor'
-    | '/_auth/add-innovation'
-    | '/_auth/add-offering'
-    | '/_auth/add-product'
-    | '/_auth/base-forecasts'
-    | '/_auth/billing-list'
-    | '/_auth/distributors'
-    | '/_auth/forecasting'
-    | '/_auth/innovation-forecasts'
-    | '/_auth/innovation-list'
-    | '/_auth/innovations'
-    | '/_auth/master-products'
-    | '/_auth/notifications'
-    | '/_auth/orders'
-    | '/_auth/product-list'
-    | '/_auth/profile'
-    | '/_auth/sales'
-    | '/_auth/stock-on-hand'
-    | '/_auth/'
-    | '/_auth/edit-distributors/$distributorId'
-    | '/_auth/edit-innovation-forecasts/$forecastId'
-    | '/_auth/edit-innovation/$innovationId'
-    | '/_auth/edit-product/$productId'
-    | '/_auth/forecast-details/$productId'
-    | '/_auth/innovation-forcasts-submit/$forecastId'
-    | '/_auth/products/$productId'
-    | '/_auth/settings/add-billing-list'
-    | '/_auth/settings/add-pricing-lists'
-    | '/_auth/products/'
-    | '/_auth/settings/'
-    | '/_auth/settings/edit-billing-list/$id'
-    | '/_auth/settings/edit-pricing-list/$pricingListId'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  AuthRoute: typeof AuthRouteWithChildren
-  LayoutRoute: typeof LayoutRoute
-  LoginRoute: typeof LoginRoute
-}
-
 const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   LayoutRoute: LayoutRoute,
   LoginRoute: LoginRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/_auth",
-        "/_layout",
-        "/login"
-      ]
-    },
-    "/_auth": {
-      "filePath": "_auth.tsx",
-      "children": [
-        "/_auth/add-distributor",
-        "/_auth/add-innovation",
-        "/_auth/add-offering",
-        "/_auth/add-product",
-        "/_auth/base-forecasts",
-        "/_auth/billing-list",
-        "/_auth/distributors",
-        "/_auth/forecasting",
-        "/_auth/innovation-forecasts",
-        "/_auth/innovation-list",
-        "/_auth/innovations",
-        "/_auth/master-products",
-        "/_auth/notifications",
-        "/_auth/orders",
-        "/_auth/product-list",
-        "/_auth/profile",
-        "/_auth/sales",
-        "/_auth/stock-on-hand",
-        "/_auth/",
-        "/_auth/edit-distributors/$distributorId",
-        "/_auth/edit-innovation-forecasts/$forecastId",
-        "/_auth/edit-innovation/$innovationId",
-        "/_auth/edit-product/$productId",
-        "/_auth/forecast-details/$productId",
-        "/_auth/innovation-forcasts-submit/$forecastId",
-        "/_auth/products/$productId",
-        "/_auth/settings/add-billing-list",
-        "/_auth/settings/add-pricing-lists",
-        "/_auth/products/",
-        "/_auth/settings/",
-        "/_auth/settings/edit-billing-list/$id",
-        "/_auth/settings/edit-pricing-list/$pricingListId"
-      ]
-    },
-    "/_layout": {
-      "filePath": "_layout.tsx"
-    },
-    "/login": {
-      "filePath": "login.tsx"
-    },
-    "/_auth/add-distributor": {
-      "filePath": "_auth/add-distributor.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/add-innovation": {
-      "filePath": "_auth/add-innovation.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/add-offering": {
-      "filePath": "_auth/add-offering.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/add-product": {
-      "filePath": "_auth/add-product.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/base-forecasts": {
-      "filePath": "_auth/base-forecasts.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/billing-list": {
-      "filePath": "_auth/billing-list.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/distributors": {
-      "filePath": "_auth/distributors.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/forecasting": {
-      "filePath": "_auth/forecasting.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/innovation-forecasts": {
-      "filePath": "_auth/innovation-forecasts.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/innovation-list": {
-      "filePath": "_auth/innovation-list.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/innovations": {
-      "filePath": "_auth/innovations.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/master-products": {
-      "filePath": "_auth/master-products.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/notifications": {
-      "filePath": "_auth/notifications.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/orders": {
-      "filePath": "_auth/orders.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/product-list": {
-      "filePath": "_auth/product-list.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/profile": {
-      "filePath": "_auth/profile.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/sales": {
-      "filePath": "_auth/sales.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/stock-on-hand": {
-      "filePath": "_auth/stock-on-hand.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/": {
-      "filePath": "_auth/index.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/edit-distributors/$distributorId": {
-      "filePath": "_auth/edit-distributors/$distributorId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/edit-innovation-forecasts/$forecastId": {
-      "filePath": "_auth/edit-innovation-forecasts/$forecastId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/edit-innovation/$innovationId": {
-      "filePath": "_auth/edit-innovation/$innovationId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/edit-product/$productId": {
-      "filePath": "_auth/edit-product/$productId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/forecast-details/$productId": {
-      "filePath": "_auth/forecast-details/$productId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/innovation-forcasts-submit/$forecastId": {
-      "filePath": "_auth/innovation-forcasts-submit/$forecastId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/products/$productId": {
-      "filePath": "_auth/products/$productId.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/settings/add-billing-list": {
-      "filePath": "_auth/settings/add-billing-list.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/settings/add-pricing-lists": {
-      "filePath": "_auth/settings/add-pricing-lists.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/products/": {
-      "filePath": "_auth/products/index.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/settings/": {
-      "filePath": "_auth/settings/index.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/settings/edit-billing-list/$id": {
-      "filePath": "_auth/settings/edit-billing-list/$id.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/settings/edit-pricing-list/$pricingListId": {
-      "filePath": "_auth/settings/edit-pricing-list/$pricingListId.tsx",
-      "parent": "/_auth"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
