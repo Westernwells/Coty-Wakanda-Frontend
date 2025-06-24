@@ -60,7 +60,7 @@ const Navbar = () => {
       : [
           { link: "/", label: "Dashboard", icon: DashboardIcon },
           {
-            link: "/innovation-forecasts",
+            link: "/innovation-list",
             label: "Innovation forecasts",
             icon: LightBulbIcon,
           },

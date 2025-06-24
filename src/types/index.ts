@@ -359,7 +359,7 @@ export interface ProductInput {
 export interface ForecastData {
   product: Pick<
     Product,
-    "id" | "brand" | "sku" | "material_description" | "offering_number"
+    "id" | "brand" | "sku" | "material_description" | "offering_number" | "brand_pillar"
   >;
   distributor?: Pick<Distributor, "id" | "name" | "currency">;
   cost: number;

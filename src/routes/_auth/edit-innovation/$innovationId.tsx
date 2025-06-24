@@ -1,6 +1,5 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
-
 import EditInnovationForm from "@/components/AddInnovation/EditInnovationForm";
 import { Button } from "@mantine/core";
 import ChevronDownIcon from "@/components/Icons/ChevronDownIcon";
@@ -13,7 +12,6 @@ import { useUserStore } from "@/stores/userStore";
 import InnovationsForecastTableDist from "@/components/Distributor-forcasts/InnovationsForecastTableDist";
 import { useForecastData } from "@/components/Distributor-forcasts/hooks/use-forecast-data";
 import { ForecastDetailsData, ForecastSubmitInput } from "@/types";
-import { useSubmitForecast } from "@/api/forecasts/submit-forcast";
 import { useUpdateInnovation } from "@/api/innovations/update-innovation";
 import { toast } from "react-toastify";
 
@@ -32,7 +30,7 @@ function RouteComponent() {
     queryFn: () => getInnovation(innovationId),
   });
 
-  const { forecastResponse,offeringProducts } = useForecastData(innovationId);
+  const { forecastResponse,offeringProducts,offerings } = useForecastData(innovationId);
   const role = useUserStore((state) => state.user)?.role;
   const isDistributor = role === "distributor";
 
@@ -145,6 +143,7 @@ function RouteComponent() {
       {isDistributor ? (
         <InnovationsForecastTableDist
           ref={forecastTableRef}
+          offerings={offerings}
           offeringProducts={offeringProducts}
           data={forecastResponse?.data as ForecastDetailsData}
         />

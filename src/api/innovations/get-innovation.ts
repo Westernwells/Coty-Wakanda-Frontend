@@ -9,5 +9,6 @@ export type ApiResponse = {
 
 export const getInnovation = async (id: string): Promise<ApiResponse> => {
   const response = await axios.get(`/innovations/${id}`);
+  //const response = await axios.get(`/innovation-forecasts/${id}/details`)
   return response.data;
 };
