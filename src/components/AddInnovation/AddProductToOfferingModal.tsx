@@ -170,7 +170,7 @@ export function AddProductToOfferingModal({
             grouping:
               (initialData.grouping?.toString() as "1" | "2" | "3") || "1",
             division: initialData.division || "",
-            brand_category: (initialData as any).brand_category || "",
+            brand_category: (initialData as any)?.brand_category || "",
             ean_upc: initialData.ean_upc || "",
             house: initialData.house || "",
             line: initialData.line || "",
@@ -285,7 +285,7 @@ export function AddProductToOfferingModal({
         pref: (initialData.pref as "pref" | "non-pref") || "pref",
         grouping: (initialData.grouping?.toString() as "1" | "2" | "3") || "1",
         division: initialData.division || "",
-        brand_category: "", // Brand category is not in the Product type
+        brand_category: initialData.brand_category || "",
         ean_upc: initialData.ean_upc || "",
         house: initialData.house || "",
         line: initialData.line || "",
