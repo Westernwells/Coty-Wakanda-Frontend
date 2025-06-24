@@ -16,6 +16,7 @@ interface PriceBenchmarkModalProps {
     product_id?: string;
   };
   productListData?: Product[]; // Optional prop for product list data
+  brandOptions?: Array<{ value: string; label: string }>;
 }
 
 export function PriceBenchmarkModal({
@@ -26,6 +27,7 @@ export function PriceBenchmarkModal({
   isEditMode = false,
   productData = {},
   productListData = [],
+  brandOptions = [],
 }: PriceBenchmarkModalProps) {
   const [localValue, setLocalValue] = useState<PriceBenchmark | null>(
     initialValue
@@ -55,12 +57,13 @@ export function PriceBenchmarkModal({
         <Modal.Body>
           <div className="bg-white rounded-2xl p-6 mt-6">
             <h2 className="text-xl font-semibold mb-6 text-primary">
-              Set Price Benchmarkx
+              Set Price Benchmark
             </h2>
             <PriceBenchmarkSection
               value={localValue}
               onChange={setLocalValue}
               productsListData={{ data: productListData }}
+              brandOptions={brandOptions}
             />
             <div className="flex justify-end gap-4 mt-8">
               <Button
