@@ -719,6 +719,45 @@ export function AddProductToOfferingModal({
                   />
                 </Grid.Col>
                 <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="brand_id"
+                    label="Brand"
+                    placeholder="Select brand"
+                    data={
+                      brandsData?.data?.map(
+                        (brand: { id: number; name: string }) => ({
+                          value: brand.id.toString(),
+                          label: brand.name,
+                        })
+                      ) || []
+                    }
+                    {...form.getInputProps("brand_id")}
+                    classNames={selectStyles}
+                    disabled={brandsLoading}
+                    searchable
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    name="sub_brand_id"
+                    label="Brand Pillar (Sub Brand)"
+                    placeholder="Select brand pillar"
+                    data={
+                      brandPillarsData?.data?.map(
+                        (pillar: { id: number; name: string }) => ({
+                          value: pillar.id.toString(),
+                          label: pillar.name,
+                        })
+                      ) || []
+                    }
+                    {...form.getInputProps("sub_brand_id")}
+                    classNames={selectStyles}
+                    disabled={brandPillarsLoading || !selectedBrandId}
+                    searchable
+                    clearable
+                  />
+                </Grid.Col>
+                <Grid.Col span={{ base: 12, md: 6 }}>
                   <TextInput
                     label="Line"
                     placeholder="Enter Line"
@@ -994,45 +1033,7 @@ export function AddProductToOfferingModal({
                   />
                 </Grid.Col>
 
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Select
-                    name="brand_id"
-                    label="Brand"
-                    placeholder="Select brand"
-                    data={
-                      brandsData?.data?.map(
-                        (brand: { id: number; name: string }) => ({
-                          value: brand.id.toString(),
-                          label: brand.name,
-                        })
-                      ) || []
-                    }
-                    {...form.getInputProps("brand_id")}
-                    classNames={selectStyles}
-                    disabled={brandsLoading}
-                    searchable
-                  />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
-                  <Select
-                    name="sub_brand_id"
-                    label="Brand Pillar (Sub Brand)"
-                    placeholder="Select brand pillar"
-                    data={
-                      brandPillarsData?.data?.map(
-                        (pillar: { id: number; name: string }) => ({
-                          value: pillar.id.toString(),
-                          label: pillar.name,
-                        })
-                      ) || []
-                    }
-                    {...form.getInputProps("sub_brand_id")}
-                    classNames={selectStyles}
-                    disabled={brandPillarsLoading || !selectedBrandId}
-                    searchable
-                    clearable
-                  />
-                </Grid.Col>
+               
               </Grid>
 
               {(brandsLoading || (brandPillarsLoading && selectedBrandId)) && (
