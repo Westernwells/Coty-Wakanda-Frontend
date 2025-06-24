@@ -583,11 +583,12 @@ export function AddProductToOfferingModal({
       gross_weight: values.gross_weight === "" ? undefined : values.gross_weight,
       net_weight: values.net_weight === "" ? undefined : values.net_weight,
       units: values.units === "" ? undefined : values.units,
-      icp_eur: values.currency === "EUR" ? icp_cost : undefined,
-      icp_usd: values.currency === "USD" ? icp_cost : undefined,
+      // icp_eur: values.currency === "EUR" ? icp_cost : undefined,
+      // icp_usd: values.currency === "USD" ? icp_cost : undefined,
+      icp_eur: icp_cost,
+      icp_usd: icp_cost,
     };
 
-    console.log("submissionValues for update/create:", submissionValues);
 
     if (editMode && initialData) {
       updateProductMutation.mutate({

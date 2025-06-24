@@ -12,12 +12,14 @@ interface PriceBenchmarkSectionProps {
   value: PriceBenchmark | null;
   onChange: (val: PriceBenchmark) => void;
   productsListData: { data: InnovationProduct[] };
+  brandOptions?: Array<{ value: string; label: string }>;
 }
 
 export function PriceBenchmarkSection({
   value,
   onChange,
   productsListData,
+  brandOptions = [],
 }: PriceBenchmarkSectionProps) {
   // Controlled value logic
   function handleFieldChange<K extends keyof PriceBenchmark>(
@@ -28,7 +30,8 @@ export function PriceBenchmarkSection({
   }
 
   const selectedBrandId = value?.brand_id?.toString();
-  const { brands, filteredProducts } = useBrandAndProductData(productsListData?.data ?? [], selectedBrandId ? parseInt(selectedBrandId) : null);
+  const { brands: bx, filteredProducts } = useBrandAndProductData(productsListData?.data ?? [], selectedBrandId ? parseInt(selectedBrandId) : null);
+  const brands = brandOptions;
 
   return (
     <Grid gutter={{ sm: 32, base: 16 }}>

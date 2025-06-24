@@ -8,7 +8,7 @@ const AdminSettings = () => {
   return (
     <div>
       <UsersTable />
-      <SystemSettings />
+      {/* <SystemSettings /> */}
       <RoyaltiesTable />
       <Group justify="end">
         <Button
