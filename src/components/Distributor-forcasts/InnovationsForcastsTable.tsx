@@ -22,12 +22,10 @@ function InnovationsForecastsTable() {
         Number(itemsPerPage), 
         activeTab
     );
-
     const navigate = useNavigate();
 
     const handleForecastClick = (row: InnovationWithStatus) => {
         const isActive = row.status === "active" || row.status === 'pre-active';
-        
         if (isActive) {
             navigate({
                 to: "/edit-innovation/$innovationId",

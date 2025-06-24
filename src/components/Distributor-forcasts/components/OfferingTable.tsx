@@ -26,7 +26,6 @@ export const OfferingTable = ({
 }: OfferingTableProps) => {
   const offering = offerings.find(o => o.id === Number(offeringId));
   const offeringNumber = offering?.number || offeringId;
-
   return (
     <Card className="mb-6 mt-10" shadow="sm" padding="lg">
       <Stack gap="md">
