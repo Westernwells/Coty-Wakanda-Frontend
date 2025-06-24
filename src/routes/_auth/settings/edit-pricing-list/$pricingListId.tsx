@@ -119,9 +119,9 @@ function EditPricingListComponent() {
 
   useEffect(() => {
     if (!isCsvMode && initialPricingProductListResult?.data) {
-      setProductsData(initialPricingProductListResult.data);
-      setProductsMeta(initialPricingProductListResult.meta);
-      setProductsHasMore(initialPricingProductListResult.meta.has_next);
+      setProductsData(initialPricingProductListResult?.data);
+      setProductsMeta(initialPricingProductListResult?.meta);
+      setProductsHasMore(initialPricingProductListResult?.meta?.has_next);
     } else if (
       !isCsvMode &&
       !isLoadingInitialProducts &&

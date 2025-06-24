@@ -446,11 +446,14 @@ function CombinedInnovationTables({
                     <Table.Th>Description</Table.Th>
                     <Table.Th>ICP EU</Table.Th>
                     <Table.Th>ICP USD</Table.Th>
+                    
                     <Table.Th>Pref Value</Table.Th>
 
                     <Table.Th className="border-r border-gray-200">
                       Status
                     </Table.Th>
+                    <Table.Th>CSSP_TREX_EUR</Table.Th>
+                    <Table.Th>CSSP_TREX_USD</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -687,6 +690,24 @@ function CombinedInnovationTables({
                             </span>
                           )}
                         </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                         ---
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                         ---
+                        </Table.Td>
                       </Table.Tr>
                     );
                   })}
@@ -761,6 +782,7 @@ function CombinedInnovationTables({
                     <Table.Th>C1</Table.Th>
                     <Table.Th>French USD</Table.Th>
                     <Table.Th>French EUR</Table.Th>
+   
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -853,6 +875,7 @@ function CombinedInnovationTables({
                             "-"
                           )}
                         </Table.Td>
+              
                       </Table.Tr>
                     );
                   })}

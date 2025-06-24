@@ -248,7 +248,7 @@ export interface ForecastFilters {
   sub_brand_id?: string | number | null;
   distributor_id?: string | number | null;
   launch_id?: string | number;
-  sort?: string;
+  sort?: string | null;
   type?: string;
   brand_type?: string;
 }

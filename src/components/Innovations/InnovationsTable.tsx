@@ -9,6 +9,11 @@ import { Loader } from "lucide-react";
 import get from "lodash.get";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "@tanstack/react-router";
+import { Innovation } from "@/types";
+import { filterByStatus } from "@/utils/filter-by-status";
+import EyeIcon from "../Icons/EyeIcon";
+import { sortOptions } from "@/constants/sort-options";
+import { useUserStore } from "@/stores/userStore";
 
 function InnovationsTable() {
   const navigate = useNavigate();
@@ -16,6 +21,7 @@ function InnovationsTable() {
   const [sortBy, setSortBy] = useState<string | null>("");
   const itemsPerPage = 10;
   const [activeTab, setActiveTab] = useState<string | null>("upcoming");
+  const userData = useUserStore((state) => state.user);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["innovations"],
@@ -27,6 +33,22 @@ function InnovationsTable() {
     delay: 100,
     trackVisibility: true,
   });
+
+  const handleForecastClick = (row: Innovation) => {
+    const isActive = row.status === "active";
+    
+    if (isActive) {
+        navigate({
+            to: "/edit-innovation/$innovationId",
+            params: { innovationId: row.id.toString() }
+        });
+    } else {
+        navigate({
+            to: "/innovation-forcasts-submit/$forecastId",
+            params: { forecastId: row.id.toString() }
+        });
+    }
+}
 
   const totalPages = Math.ceil((data?.data.length || 0) / itemsPerPage);
 
@@ -144,16 +166,9 @@ function InnovationsTable() {
                     <Table.Td>{element.forecast_deadline}</Table.Td>
                     <Table.Td
                       className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
-                      onClick={() => {
-                        navigate({
-                          to: "/edit-innovation/$innovationId",
-                          params: {
-                            innovationId: element.id.toString(),
-                          },
-                        });
-                      }}
+                      onClick={() => handleForecastClick(element)}
                     >
-                      <PencilIcon />
+                      {element.status === "active" ? <PencilIcon /> : <EyeIcon />}
                     </Table.Td>
                   </Table.Tr>
                 ))}
