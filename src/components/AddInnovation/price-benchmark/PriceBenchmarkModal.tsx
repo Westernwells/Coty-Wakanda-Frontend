@@ -57,7 +57,7 @@ export function PriceBenchmarkModal({
         <Modal.Body>
           <div className="bg-white rounded-2xl p-6 mt-6">
             <h2 className="text-xl font-semibold mb-6 text-primary">
-              Set Price Benchmarkx
+              Set Price Benchmark
             </h2>
             <PriceBenchmarkSection
               value={localValue}
