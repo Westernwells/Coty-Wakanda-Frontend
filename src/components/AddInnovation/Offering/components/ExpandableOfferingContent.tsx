@@ -25,11 +25,13 @@ interface ExpandableOfferingContentProps {
   brandPillarOptions: Array<{ value: string; label: string }>;
   isEdit: boolean;
   setIsEdit: (isEdit: boolean | ((prevState: boolean) => boolean)) => void;
-  onBulkProductUpload: (e:React.ChangeEvent<HTMLInputElement>) => void;
+  onBulkProductUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   productListData?: InnovationProduct[]; // Optional prop for product list data
 }
 
-export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps> = ({
+export const ExpandableOfferingContent: React.FC<
+  ExpandableOfferingContentProps
+> = ({
   isExpanded,
   isLoading,
   offeringId,
@@ -49,7 +51,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
   isEdit,
   setIsEdit,
   onBulkProductUpload,
-  productListData
+  productListData,
 }) => {
   return (
     <Collapse in={isExpanded}>
@@ -67,7 +69,7 @@ export const ExpandableOfferingContent: React.FC<ExpandableOfferingContentProps>
                 hasSelectedProducts={selectedProducts.length > 0}
                 onBulkProductUpload={onBulkProductUpload} // Optional prop for bulk upload
               />
-              
+
               <ProductTableContent
                 offeringId={offeringId}
                 innovationId={innovationId}
