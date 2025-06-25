@@ -15,9 +15,12 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { PriceBenchmarkModal } from "../AddInnovation/price-benchmark/PriceBenchmarkModal";
 import { ConfirmationModal } from "../Shared/ConfirmationModal";
 import useOfferingProducts from "./Offering/hooks/useOfferingProducts";
-import useProductData, { mapOfferingProducts } from "./Offering/hooks/useProductData";
+import useProductData, {
+  mapOfferingProducts,
+} from "./Offering/hooks/useProductData";
 import { useDeleteBenchmark } from "@/api/products/delete-benchmark";
 import { on } from "events";
+import ExclamationTooltip from "../ExclamationToolTip";
 
 interface CombinedInnovationTablesProps {
   // Products table props
@@ -39,7 +42,7 @@ interface CombinedInnovationTablesProps {
       irc: string;
       billing_price: number;
       rrsp: number;
-      c1: number
+      c1: number;
     }[];
   }[];
   // New props
@@ -80,21 +83,27 @@ function CombinedInnovationTables({
 
   const [removeBenchmark, setRemoveBenchmark] = useState(false);
   const [benchmarkProduct, setBenchmarkProduct] = useState<
-  | (Product & {
-      icp_cost?: number;
-    })
-  | null
->(null);
-  const {mutate:removeBenchmarkProduct, isPending} = useDeleteBenchmark({
-    onSuccess:async () => {
+    | (Product & {
+        icp_cost?: number;
+      })
+    | null
+  >(null);
+  const { mutate: removeBenchmarkProduct, isPending } = useDeleteBenchmark({
+    onSuccess: async () => {
       queryClient.invalidateQueries({
         queryKey: ["offering-products", Number(offeringId)],
       });
       setRemoveBenchmark(false);
       setBenchmarkProduct(null);
       const data = await fetchOfferingProducts(Number(offeringId));
-      setLocalProducts(data?.products ? mapOfferingProducts(data.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
-    }
+      setLocalProducts(
+        data?.products
+          ? (mapOfferingProducts(
+              data.products as unknown as OfferingProductData[]
+            ) as unknown as Product[])
+          : []
+      );
+    },
   });
 
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
@@ -115,7 +124,6 @@ function CombinedInnovationTables({
     new Set()
   );
   const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
-
 
   const productData = useMemo(() => {
     return {
@@ -305,15 +313,18 @@ function CombinedInnovationTables({
 
     try {
       setIsDeletingProduct(true);
-      const deleteResult = await deleteProductMutation.mutateAsync({
-        innovationId,
-        offeringId,
-        productId: productToDelete.id,
-      },{
-        onSuccess() {
-          closeDeleteModal();
+      const deleteResult = await deleteProductMutation.mutateAsync(
+        {
+          innovationId,
+          offeringId,
+          productId: productToDelete.id,
         },
-      });
+        {
+          onSuccess() {
+            closeDeleteModal();
+          },
+        }
+      );
 
       const updatedProducts = localProducts.filter(
         (p) => p.id !== productToDelete.id
@@ -371,13 +382,17 @@ function CombinedInnovationTables({
           });
           const data = await fetchOfferingProducts(Number(offeringId));
 
-          setLocalProducts(data?.products ? mapOfferingProducts(data.products as unknown as OfferingProductData[]) as unknown as Product[] : []);
-         
+          setLocalProducts(
+            data?.products
+              ? (mapOfferingProducts(
+                  data.products as unknown as OfferingProductData[]
+                ) as unknown as Product[])
+              : []
+          );
         },
       }
     );
-
-}
+  }
 
   return (
     <div className="">
@@ -448,7 +463,7 @@ function CombinedInnovationTables({
                     <Table.Th>Description</Table.Th>
                     <Table.Th>ICP EU</Table.Th>
                     <Table.Th>ICP USD</Table.Th>
-                    
+
                     <Table.Th>Pref Value</Table.Th>
 
                     <Table.Th className="border-r border-gray-200">
@@ -602,7 +617,7 @@ function CombinedInnovationTables({
                             paddingBottom: "0px",
                           }}
                         >
-                         {product?.price_benchmark?.product_irc || "-"}
+                          {product?.price_benchmark?.product_irc || "-"}
                         </Table.Td>
                         <Table.Td
                           className="max-h-[42px]"
@@ -690,7 +705,6 @@ function CombinedInnovationTables({
                             </span>
                           )}
                         </Table.Td>
-                        
                       </Table.Tr>
                     );
                   })}
@@ -735,7 +749,7 @@ function CombinedInnovationTables({
               </>
             )}
           </div>
-{/* TODO: update CSSP value here */}
+          {/* TODO: update CSSP value here */}
           <InfiniteScroll
             dataLength={products.length}
             next={() => {}}
@@ -758,15 +772,30 @@ function CombinedInnovationTables({
                 <Table.Thead>
                   <Table.Tr className="bg-primary text-white">
                     {/* Distributor Price Columns */}
-                    <Table.Th className="border-l border-gray-200">
+                    <Table.Th
+                      className="border-l border-gray-200 w-full"
+                      style={{ width: "100%" }}
+                    >
                       Billing Price
                     </Table.Th>
-                    <Table.Th>RRSP</Table.Th>
-                    <Table.Th>C1</Table.Th>
-                    <Table.Th>French USD</Table.Th>
-                    <Table.Th>French EUR</Table.Th>
-                    <Table.Th>CSSP_TREX_EUR</Table.Th>
-                    <Table.Th>CSSP_TREX_USD</Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      RRSP
+                    </Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      C1
+                    </Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      French USD
+                    </Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      French EUR
+                    </Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      CSSP_TREX_EUR
+                    </Table.Th>
+                    <Table.Th className="w-full" style={{ width: "100%" }}>
+                      CSSP_TREX_USD
+                    </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -793,10 +822,17 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
+                            position: "relative",
                           }}
                         >
                           {distributorPrice ? (
-                            <> ${distributorPrice.billing_price.toFixed(2)}  </>
+                            <>
+                              ${distributorPrice.billing_price.toFixed(2)}
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
+                            </>
                           ) : (
                             "-"
                           )}
@@ -806,12 +842,17 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
+                            position: "relative",
                           }}
                         >
                           {distributorPrice ? (
-                           <>
+                            <>
                               ${distributorPrice.rrsp.toFixed(2)}
-                           </>
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
+                            </>
                           ) : (
                             "-"
                           )}
@@ -821,12 +862,17 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
+                            position: "relative",
                           }}
                         >
                           {distributorPrice ? (
-                                <>
-                                ${distributorPrice.c1?.toFixed(2)}
-                                </>
+                            <>
+                              ${distributorPrice.c1?.toFixed(2)}
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
+                            </>
                           ) : (
                             "-"
                           )}
@@ -836,10 +882,17 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
+                            position: "relative",
                           }}
                         >
                           {distributorPrice ? (
-                           <>${distributorPrice.rrsp.toFixed(2)}</>
+                            <>
+                              ${distributorPrice.rrsp.toFixed(2)}
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
+                            </>
                           ) : (
                             "-"
                           )}
@@ -849,10 +902,17 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
+                            position: "relative",
                           }}
                         >
                           {distributorPrice ? (
-                                <>{`$${distributorPrice.rrsp.toFixed(2)}`}</>
+                            <>
+                              {`$${distributorPrice.rrsp.toFixed(2)}`}
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
+                            </>
                           ) : (
                             "-"
                           )}
@@ -862,18 +922,20 @@ function CombinedInnovationTables({
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
                           }}
                         >
-                         ---
+                          ---
                         </Table.Td>
                         <Table.Td
                           style={{
                             height: "42px !important",
                             paddingTop: "0px",
                             paddingBottom: "0px",
+                            width: "100px",
                           }}
                         >
-                         ---
+                          ---
                         </Table.Td>
                       </Table.Tr>
                     );
@@ -937,7 +999,7 @@ function CombinedInnovationTables({
       {benchmarkProduct && (
         <>
           <PriceBenchmarkModal
-          brandOptions={brandOptions}
+            brandOptions={brandOptions}
             opened={isBenchmarkModalOpen}
             onClose={() => {
               setIsBenchmarkModalOpen(false);
@@ -984,7 +1046,6 @@ function CombinedInnovationTables({
             onConfirm={() => {
               // handleSave(benchmarkProduct.id, null);
               removeBenchmarkProduct(benchmarkProduct.id);
-
             }}
             confirmButtonClassName="bg-red-500 text-white hover:bg-red-600 transition-all ease-in-out duration-300"
             cancelButtonClassName="border-red-500 text-red-500 hover:bg-red-100 transition-all ease-in-out duration-300"
