@@ -205,9 +205,13 @@ export interface Subcategory {
   created_at: string;
 }
 
-export interface Lines {
+export interface Line {
   id: number;
-  house_id?: number | string;
+  house: {
+    id: number;
+    name: string;
+    created_at: string | null;
+  };
   name: string;
   created_at: string;
 }

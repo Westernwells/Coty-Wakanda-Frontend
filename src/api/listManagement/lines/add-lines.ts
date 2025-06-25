@@ -1,13 +1,16 @@
 import { axios } from "@/lib/axios";
 import { MutationConfig } from "@/lib/react-query";
 import { queryClient } from "@/main";
-import { Lines } from "@/types";
+import { Line } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 
 export const addLine = ({
   data,
 }: {
-  data: Pick<Lines, "name" | "house_id">;
+  data: {
+    name: string;
+    house_id: string;
+  }
 }): Promise<Comment> => {
   return axios.post(`/lines`, data);
 };
@@ -20,14 +23,16 @@ export const useAddLine = ({ mutationConfig }: UseAddLineOptions) => {
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
   return useMutation({
+    ...restConfig,
+    mutationFn: addLine,
     onSuccess: (...args) => {
       queryClient.invalidateQueries({
         queryKey: ["lines"],
-        refetchType: "all",
+        type: "all",
       });
-      onSuccess?.(...args);
+      if (onSuccess) {
+        onSuccess(...args);
+      }
     },
-    ...restConfig,
-    mutationFn: addLine,
   });
 };

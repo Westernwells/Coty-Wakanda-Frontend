@@ -15,14 +15,16 @@ export const useDeleteLine = ({ mutationConfig }: UseDeleteLineOptions) => {
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
   return useMutation({
+    ...restConfig,
+    mutationFn: deleteLine,
     onSuccess: (...args) => {
       queryClient.invalidateQueries({
         queryKey: ["lines"],
-        refetchType: "all",
+        type: "all",
       });
-      onSuccess?.(...args);
+      if(onSuccess) {
+        onSuccess(...args);
+      }
     },
-    ...restConfig,
-    mutationFn: deleteLine,
   });
 };

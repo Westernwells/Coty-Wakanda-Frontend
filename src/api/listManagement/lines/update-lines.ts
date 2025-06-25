@@ -1,16 +1,17 @@
 import { axios } from "@/lib/axios";
 import { MutationConfig } from "@/lib/react-query";
 import { queryClient } from "@/main";
-import { Lines } from "@/types";
+import { Line } from "@/types";
 import { useMutation } from "@tanstack/react-query";
+import { on } from "events";
 
 // Define Line type if not already imported
 
 export const updateLine = ({
   data,
 }: {
-  data: Pick<Lines, "id" | "name">;
-}): Promise<Lines> => {
+  data: Pick<Line, "id" | "name">;
+}): Promise<Line> => {
   return axios.put(`/lines/${data.id}`, data);
 };
 
@@ -22,14 +23,17 @@ export const useUpdateLine = ({ mutationConfig }: UseUpdateLineOptions) => {
   const { onSuccess, ...restConfig } = mutationConfig || {};
 
   return useMutation({
+    ...restConfig,
+    mutationFn: updateLine,
     onSuccess: (...args) => {
       queryClient.invalidateQueries({
         queryKey: ["lines"],
-        refetchType: "all",
+        type: "all",
       });
-      onSuccess?.(...args);
+      if(onSuccess) {
+
+        onSuccess?.(...args);
+      }
     },
-    ...restConfig,
-    mutationFn: updateLine,
   });
 };

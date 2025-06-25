@@ -1,8 +1,9 @@
+import { getHouses } from "@/api/get-houses";
 import { useAddLine } from "@/api/listManagement/lines/add-lines";
 import { useDeleteLine } from "@/api/listManagement/lines/delete-lines";
 import { getLines } from "@/api/listManagement/lines/get-lines";
 import { useUpdateLine } from "@/api/listManagement/lines/update-lines";
-import { Lines, Meta } from "@/types";
+import { Line, Meta } from "@/types";
 import {
   Button,
   Group,
@@ -15,38 +16,58 @@ import {
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { toast } from "react-toastify";
 import ExitIcon from "../Icons/ExitIcon";
 import PencilIcon from "../Icons/PencilIcon";
 import PlusIcon from "../Icons/PlusIcon";
-import RefreshIcon from "../Icons/RefreshIcon";
 import TrashIcon from "../Icons/TrashIcon";
 import ErrorCard from "../Shared/ErrorCard";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
-import { ChevronDownIcon } from "lucide-react";
-import { getHouses } from "@/api/get-houses";
 
 const LinesSettings = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [openedDelete, { open: openDelete, close: closeDelete }] =
     useDisclosure(false);
   const [id, setId] = useState<number>(0);
+  const [selectedLine, setSelectedLine] = useState<Line | null>(null);
   const [linesList, setLinesList] = useState<
-    Pick<Lines, "id" | "name" | "created_at">[]
+  Line[]
   >([]);
 
   const [meta, setMeta] = useState<Meta>();
   const [hasMore, setHasMore] = useState<boolean>(false);
-  const addLineMutation = useAddLine({ mutationConfig: {} });
+  const addLineMutation = useAddLine({ mutationConfig: {
+    onSuccess: () => {
+        toast.success("Line added successfully");
+        setSelectedLine(null);
+        close();
+      },
+      onError: (error) => {
+        toast.error("Error adding line: " + error.message);
+      },
+  },  });
   const updateLineMutation = useUpdateLine({
     mutationConfig: {
-      onSuccess: () => setId(0),
+      onSuccess: () => {
+        toast.success("Line updated successfully");
+        setSelectedLine(null);
+        close();
+      },
     },
   });
   const deleteLineMutation = useDeleteLine({
     mutationConfig: {
-      onSuccess: () => setId(0),
+      onSuccess: () => {
+        toast.success("Line deleted successfully");
+        setSelectedLine(null);
+        closeDelete();
+      },
+      onError: (error) => {
+        toast.error("Error deleting line: " + error.message);
+      },
     },
   });
   const form = useForm({
@@ -69,14 +90,12 @@ const LinesSettings = () => {
     queryKey: ["houses"],
     queryFn: () => getHouses(),
   });
-  console.log("lineData", lineData);
-  console.log("housesData", housesData);
-
+ 
   useEffect(() => {
     setLinesList(lineData?.data || []);
     setMeta(lineData?.meta);
     setHasMore(lineData?.meta?.has_next || false);
-    setId(0);
+  setSelectedLine(null);
     form.reset();
   }, [lineData]);
 
@@ -159,8 +178,9 @@ const LinesSettings = () => {
                         <Table.Td
                           className="w-5 cursor-pointer"
                           onClick={() => {
-                            setId(element.id);
+                            setSelectedLine(element);
                             form.setFieldValue("name", element.name);
+                            form.setFieldValue("house_id", String(element?.house?.id));
                             open();
                           }}
                         >
@@ -169,7 +189,7 @@ const LinesSettings = () => {
                         <Table.Td
                           className="last:rounded-ee-xl w-5 text-center !pr-2 cursor-pointer"
                           onClick={() => {
-                            setId(element.id);
+                            setSelectedLine(element);
                             openDelete();
                           }}
                         >
@@ -188,7 +208,7 @@ const LinesSettings = () => {
         opened={openedDelete}
         onClose={() => {
           form.reset();
-          setId(0);
+          setSelectedLine(null);
           closeDelete();
         }}
         withinPortal={false}
@@ -205,13 +225,14 @@ const LinesSettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                Delete Line {id}
+                Delete Line "{selectedLine?.name}" with ID {selectedLine?.id}
               </h2>
               <div className="space-y-6">
                 <Group justify="flex-end" mt="xl" gap={10}>
                   <Button
+                    disabled={deleteLineMutation.isPending}
                     variant="outline"
-                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300 disabled:bg-opacity-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                     leftSection={<ExitIcon />}
                     onClick={() => {
                       closeDelete();
@@ -220,16 +241,21 @@ const LinesSettings = () => {
                     Cancel
                   </Button>
                   <Button
-                    leftSection={<RefreshIcon />}
+                  disabled={deleteLineMutation.isPending}
+                    leftSection={<TrashIcon className="w-full h-full" />}
                     type="submit"
                     variant="outline"
-                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300 hover:text-primary disabled:bg-opacity-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                     onClick={() => {
-                      deleteLineMutation.mutate(id);
-                      closeDelete();
+                      if (!selectedLine?.id) {
+                        toast.error("No line selected for deletion");
+                        return;
+                      }
+                      deleteLineMutation.mutate(selectedLine?.id);
+                      
                     }}
                   >
-                    Delete
+                    {deleteLineMutation.isPending ? "Deleting..." :"Delete"}
                   </Button>
                 </Group>
               </div>
@@ -242,6 +268,7 @@ const LinesSettings = () => {
         onClose={() => {
           form.reset();
           setId(0);
+          setSelectedLine(null);
           close();
         }}
         withinPortal={false}
@@ -256,7 +283,7 @@ const LinesSettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                {id ? "Update Line" : "Add Line"}
+                {selectedLine?.id ? "Update Line" : "Add Line"}
               </h2>
               <div className="space-y-6">
                 <TextInput
@@ -284,8 +311,9 @@ const LinesSettings = () => {
                 />
                 <Group justify="flex-end" mt="xl" gap={10}>
                   <Button
+                  disabled={addLineMutation.isPending || updateLineMutation.isPending}
                     variant="outline"
-                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300 disabled:bg-opacity-50 disabled:text-gray-400 disabled::cursor-not-allowed"
                     leftSection={<ExitIcon />}
                     onClick={() => {
                       close();
@@ -294,17 +322,18 @@ const LinesSettings = () => {
                     Cancel
                   </Button>
                   <Button
-                    leftSection={<RefreshIcon />}
+                    leftSection={selectedLine?.id ? <PencilIcon className="w-full h-full" /> : <PlusIcon className="w-full h-full"/>}
+                    disabled={!form.isValid() || addLineMutation.isPending || updateLineMutation.isPending}
                     type="submit"
                     variant="outline"
-                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"
+                    className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 hover:text-primary transition-all ease-in-out duration-300 disabled:bg-opacity-50 disabled:text-gray-400 disabled::cursor-not-allowed"
                     onClick={() => {
-                      if (id) {
+                      if (selectedLine?.id) {
                         updateLineMutation.mutate({
                           data: {
                             ...form.getValues(),
 
-                            id: id,
+                            id: selectedLine.id,
                           },
                         });
                       } else {
@@ -312,10 +341,9 @@ const LinesSettings = () => {
                           data: form.getValues(),
                         });
                       }
-                      close();
                     }}
                   >
-                    {id ? "Update Line" : "Add Line"}
+                    {selectedLine?.id ? updateLineMutation.isPending? "Updating": "Update Line" : addLineMutation.isPending ? "Adding..." : "Add Line"}
                   </Button>
                 </Group>
               </div>

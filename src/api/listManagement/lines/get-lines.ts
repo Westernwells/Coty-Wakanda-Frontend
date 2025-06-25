@@ -1,9 +1,9 @@
-import { Lines, Meta, PageParams } from "@/types";
+import { Line, Meta, PageParams } from "@/types";
 import { axios } from "@/lib/axios";
 
 export type LinesApiResponse = {
   message: string;
-  data: Pick<Lines, "id" | "name" | "created_at">[];
+  data: Line[];
   meta: Meta;
 };
 
