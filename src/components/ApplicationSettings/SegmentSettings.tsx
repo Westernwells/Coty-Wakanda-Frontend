@@ -216,7 +216,7 @@ const SegmentSettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                Add Segment
+                {id ? "Update Segment" : "Add Segment"}
               </h2>
               <div className="space-y-6">
                 <TextInput
@@ -257,7 +257,7 @@ const SegmentSettings = () => {
                       close();
                     }}
                   >
-                    {id ? "Update" : " Add"}
+                    {id ? "Update Segment" : "Add Segment"}
                   </Button>
                 </Group>
               </div>

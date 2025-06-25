@@ -69,11 +69,17 @@ export type Category = {
   created_at: string;
 };
 
+export type Houses = {
+  id: number;
+  name: string;
+};
+
 export type Brand = {
   id: number;
   brand_type_id: number;
   name: string;
   active: boolean;
+  type: "Luxury" | "Mass";
   type: "Luxury" | "Mass";
   created_at: string;
   updated_at: string;
@@ -195,6 +201,13 @@ export interface Country {
 export interface Subcategory {
   id: number;
   category_id?: number | string;
+  name: string;
+  created_at: string;
+}
+
+export interface Lines {
+  id: number;
+  house_id?: number | string;
   name: string;
   created_at: string;
 }
@@ -359,7 +372,12 @@ export interface ProductInput {
 export interface ForecastData {
   product: Pick<
     Product,
-    "id" | "brand" | "sku" | "material_description" | "offering_number"
+    | "id"
+    | "brand"
+    | "sku"
+    | "material_description"
+    | "offering_number"
+    | "brand_pillar"
   >;
   distributor?: Pick<Distributor, "id" | "name" | "currency">;
   cost: number;
@@ -387,7 +405,7 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number" 
+    "id" | "brand" | "material_description" | "offering_number"
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;

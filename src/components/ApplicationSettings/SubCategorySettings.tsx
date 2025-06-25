@@ -246,7 +246,7 @@ const SubcategorySettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                Add Subcategory
+                {id ? "Update Subcategory" : " Add Subcategory"}
               </h2>
               <div className="space-y-6">
                 <TextInput
@@ -304,7 +304,7 @@ const SubcategorySettings = () => {
                       close();
                     }}
                   >
-                    {id ? "Update" : " Add"}
+                    {id ? "Update Subcategory" : " Add Subcategory"}
                   </Button>
                 </Group>
               </div>
