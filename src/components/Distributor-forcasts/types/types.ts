@@ -1,4 +1,4 @@
-import { Innovation } from "@/types";
+import { Innovation } from '@/types';
 
 export interface Offering {
   id?: number;
@@ -48,7 +48,7 @@ export interface ApiError {
 }
 
 export interface ForecastProduct {
-  offering_number: number
+  offering_number: number;
   brand?: {
     name: string;
   };
@@ -75,15 +75,23 @@ export interface ForecastDetailsData {
 }
 
 export interface TransformedForecastRow {
+  id: number;
   brand: string;
   pillar: string;
+  brand_pillar: { id: number; name: string };
   sku: string;
   launchId: string;
   cost: string;
-  [key: string]: string;
+  items: Record<string, { value: number; is_closed: boolean }>;
+  // [key: string]:
+  //   | number
+  //   | string
+  //   | boolean
+  //   | { id: number; name: string }
+  //   | Record<string, { value: number; is_closed: boolean }>;
 }
 
 export interface TransformedForecast {
   offeringNumber: string;
   data: TransformedForecastRow[];
-} 
+}
