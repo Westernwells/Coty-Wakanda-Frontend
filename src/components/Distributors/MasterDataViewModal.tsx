@@ -104,13 +104,18 @@ const MasterDataViewModal = ({
                     "C1",
                     "French USD",
                     "French EUR",
+                    "CSSP_TREX_USD",
+                    "CSSP_TREX_EUR",
                   ]
                 }
+                // TODO: update tableFields to match the actual fields you want to display
                 tableFields={
                   tableFields || [
                     "billing_price",
                     "rrsp",
                     "c1",
+                    "french_usd",
+                    "french_eur",
                     "french_usd",
                     "french_eur",
                   ]
