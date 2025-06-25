@@ -356,6 +356,12 @@ export interface ProductInput {
   brand_category: string;
 }
 
+interface DateValues {
+  value: string | number;
+  forecast_value?: string | number;
+  is_closed: boolean;
+}
+
 export interface ForecastData {
   product: Pick<
     Product,
@@ -371,12 +377,6 @@ export interface ForecastData {
   monthly_total: number;
   sub_total: number;
   items: Record<string, DateValues>;
-}
-
-interface DateValues {
-  value: string | number;
-  forecast_value?: string | number;
-  is_closed: boolean;
 }
 
 export interface ForecastSubmitInput {
