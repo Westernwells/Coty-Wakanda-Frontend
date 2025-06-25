@@ -1,8 +1,8 @@
-import { FormSection } from "../Shared/Form/Section";
-import { Table } from "@mantine/core";
-import DateSwitch from "./DateSwitch";
-import { UseFormReturnType } from "@mantine/form";
-import { ForecastSubmitInput } from "@/types";
+import { FormSection } from '../Shared/Form/Section';
+import { Table } from '@mantine/core';
+import DateSwitch from './DateSwitch';
+import { UseFormReturnType } from '@mantine/form';
+import { ForecastSubmitInput } from '@/types';
 
 interface SubmitTableProps {
   title?: string;
@@ -10,9 +10,15 @@ interface SubmitTableProps {
     [key: string]: string;
   }[];
   months?: string[];
+  form: UseFormReturnType<{ forecast: ForecastSubmitInput[] }>;
 }
 
-const SubmitTable = ({ title = "Offering", forecast, months = [], form     }: SubmitTableProps) => {
+const SubmitTable = ({
+  title = 'Offering',
+  forecast,
+  months = [],
+  form,
+}: SubmitTableProps) => {
   return (
     <FormSection title={title} rightSide={<DateSwitch />}>
       <div className="relative border border-primary rounded-xl border-t-0">
@@ -39,7 +45,10 @@ const SubmitTable = ({ title = "Offering", forecast, months = [], form     }: Su
             <Table.Tbody>
               {forecast.length === 0 ? (
                 <Table.Tr>
-                  <Table.Td colSpan={months.length + 7} className="text-center py-8 text-gray-500 text-lg">
+                  <Table.Td
+                    colSpan={months.length + 7}
+                    className="text-center py-8 text-gray-500 text-lg"
+                  >
                     No elements
                   </Table.Td>
                 </Table.Tr>
@@ -49,7 +58,7 @@ const SubmitTable = ({ title = "Offering", forecast, months = [], form     }: Su
                     return sum + (Number(element[month]) || 0);
                   }, 0);
 
-                  return ( 
+                  return (
                     <Table.Tr key={index}>
                       <Table.Td className="first:rounded-es-xl">
                         {element.brand}
@@ -77,4 +86,3 @@ const SubmitTable = ({ title = "Offering", forecast, months = [], form     }: Su
 };
 
 export default SubmitTable;
-

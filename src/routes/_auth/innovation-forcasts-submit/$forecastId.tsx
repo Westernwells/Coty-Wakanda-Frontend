@@ -37,12 +37,12 @@ function RouteComponent() {
     isLoading,
     error,
   } = useForecastData(params.forecastId);
-  const savedForecasts = listResp?.data.forecast || [];
+  const savedForecasts = listResp?.data?.forecast || [];
   const { months, transformedForecasts } = useForecastTransform(
     offerings,
     offeringProducts,
-    forecastResponse?.data,
     savedForecasts,
+    forecastResponse?.data,
     selectedType
   );
 

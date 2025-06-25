@@ -27,12 +27,10 @@ export const useForecastData = (id: string) => {
 
   const {
     data: listResp,
-    isLoading: loadingList,
-    error: errorList,
   } = useQuery({
-    queryKey: ['innovation-forecasts', innovation?.data.id],
+    queryKey: ['innovation-forecasts', innovation?.data?.id],
     queryFn: () => getInnovationForecastsDetails(),
-    enabled: !!innovation?.data.id,
+    enabled: !!innovation?.data?.id,
   });
 
   const { data: offerings, isLoading: isOfferingsLoading } = useQuery({

@@ -74,7 +74,7 @@ export type Brand = {
   brand_type_id: number;
   name: string;
   active: boolean;
-  type: "Luxury" | "Mass";
+  type: 'Luxury' | 'Mass';
   created_at: string;
   updated_at: string;
   deleted_at: null | string;
@@ -93,7 +93,7 @@ export type BrandPillar = {
 
 export type Coefficient = {
   id: number;
-  type: "regular" | "giftset" | "tester";
+  type: 'regular' | 'giftset' | 'tester';
   pref_value: string;
   non_pref_value: string;
   brand: Brand;
@@ -117,7 +117,7 @@ export type ProductBindingPricing = {
   regional_billing_price: number;
 };
 
-export type Pref = "pref" | "non-pref";
+export type Pref = 'pref' | 'non-pref';
 
 export type LoginValues = {
   email: string;
@@ -261,12 +261,12 @@ export interface Document {
 export interface PriceBenchmark {
   brand_id: string | number;
   product_id: string | number;
-  product_irc?: string | number
+  product_irc?: string | number;
   index_value: string | number;
   comment: string;
-  brand?: Pick<Brand, "id" | "name">;
-  product?: Pick<Product, "id">;
-  category?:  Pick<Category, "id" | "name">;
+  brand?: Pick<Brand, 'id' | 'name'>;
+  product?: Pick<Product, 'id'>;
+  category?: Pick<Category, 'id' | 'name'>;
 }
 
 export interface DistributerPricing {
@@ -276,7 +276,7 @@ export interface DistributerPricing {
   active_rrsp: number | string;
   billing: number | string;
   currency: string;
-  distributor: Pick<Distributor, "id" | "name" | "type" | "currency">;
+  distributor: Pick<Distributor, 'id' | 'name' | 'type' | 'currency'>;
 }
 
 export interface MasterProduct {
@@ -359,9 +359,14 @@ export interface ProductInput {
 export interface ForecastData {
   product: Pick<
     Product,
-    "id" | "brand" | "sku" | "material_description" | "offering_number" | "brand_pillar"
+    | 'id'
+    | 'brand'
+    | 'sku'
+    | 'material_description'
+    | 'offering_number'
+    | 'brand_pillar'
   >;
-  distributor?: Pick<Distributor, "id" | "name" | "currency">;
+  distributor?: Pick<Distributor, 'id' | 'name' | 'currency'>;
   cost: number;
   monthly_total: number;
   sub_total: number;
@@ -387,7 +392,7 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number" 
+    'id' | 'brand' | 'material_description' | 'offering_number'
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
@@ -400,8 +405,8 @@ export interface ProductDistributor {
   name: string;
   type: string;
   registered: string;
-  coefficients: Pick<Coefficient, "id" | "pref_value" | "non_pref_value">[];
-  mirrors: Omit<ProductDistributor, "registered">[];
+  coefficients: Pick<Coefficient, 'id' | 'pref_value' | 'non_pref_value'>[];
+  mirrors: Omit<ProductDistributor, 'registered'>[];
 }
 
 export interface ForecastChartData {
@@ -410,7 +415,7 @@ export interface ForecastChartData {
 }
 
 export interface OrderData {
-  product: Pick<Product, "id" | "brand" | "sku" | "material_description">;
+  product: Pick<Product, 'id' | 'brand' | 'sku' | 'material_description'>;
   cost: number;
   monthly_total: number;
   sub_total: number;
@@ -426,7 +431,7 @@ export interface Innovation {
   format: string;
   forecast_deadline: string;
   created_at: string;
-  brand: Pick<Brand, "id" | "name">;
+  brand: Pick<Brand, 'id' | 'name'>;
   brand_pillar: BrandPillar;
   status?: string;
 }

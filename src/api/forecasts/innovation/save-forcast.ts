@@ -27,7 +27,7 @@ export const useSaveForecast = ({
 
   return useMutation({
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: ['forecast-details', 2581] });
+      queryClient.invalidateQueries({ queryKey: ['forecast-details', forecastId] });
       onSuccess?.(...args);
     },
     ...restConfig,

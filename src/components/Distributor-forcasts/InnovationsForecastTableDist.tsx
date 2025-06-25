@@ -141,6 +141,7 @@ const InnovationsForecastTableDist = forwardRef<
             form={form}
             forecastsByOffering={forecastsByOffering}
             offerings={offerings}
+            status={true}
           />
         ))}
         
