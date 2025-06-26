@@ -20,7 +20,6 @@ import { useCsvProductBulkUploader } from "@/lib/hooks/useCsvProductBulkUploader
 import { Product as InnovationProduct } from "@/types/InnovationOfferProduct";
 import { toast } from "react-toastify";
 import { useOfferingProducts } from "./hooks/useOfferingProducts";
-import { getBrands } from "@/api/get-brands";
 
 export const OfferingTable: React.FC<OfferingTableProps> = ({
   offerings,
@@ -176,11 +175,6 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
     queryFn: () => getProducts({ page_size: 9999, filter: { is_innovation_product: true } }),
   });
 
-  const { data: brands } = useQuery({
-    queryKey: ["brands"],
-    queryFn: () => getBrands(),
-  });
-
   return (
     <div className="bg-white rounded-2xl px-6 my-6">
       <FormSection title="Offerings">
@@ -226,10 +220,7 @@ export const OfferingTable: React.FC<OfferingTableProps> = ({
                         isDeleteMode={isDeleteMode}
                         setIsDeleteMode={setIsDeleteMode}
                         onDeleteProducts={deleteProductsWithRefresh}
-                        brandOptions={brands?.data?.map((brand) => ({
-                          value: brand.id.toString(),
-                          label: brand.name,
-                        })) || []}
+                        brandOptions={brandOptions}
                         brandPillarOptions={brandPillarOptions}
                         isEdit={productsTableStates[index]?.isEdit || false}
                         setIsEdit={(isEditValue) => {
