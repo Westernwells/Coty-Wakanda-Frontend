@@ -183,7 +183,6 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
           onLocalEdit={onLocalEdit}
           onLocalDelete={onLocalDelete}
           productListData={productListData}
-          brandOptions={brandOptions}
         />
       </Grid.Col>
     </Grid>

@@ -50,7 +50,6 @@ interface CombinedInnovationTablesProps {
   onLocalEdit?: (product: Product) => void;
   onLocalDelete?: (product: Product) => void;
   productListData?: InnovationProduct[]; // Optional prop for product list data
-  brandOptions: Array<{ value: string; label: string }>;
 }
 
 function CombinedInnovationTables({
@@ -72,7 +71,6 @@ function CombinedInnovationTables({
   onLocalEdit,
   onLocalDelete,
   productListData,
-  brandOptions,
 }: CombinedInnovationTablesProps) {
   const { fetchOfferingProducts } = useOfferingProducts(innovationId);
   const [currentDistributorIndex, setCurrentDistributorIndex] = useState(0);
@@ -454,6 +452,8 @@ function CombinedInnovationTables({
                     <Table.Th className="border-r border-gray-200">
                       Status
                     </Table.Th>
+                    <Table.Th>CSSP_TREX_EUR</Table.Th>
+                    <Table.Th>CSSP_TREX_USD</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -690,7 +690,24 @@ function CombinedInnovationTables({
                             </span>
                           )}
                         </Table.Td>
-                        
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                         ---
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            height: "42px !important",
+                            paddingTop: "0px",
+                            paddingBottom: "0px",
+                          }}
+                        >
+                         ---
+                        </Table.Td>
                       </Table.Tr>
                     );
                   })}
@@ -735,7 +752,7 @@ function CombinedInnovationTables({
               </>
             )}
           </div>
-{/* TODO: update CSSP value here */}
+
           <InfiniteScroll
             dataLength={products.length}
             next={() => {}}
@@ -765,8 +782,7 @@ function CombinedInnovationTables({
                     <Table.Th>C1</Table.Th>
                     <Table.Th>French USD</Table.Th>
                     <Table.Th>French EUR</Table.Th>
-                    <Table.Th>CSSP_TREX_EUR</Table.Th>
-                    <Table.Th>CSSP_TREX_USD</Table.Th>
+   
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -774,6 +790,8 @@ function CombinedInnovationTables({
                     const distributorPrice = currentDistributor?.data.find(
                       (price) => price.irc === product.irc
                     );
+
+                    console.log("distributor Price", distributorPrice);
 
                     return (
                       <Table.Tr
@@ -857,24 +875,7 @@ function CombinedInnovationTables({
                             "-"
                           )}
                         </Table.Td>
-                        <Table.Td
-                          style={{
-                            height: "42px !important",
-                            paddingTop: "0px",
-                            paddingBottom: "0px",
-                          }}
-                        >
-                         ---
-                        </Table.Td>
-                        <Table.Td
-                          style={{
-                            height: "42px !important",
-                            paddingTop: "0px",
-                            paddingBottom: "0px",
-                          }}
-                        >
-                         ---
-                        </Table.Td>
+              
                       </Table.Tr>
                     );
                   })}
@@ -937,7 +938,6 @@ function CombinedInnovationTables({
       {benchmarkProduct && (
         <>
           <PriceBenchmarkModal
-          brandOptions={brandOptions}
             opened={isBenchmarkModalOpen}
             onClose={() => {
               setIsBenchmarkModalOpen(false);
