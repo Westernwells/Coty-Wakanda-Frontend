@@ -9,7 +9,6 @@ export const useInnovationsWithOfferrings = (activePage: number, itemsPerPage: n
         queryKey: ['innovations'],
         queryFn: getInnovations
     });
-
     const filteredData = useMemo(() => {
         if (!innovationsData?.data) return [];
         

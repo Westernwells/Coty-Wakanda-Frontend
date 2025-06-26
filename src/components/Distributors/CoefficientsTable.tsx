@@ -90,7 +90,7 @@ function CoefficientsTable({ distributorId }: { distributorId: number }) {
                     </Table.Td>
                     <Table.Td>{element.pref_value}</Table.Td>
                     <Table.Td>
-                      {element.type === "regular"
+                      {element.type === "regular" || element.type === "giftset"
                         ? element.non_pref_value
                         : "-"}
                     </Table.Td>

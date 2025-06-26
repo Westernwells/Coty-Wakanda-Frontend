@@ -3,7 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 
 import Headline from "@/components/Shared/Headline";
 import PlusIcon from "@/components/Icons/PlusIcon";
-import InnovationsTable from "@/components/Innovations/InnovationsTable";
+import InnovationForecastsTable from "@/components/Innovations/InnovationForecastsTable";
 
 export const Route = createFileRoute("/_auth/innovations")({
   component: RouteComponent,
@@ -25,7 +25,7 @@ function RouteComponent() {
             Add new innovation
           </Button>
         </Group>
-        <InnovationsTable />
+        <InnovationForecastsTable />
       </section>
     </div>
   );

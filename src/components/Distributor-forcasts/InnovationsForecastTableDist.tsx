@@ -1,4 +1,4 @@
-import { ForecastData, ForecastDetailsData, ForecastSubmitInput, Product } from "@/types";
+import { ForecastData, ForecastDetailsData, ForecastSubmitInput,  Product } from "@/types";
 import { Text } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
 import { useEffect, useState, forwardRef, useImperativeHandle, useMemo } from "react";
@@ -6,10 +6,12 @@ import { z } from "zod";
 import { OfferingProductsMap } from "./hooks/use-offering-products";
 import { createBaseForecast, createProductForecast } from "./utils";
 import { ForecastFilters, OfferingTable } from "./components";
+import { Offering } from "../AddInnovation/Offering/types";
 
 interface InnovationsForecastTableDistProps {
   data: ForecastDetailsData;
   offeringProducts: OfferingProductsMap;
+  offerings: Offering[];
 }
 
 const forecastSchema = z.object({
@@ -29,11 +31,12 @@ const forecastSchema = z.object({
 const InnovationsForecastTableDist = forwardRef<
   { submit: () => void },
   InnovationsForecastTableDistProps
->(({ data, offeringProducts }, ref) => {
+>(({ data, offeringProducts,offerings }, ref) => {
   const [sortBy, setSortBy] = useState<string | null>("");
   const [itemsPerPage, setItemsPerPage] = useState("5");
   const [date, setDate] = useState<Date>(new Date());
   const [showDateChanger, setShowDateChanger] = useState(false);
+
 
   const forecastsByOffering = useMemo(() => {
     const grouped: Record<string, ForecastData[]> = {};
@@ -113,6 +116,8 @@ const InnovationsForecastTableDist = forwardRef<
     }
   }, [forecasts]);
 
+
+
   return (
     <form>
       <div className="bg-white shadow-md rounded-lg p-6 mt-5">
@@ -126,6 +131,7 @@ const InnovationsForecastTableDist = forwardRef<
           setDate={setDate}
         />
         
+
         {Object.entries(forecastsByOffering).map(([offeringId, offeringForecasts], index) => (
           <OfferingTable
             key={offeringId}
@@ -134,6 +140,8 @@ const InnovationsForecastTableDist = forwardRef<
             data={data}
             form={form}
             forecastsByOffering={forecastsByOffering}
+            offerings={offerings}
+            status={true}
           />
         ))}
         

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getInnovations } from "@/api/innovations/get-innovations";
 import ErrorCard from "../Shared/ErrorCard";
 import { Loader } from "lucide-react";
+import get from "lodash.get";
 import { useInView } from "react-intersection-observer";
 import { useNavigate } from "@tanstack/react-router";
 import { Innovation } from "@/types";
@@ -34,7 +35,7 @@ function InnovationsTable() {
   });
 
   const handleForecastClick = (row: Innovation) => {
-    const isActive = userData?.role === "admin" ? true : row.status === "active";
+    const isActive = row.status === "active";
     
     if (isActive) {
         navigate({
@@ -51,11 +52,28 @@ function InnovationsTable() {
 
   const totalPages = Math.ceil((data?.data.length || 0) / itemsPerPage);
 
+  const sortOptions = [
+    { value: "brand", label: "Brand" },
+    { value: "offeringNumber", label: "Offering number" },
+    { value: "status", label: "Status" },
+  ];
 
+  // Filter data based on search and filters
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    if (sortBy) {
+      return [...data.data].sort((a, b) =>
+        get(a, sortBy) > get(b, sortBy)
+          ? 1
+          : get(b, sortBy) > get(a, sortBy)
+            ? -1
+            : 0
+      );
+    }
+    return data.data;
+  }, [sortBy, data]);
 
-    const filteredData = filterByStatus(data?.data || [], activeTab);
-
-
+  // Load more data dynamically
   const paginatedData = useMemo(() => {
     return filteredData.slice(0, activePage * itemsPerPage);
   }, [filteredData, activePage]);
@@ -126,13 +144,11 @@ function InnovationsTable() {
               <Table.Thead>
                 <Table.Tr className="bg-primary text-white">
                   <Table.Th className="rounded-ss-xl">Brand</Table.Th>
-                  <Table.Th>Launch Name</Table.Th>
-                  <Table.Th>Launch Id</Table.Th>
-                  <Table.Th>Launch Reference</Table.Th>
+                  <Table.Th>Offering Number</Table.Th>
+                  <Table.Th>Global ICW</Table.Th>
+                  <Table.Th>Global OCD</Table.Th>
                   <Table.Th>Status</Table.Th>
                   <Table.Th className="rounded-se-xl"></Table.Th>
-                  
-                  
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -144,15 +160,15 @@ function InnovationsTable() {
                     <Table.Td className="first:rounded-es-xl">
                       {element.brand.name}
                     </Table.Td>
-                    <Table.Td>{element.launch_name}</Table.Td>
                     <Table.Td>{element.launch_id}</Table.Td>
+                    <Table.Td>{element.launch_name}</Table.Td>
                     <Table.Td>{element.launch_ref}</Table.Td>
-                    <Table.Td>{element.status}</Table.Td>
+                    <Table.Td>{element.forecast_deadline}</Table.Td>
                     <Table.Td
                       className="last:rounded-ee-xl text-center !pr-2 cursor-pointer"
                       onClick={() => handleForecastClick(element)}
                     >
-                      {userData?.role === "admin" ? <EyeIcon /> : element.status === "active" ? <PencilIcon /> : <EyeIcon />}
+                      {element.status === "active" ? <PencilIcon /> : <EyeIcon />}
                     </Table.Td>
                   </Table.Tr>
                 ))}

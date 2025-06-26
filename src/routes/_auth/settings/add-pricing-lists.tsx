@@ -162,9 +162,9 @@ function AddPricingListsComponent() {
           "Setting products from initial result:",
           initialPricingProductListResult.data
         );
-        setProductsData(initialPricingProductListResult.data);
-        setProductsMeta(initialPricingProductListResult.meta);
-        setProductsHasMore(initialPricingProductListResult.meta.has_next);
+        setProductsData(initialPricingProductListResult?.data);
+        setProductsMeta(initialPricingProductListResult?.meta);
+        setProductsHasMore(initialPricingProductListResult?.meta?.has_next);
       } else if (
         !isLoadingInitialProducts &&
         !isLoadingBrandTypeProducts &&
