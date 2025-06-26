@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, getHouseName } from "@/lib/utils";
 import { MasterProduct } from "@/types";
 import React, { useRef } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -62,7 +62,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
       }
     }
   }
-
+console.log("products", products);
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b sticky top-0 bg-white z-20">
@@ -133,16 +133,16 @@ const ProductTable: React.FC<ProductTableProps> = ({
                   )}
                 >
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
-                    {product.house}
+                    {getHouseName(product.house)}
                   </td>
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.description}
                   </td>
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
-                    {product.brand_line}
+                    {product?.brand_line ? typeof product.brand_line === "string" ? product.brand_line : product?.brand_line?.name: ""}
                   </td>
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
-                    {product.article_type}
+                    {product?.article_type}
                   </td>
                   <td className="px-2 py-[3px] whitespace-nowrap text-sm text-gray-900">
                     {product.irc}

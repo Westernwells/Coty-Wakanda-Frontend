@@ -18,12 +18,7 @@ export const addProductSchema = z.object({
   }),
   launch_date: z.date({ message: "This field is required" }),
   discontinue_date: z.date({ message: "This field is required" }),
-  offering_number: z.preprocess(
-    val => (val === "" ? undefined : val),
-    z.number({ coerce: true })
-      .min(1, { message: "Must be at least 1" })
-      .optional()
-  ),
+  offering_number: z.number().nullable().optional(),
   irc: z.string().min(1, { message: "This field is required" }),
   material_description: z
     .string()
@@ -31,7 +26,7 @@ export const addProductSchema = z.object({
   ean_upc: z.string().min(1, { message: "This field is required" }),
   house: z.string().min(1, { message: "This field is required" }),
   brand_id: z.string().min(1, { message: "This field is required" }),
-  line: z.string().min(1, { message: "This field is required" }),
+  // line: z.string().min(1, { message: "This field is required" }),
   line_id: z
     .number({
       coerce: true,

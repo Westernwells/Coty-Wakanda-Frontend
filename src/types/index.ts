@@ -149,8 +149,18 @@ export interface Product {
   sku: string;
   material_description: string;
   ean_upc: string;
-  house: string;
-  line: string;
+  house?: string;
+  line?: {
+    id: number;
+    name: string;
+    created_at: string | null;
+    house?: {
+      id: number;
+      name: string;
+      created_at: string | null;
+
+    } | null;  
+  } | null;
   line_id: string;
   line_number: string;
   article_type: string;
@@ -186,6 +196,7 @@ export interface Product {
   gmm_segment: Segment;
   status?: string;
   sub_brand_id?: string;
+  house_id?: string;
 }
 
 export interface Country {
@@ -337,13 +348,13 @@ export interface ProductInput {
   material_description: string;
   ean_upc: string;
   house: string;
-  line: string;
+  line?: string | any;
   line_id: string;
   line_number: string;
   article_type: string;
   division: string;
   segment_id: string;
-  sub_brand_id: string;
+  sub_brand_id: string | null;
   factory: string;
   commodity_id: string;
   gender: string;

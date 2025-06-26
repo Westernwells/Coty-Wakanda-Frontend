@@ -68,6 +68,7 @@ function RouteComponent() {
             <Loader size="md" />
           </div>
         ) : (
+      
           <MasterDataViewModal
             filters={filters}
             hasNextPage={hasNextPage}
@@ -77,7 +78,8 @@ function RouteComponent() {
             isLoading={isLoading}
             error={error}
             isFetchingNextPage={isFetchingNextPage}
-          />
+            />
+        
         )}
       </section>
     </div>

@@ -8,7 +8,13 @@ export type LinesApiResponse = {
 };
 
 export const getLines = async (
-  params: PageParams
+  params?: {
+    cursor?: number;
+    page_size?: number;
+    filter?: {
+      house_id?: string | number;
+    };
+  }
 ): Promise<LinesApiResponse> => {
   const response = await axios.get(`/lines`, { params });
   return response.data;
