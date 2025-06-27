@@ -167,7 +167,7 @@ export const ProductTableContent: React.FC<ProductTableContentProps> = ({
     <Grid gutter="lg">
       <Grid.Col>
         <CombinedInnovationTables
-          products={mappedProducts}
+          products={mappedProducts as unknown as Product[]}
           isEdit={isEdit}
           onProductSelect={onProductSelect}
           selectedProducts={selectedProducts}

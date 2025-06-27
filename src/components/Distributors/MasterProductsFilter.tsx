@@ -78,8 +78,8 @@ const MasterProductFilters = ({
   const hasError = brandsError || distributorsError || housesError;
   const houseOptions =
     housesData?.data?.map((house) => ({
-      value: house,
-      label: house,
+      value: house?.id?.toString(),
+      label: house?.name?.toString() ,
     })) || [];
 
   if (hasError) {

@@ -8,7 +8,8 @@ export const createBaseForecast = (data: ForecastDetailsData, product: Product):
       brand: convertToBrand(product.brand),
       sku: product.sku,
       material_description: product.material_description || '',
-      offering_number: Number(product.offering_number) || 0
+      offering_number: Number(product.offering_number) || 0,
+      brand_pillar: product?.brand_pillar
         },
     cost: 0,
     monthly_total: 0,
@@ -25,7 +26,8 @@ export const createProductForecast = (baseForecast: ForecastData, product: any):
       brand: convertToBrand(product.brand || product.brand_pillar?.brand),
       sku: product.sku,
       material_description: product.material_description || '',
-      offering_number: Number(product.offering_number) || 0
+      offering_number: Number(product.offering_number) || 0,
+      brand_pillar: product?.brand_pillar
     }
   };
 }; 
