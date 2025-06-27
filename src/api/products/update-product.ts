@@ -8,7 +8,9 @@ import { useMutation } from "@tanstack/react-query";
 export const updateProduct = ({
   data,
 }: {
-  data: Partial<Product>;
+  data: Partial<Omit<Product, "house">&{
+    house: string
+  }>;
 }): Promise<Comment> => {
   return axios.put(
     `/products/${data.id}`,

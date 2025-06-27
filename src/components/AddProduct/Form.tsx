@@ -115,7 +115,7 @@ const AddProductForm = forwardRef(function AddProductForm(
   );
 
   const form = useForm<
-    Partial<ProductInput> & { division?: string; brand_category: string; house_id: string }
+    Partial<ProductInput> & { division?: string; brand_category: string; }
   >({
     mode: "uncontrolled",
     initialValues: isEdit
@@ -129,9 +129,7 @@ const AddProductForm = forwardRef(function AddProductForm(
           brand_type: product?.division,
           line: product?.line?.id?.toString() ?? "",
           house: product?.house?.id?.toString() ?? "",
-          line_id: product?.line?.id?.toString() ?? "",
-          // brand_id: product?.brand?.id?.toString() ?? "",
-          // sub_brand_id: "153",
+          line_id: product?.line?.id?.toString() ?? ""
           
         }
       : {
@@ -247,7 +245,7 @@ const AddProductForm = forwardRef(function AddProductForm(
         queryFn: () => getLines({
           cursor: 1,
           filter:{
-            house_id: form.getValues().house as string,
+            house_id: form.getValues().house as unknown as string,
           },
           page_size: 9999,
           
@@ -385,7 +383,7 @@ console.log("form error", form.errors);
                 )
               );
             }
-      
+           
             updateProduct.mutate(
               {
                 data: {
@@ -398,6 +396,8 @@ console.log("form error", form.errors);
                   price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
                   house_id: values.house,
+                  house: values.house
+                  // house: values.house?.id
                 
                 },
               },
@@ -429,6 +429,7 @@ console.log("form error", form.errors);
                   sub_brand_id: values.sub_brand_id,
                   price_benchmark: null,
                   house_id: values.house,
+                  house: values.house
                 },
               },
               {
@@ -1407,7 +1408,7 @@ console.log("form error", form.errors);
       </FormSection>
 
       <FormSection title="Upload documents" className="mb-5">
-        <FileUploadSection
+        <FileUploadSection<Partial<ProductInput> & { division?: string; brand_category: string; }>
           form={form}
           multiple
           id="documents"
@@ -1474,6 +1475,7 @@ console.log("form error", form.errors);
                     .split("T")[0],
                   price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
+                  // house: toSubmit
                 },
               },
               {

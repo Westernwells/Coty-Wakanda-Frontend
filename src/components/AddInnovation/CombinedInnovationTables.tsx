@@ -43,6 +43,7 @@ interface CombinedInnovationTablesProps {
       billing_price: number;
       rrsp: number;
       c1: number;
+      billing_price_error?: string;
     }[];
   }[];
   // New props
@@ -198,7 +199,9 @@ function CombinedInnovationTables({
     onSelectedProductsChange(newSelectedProducts);
   };
 
-  const handleBenchmarkToggle = (product: Product) => {
+  const handleBenchmarkToggle = (product: Product &{
+    sub_brand_id?: string
+  }) => {
     const newBenchmarkedProducts = new Set(benchmarkedProducts);
     if (product?.price_benchmark) {
       setBenchmarkProduct(product);
@@ -369,9 +372,12 @@ function CombinedInnovationTables({
           product_type: productData.product_type ?? "saleable",
           pref: productData.pref ?? "pref",
           grouping: productData.grouping ?? "1",
+          sub_brand_id: productData?.sub_brand_id ?? "",
           ...(localValue
             ? { price_benchmark: localValue }
             : { price_benchmark: null }),
+            line: productData?.line?.id.toString(),
+            house: productData?.house?.id.toString()
         },
       },
       {
@@ -579,7 +585,9 @@ function CombinedInnovationTables({
                         >
                           <Checkbox
                             checked={product?.price_benchmark ? true : false}
-                            onChange={() => handleBenchmarkToggle(product)}
+                            onChange={() => handleBenchmarkToggle(product as unknown as  Product &{
+                              sub_brand_id?: string
+                            })}
                             styles={{
                               input: {
                                 cursor: "pointer",
@@ -803,7 +811,6 @@ function CombinedInnovationTables({
                     const distributorPrice = currentDistributor?.data.find(
                       (price) => price.irc === product.irc
                     );
-
                     return (
                       <Table.Tr
                         key={product.id}
@@ -830,7 +837,7 @@ function CombinedInnovationTables({
                             <>
                               ${distributorPrice.billing_price.toFixed(2)}
                               <div className="absolute top-1 right-0">
-                                <ExclamationTooltip />
+                                <ExclamationTooltip message={distributorPrice?.billing_price_error} />
                               </div>
                             </>
                           ) : (
@@ -1033,6 +1040,10 @@ function CombinedInnovationTables({
                       .toISOString()
                       .split("T")[0]
                   : benchmarkProduct.discontinue_date,
+                  sub_brand_id: benchmarkProduct?.sub_brand_id ?? undefined,
+                  // house:
+                  house: benchmarkProduct?.house?.id.toString(),
+                  line: benchmarkProduct?.line?.id.toString()
             }}
             productListData={productListData}
           />

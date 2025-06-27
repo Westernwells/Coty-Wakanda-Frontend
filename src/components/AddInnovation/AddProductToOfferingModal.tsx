@@ -47,7 +47,7 @@ export interface OfferingProductFormValues {
   division: string;
   brand_category: string;
   ean_upc: string;
-  house: string;
+  house: string | number;
   line: string;
   line_id: string | number | undefined;
   article_type: string;
@@ -175,7 +175,7 @@ export function AddProductToOfferingModal({
             brand_category: (initialData as any)?.brand_category || "",
             ean_upc: initialData.ean_upc || "",
             house: initialData?.line?.house?.id ?? "",
-            line: initialData.line?.id || "",
+            line: String(initialData.line?.id) || "",
             line_id: initialData?.line?.id || "",
             article_type: initialData.article_type || "",
             offering_number: initialData.offering_number+ "" || "",
@@ -290,7 +290,7 @@ export function AddProductToOfferingModal({
         brand_category: initialData.brand_category || "",
         ean_upc: initialData.ean_upc || "",
         house: String(initialData.line?.house?.id) || "",
-        line: (initialData.line?.id) || "",
+        line: String(initialData.line?.id) || "",
         line_id: String(initialData?.line?.id) || "",
         article_type: initialData.article_type || "",
         offering_number: initialData.offering_number + "" || "",

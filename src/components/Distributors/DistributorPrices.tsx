@@ -251,8 +251,8 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
                               className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
                               ${Number(value).toFixed(2)}
-                              <div className="absolute top-1 right-0">
-                                <ExclamationTooltip />
+                               <div className="absolute top-1 right-0">
+                                <ExclamationTooltip message={price?.billing_price_error} />
                               </div>
                             </div>
                           )}

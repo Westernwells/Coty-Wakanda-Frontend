@@ -80,7 +80,6 @@ export type Brand = {
   name: string;
   active: boolean;
   type: "Luxury" | "Mass";
-  type: "Luxury" | "Mass";
   created_at: string;
   updated_at: string;
   deleted_at: null | string;
@@ -149,7 +148,11 @@ export interface Product {
   sku: string;
   material_description: string;
   ean_upc: string;
-  house?: string;
+  house?:  {
+    id: number;
+    name: string;
+    created_at: string | null;
+  } | null; 
   line?: {
     id: number;
     name: string;
@@ -195,7 +198,7 @@ export interface Product {
   gmm_market: Market;
   gmm_segment: Segment;
   status?: string;
-  sub_brand_id?: string;
+  sub_brand_id?: string | null;
   house_id?: string;
 }
 
@@ -310,7 +313,15 @@ export interface DistributerPricing {
 export interface MasterProduct {
   house: string;
   description: string;
-  brand_line: string;
+  brand_line: {
+    id: number;
+    name: string;
+    created_at: string | null;
+    active: boolean;
+    house_id: number | null;
+    updated_at: string | null;
+  } | string | null;
+
   article_type: string;
   irc: string;
   icp_eur: string;
@@ -332,6 +343,7 @@ export interface MasterDistributor {
     rrsp: string | null;
     billing_price: string | null;
     c1: string | null;
+    billing_price_error: string | null;
   }[];
 }
 
@@ -347,7 +359,7 @@ export interface ProductInput {
   irc: string;
   material_description: string;
   ean_upc: string;
-  house: string;
+  house:  string;
   line?: string | any;
   line_id: string;
   line_number: string;

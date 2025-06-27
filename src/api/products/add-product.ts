@@ -203,7 +203,9 @@ export const addProductSchema = z.object({
 export const addProduct = ({
   data,
 }: {
-  data: Partial<Product>;
+  data: Partial<Omit<Product, "house"> & {
+    house: string;
+  }>;
 }): Promise<Comment> => {
   const body = {
     ...data,
