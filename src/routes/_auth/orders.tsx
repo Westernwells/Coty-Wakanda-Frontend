@@ -1,27 +1,26 @@
-import { getOrders } from '@/api/orders/get-orders';
-import OrdersTable from '@/components/Distributor-forcasts/OrdersTable';
-import DeadlineHeader from '@/components/DistributorPages/Shared/DeadlineHeader';
-import SubmitFooter from '@/components/DistributorPages/Shared/SubmitFooterOrder';
-import ErrorCard from '@/components/Shared/ErrorCard';
-import Headline from '@/components/Shared/Headline';
-import { ForecastSubmitInput } from '@/types';
-import { Loader } from '@mantine/core';
-import { useForm } from '@mantine/form';
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect } from 'react';
+import { getOrders } from "@/api/orders/get-orders";
+import OrdersTable from "@/components/Distributor-forcasts/OrdersTable";
+import DeadlineHeader from "@/components/DistributorPages/Shared/DeadlineHeader";
+import SubmitFooter from "@/components/DistributorPages/Shared/SubmitFooterOrder";
+import ErrorCard from "@/components/Shared/ErrorCard";
+import Headline from "@/components/Shared/Headline";
+import { ForecastSubmitInput } from "@/types";
+import { Loader } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-export const Route = createFileRoute('/_auth/orders')({
+export const Route = createFileRoute("/_auth/orders")({
   component: RouteComponent,
-})
-
+});
 
 function RouteComponent() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["orders"],
     queryFn: getOrders,
   });
-  const form = useForm<{order: ForecastSubmitInput[]}>();
+  const form = useForm<{ order: ForecastSubmitInput[] }>();
 
   useEffect(() => {
     if (data) {
@@ -33,9 +32,11 @@ function RouteComponent() {
         })),
       }));
 
-      form.setValues({order: [...transformedData]});
+      form.setValues({ order: [...transformedData] });
     }
   }, [data]);
+
+  console.log("Orders data:", data);
 
   return (
     <div>
@@ -52,7 +53,7 @@ function RouteComponent() {
       ) : (
         <OrdersTable data={data.data.order} form={form} />
       )}
-      <SubmitFooter title="Submit Orders" form={form}/>
+      <SubmitFooter title="Submit Orders" form={form} />
     </div>
   );
 }

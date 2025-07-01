@@ -261,12 +261,12 @@ export interface Document {
 export interface PriceBenchmark {
   brand_id: string | number;
   product_id: string | number;
-  product_irc?: string | number
+  product_irc?: string | number;
   index_value: string | number;
   comment: string;
   brand?: Pick<Brand, "id" | "name">;
   product?: Pick<Product, "id">;
-  category?:  Pick<Category, "id" | "name">;
+  category?: Pick<Category, "id" | "name">;
 }
 
 export interface DistributerPricing {
@@ -387,7 +387,7 @@ export interface ForecastSubmitItem {
 export interface ForecastDetailsData {
   product: Pick<
     Product,
-    "id" | "brand" | "material_description" | "offering_number" 
+    "id" | "brand" | "material_description" | "offering_number"
   >;
   unit_forecast: Record<string, DateValues>;
   gross_sales: Record<string, DateValues>;
@@ -410,7 +410,7 @@ export interface ForecastChartData {
 }
 
 export interface OrderData {
-  product: Pick<Product, "id" | "brand" | "sku" | "material_description">;
+  product: Product;
   cost: number;
   monthly_total: number;
   sub_total: number;

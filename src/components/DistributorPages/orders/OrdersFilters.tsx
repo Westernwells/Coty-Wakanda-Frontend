@@ -67,7 +67,6 @@ const OrderFilter = ({
     },
   });
 
-  // Update parent filters when any field changes
   useEffect(() => {
     setFilters(form.getValues());
   }, [setFilters, form]);
