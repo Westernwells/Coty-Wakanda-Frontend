@@ -24,28 +24,33 @@ const SubmitFooter = ({
 }) => {
   const [opened, { open, close }] = useDisclosure(false);
   const submitOrderMutation = useSubmitOrder({ mutationConfig: {} });
-  const onSubmit = (type: "save" | "submit") => {
+  const onSubmit = async (type: "save" | "submit") => {
     if (form) {
       const data = form.getValues().order;
-      console.log(data)
-      const schema = z.object({
-        items: z
-          .object({ month: z.string(), value: z.number().min(0) })
-          .array(),
-        product_id: z.number()
-      }).array();
+      console.log(data);
+      const schema = z
+        .object({
+          items: z
+            .object({ month: z.string(), value: z.number().min(0) })
+            .array(),
+          product_id: z.number(),
+        })
+        .array();
       if (!schema.safeParse(data).success) {
         schema.safeParse(data).error?.issues.map((issue) => {
-          const path = issue.path.join(".")
-          form.setFieldError(`order.${path}`, "please fill this fields")
-        })
-        return
+          const path = issue.path.join(".");
+          form.setFieldError(`order.${path}`, "please fill this fields");
+        });
+        return;
       }
-      submitOrderMutation.mutate({ data: { order: data }, type: type });
+      await submitOrderMutation.mutateAsync({
+        data: { order: data },
+        type: type,
+      });
     }
   };
   return (
-    <Group justify="flex-end" mt="xl" gap={10} pb="lg" >
+    <Group justify="flex-end" mt="xl" gap={10} pb="lg">
       <Button
         variant="outline"
         className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white  hover:bg-opacity-40 transition-all ease-in-out duration-300"

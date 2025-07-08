@@ -410,6 +410,7 @@ export interface ForecastChartData {
 }
 
 export interface OrderData {
+  distributor: Distributor;
   product: Product;
   cost: number;
   monthly_total: number;

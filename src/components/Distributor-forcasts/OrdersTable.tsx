@@ -269,6 +269,8 @@ function OrdersTable({
                             allowNegative={false}
                             required
                             disabled={order.items[item].is_closed}
+                            defaultValue={order.items[item].value}
+                            value={order.items[item].value}
                           />
                         </Table.Td>
                       </Fragment>

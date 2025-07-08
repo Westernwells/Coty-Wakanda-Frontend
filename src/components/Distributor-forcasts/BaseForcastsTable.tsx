@@ -216,9 +216,9 @@ function BaseForecastsTable({
                   <Table.Th>SKU</Table.Th>
                   <Table.Th>Cost</Table.Th>
                   {!isSales && <Table.Th>Monthly Totals</Table.Th>}
-                  {/* {Object.keys(forecasts[0].items).map((date) => (
+                  {Object.keys(forecasts[0].items).map((date) => (
                     <Table.Th key={date}>{date}</Table.Th>
-                  ))} */}
+                  ))}
                   <Table.Th className="rounded-se-xl">Sub Total</Table.Th>
                 </Table.Tr>
               </Table.Thead>
