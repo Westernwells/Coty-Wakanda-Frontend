@@ -20,13 +20,17 @@ function RouteComponent() {
     queryKey: ["orders"],
     queryFn: getOrders,
   });
-  const form = useForm<{ order: ForecastSubmitInput[] }>();
+  const form = useForm<{ order: ForecastSubmitInput[] }>({
+    initialValues: {
+      order: [],
+    },
+  });
 
   useEffect(() => {
-    if (data) {
+    if (data?.data?.order) {
       const transformedData = data.data.order.map((item) => ({
         product_id: item.product.id,
-        items: Object.entries(item.items).map(([month, item]) => ({
+        items: Object.entries(item.items ?? {}).map(([month, item]) => ({
           month,
           value: item.value,
         })),

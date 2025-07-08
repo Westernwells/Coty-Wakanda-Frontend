@@ -3,21 +3,31 @@ import { MutationConfig } from "@/lib/react-query";
 import { queryClient } from "@/main";
 import { useMutation } from "@tanstack/react-query";
 
-interface BulkStatusUpdateRequest {
-  distributorId: number;
-  products: number[];
-  status: "hidden" | "visible";
-}
+type StatusUpdateRequest =
+  | {
+      distributorId: number;
+      productId: number;
+      status: "hidden" | "visible";
+    }
+  | {
+      distributorId: number;
+      products: number[];
+      status: "hidden" | "visible";
+    };
 
-export const updateProductsStatus = ({
-  distributorId,
-  products,
-  status,
-}: BulkStatusUpdateRequest): Promise<{ message: string }> => {
+export const updateProductsStatus = (
+  request: StatusUpdateRequest
+): Promise<{ message: string }> => {
+  const { distributorId, status } = request;
+
+  const productIds =
+    "productId" in request ? [request.productId] : request.products;
+
   return axios.post(
     `/distributors/${distributorId}/products/bulk-status-update`,
     {
-      products,
+      products: productIds,
+      productIds,
       status,
     }
   );
@@ -33,17 +43,48 @@ export const useUpdateProductsStatus = ({
   const { onSuccess, ...restConfig } = config || {};
 
   return useMutation({
-    onSuccess: (_, variables, ...rest) => {
-      // Invalidate the specific product list query for this distributor
+    mutationFn: updateProductsStatus,
+    onSuccess: (data, variables, context) => {
+      const { distributorId } = variables;
+      const updatedProductIds =
+        "productId" in variables ? [variables.productId] : variables.products;
+      const newStatus = variables.status;
+
+      // Manually update the cache
+      queryClient.setQueryData(
+        ["products", { distributorId }],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              data: page.data.map((product: any) =>
+                updatedProductIds.includes(product.id)
+                  ? {
+                      ...product,
+                      pricing: {
+                        ...product.pricing,
+                        status: newStatus,
+                      },
+                    }
+                  : product
+              ),
+            })),
+          };
+        }
+      );
+
+      // Optional: background refetch
       queryClient.invalidateQueries({
-        queryKey: ["products", { distributorId: variables.distributorId }],
+        queryKey: ["products", { distributorId }],
         exact: false,
-        refetchType: "active",
+        refetchType: "inactive",
       });
 
-      onSuccess?.(_, variables, ...rest);
+      onSuccess?.(data, variables, context);
     },
     ...restConfig,
-    mutationFn: updateProductsStatus,
   });
 };

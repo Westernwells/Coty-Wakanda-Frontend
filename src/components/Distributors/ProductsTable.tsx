@@ -9,15 +9,17 @@ import {
   Loader,
   Select,
   Table,
+  Modal,
 } from "@mantine/core";
-import { useIntersection } from "@mantine/hooks";
+import { useDisclosure, useIntersection } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ChevronDownIcon from "../Icons/ChevronDownIcon";
 import { selectStyles } from "../Shared/Styles";
 import { RotateCw, XIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 interface ProductsTableProps {
   distributorId: number;
@@ -87,10 +89,20 @@ const ProductsTable = ({
     },
   });
 
+  const [opened, { open, close }] = useDisclosure(false);
+  const [selectedProduct, setSelectedProduct] = useState<
+    ProductListResponse["data"][number] | null
+  >(null);
+  const [activeProduct, setActiveProduct] = useState<{
+    id: number;
+    currentStatus: "visible" | "hidden";
+  } | null>(null);
+
   const navigate = useNavigate();
 
   // Combine all pages of products
   const products = infiniteData?.pages.flatMap((page) => page.data) || [];
+
   const productIds = products.map((product) => product.id);
 
   const allProductsSelected =
@@ -155,212 +167,126 @@ const ProductsTable = ({
                 selectedProducts.length === 0 ||
                 updateStatusMutation.isPending
               }
-              loading={updateStatusMutation.isPending}
+              // loading={updateStatusMutation.isPending}
             >
               Apply
             </Button>
           </Group>
         </Group>
-        {/* <div className="overflow-x-auto overflow-y-auto max-h-[1000px] bg-red-500">
-        <Table
-          verticalSpacing="sm"
-          borderColor="transparent"
-          striped="even"
-          stripedColor="#F2F4F6"
-          stickyHeader
+        <InfiniteScroll
+          dataLength={products.length}
+          next={fetchNextPage}
+          hasMore={hasNextPage}
+          loader={
+            <div className="text-center py-4">
+              <Loader size="md" />
+            </div>
+          }
+          endMessage={
+            <p className="text-center text-gray-500 py-4">
+              No more products to load.
+            </p>
+          }
         >
-          <Table.Thead className="bg-primary h-14 sticky top-0 z-10">
-            <Table.Tr>
-              <Table.Th style={{ width: 40 }}>
-                <Checkbox
-                  checked={allProductsSelected}
-                  indeterminate={indeterminate}
-                  onChange={(event) =>
-                    onSelectAllChange(event.currentTarget.checked, productIds)
-                  }
-                  classNames={{ input: "bg-white border-gray-300" }}
-                  disabled={updateStatusMutation.isPending}
-                />
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                Product name
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                C1 Price
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                CSSP
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                Status
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                ICP EUR
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                ICP USD
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                French EUR
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                French USD
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                RRSP
-              </Table.Th>
-              <Table.Th className="text-white text-sm font-medium">
-                Regional Billing Prices
-              </Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {products.map((product, index) => (
-              <Table.Tr
-                key={product.id}
-                className={
-                  selectedProducts.includes(product.id) ? "bg-blue-50" : ""
-                }
-                ref={index === products.length - 1 ? ref : undefined}
-              >
-                <Table.Td>
+          <Table
+            verticalSpacing="sm"
+            borderColor="transparent"
+            striped="even"
+            stripedColor="#F2F4F6"
+          >
+            <Table.Thead>
+              <Table.Tr className="bg-primary text-white">
+                <Table.Th className="w-[50px] rounded-ss-xl">
                   <Checkbox
-                    checked={selectedProducts.includes(product.id)}
+                    checked={allProductsSelected}
+                    indeterminate={indeterminate}
                     onChange={(event) =>
-                      onRowCheckboxChange(
-                        product.id,
-                        event.currentTarget.checked
-                      )
+                      onSelectAllChange(event.currentTarget.checked, productIds)
                     }
                     classNames={{ input: "bg-white border-gray-300" }}
                     disabled={updateStatusMutation.isPending}
                   />
-                </Table.Td>
-                <Table.Td>{product.material_description}</Table.Td>
-                <Table.Td>{product.pricing.c1}</Table.Td>
-                <Table.Td>{product.pricing.cssp}</Table.Td>
-                <Table.Td>
-                  <Badge
-                    styles={{
-                      root: {
-                        backgroundColor:
-                          product.pricing.status === "hidden"
-                            ? "#FF8383"
-                            : "#2196F3",
-                      },
-                    }}
-                    variant="filled"
-                    radius="xl"
-                    className="px-3 py-1 font-normal"
-                  >
-                    {product.pricing.status}
-                  </Badge>
-                </Table.Td>
-                <Table.Td>{product.pricing.icp_eur}</Table.Td>
-                <Table.Td>{product.pricing.icp_usd}</Table.Td>
-                <Table.Td>{product.pricing.french_eur}</Table.Td>
-                <Table.Td>{product.pricing.french_usd}</Table.Td>
-                <Table.Td>{product.pricing.rrsp}</Table.Td>
-                <Table.Td>{product.pricing.regional_billing_price}</Table.Td>
+                </Table.Th>
+                <Table.Th>Product name</Table.Th>
+                <Table.Th>C1 Price</Table.Th>
+                <Table.Th>CSSP</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th className="border-l border-l-gray-200">
+                  ICP EUR
+                </Table.Th>
+                <Table.Th>ICP USD</Table.Th>
+                <Table.Th>French EUR</Table.Th>
+                <Table.Th>French USD</Table.Th>
+                <Table.Th>RRSP</Table.Th>
+                <Table.Th className="rounded-se-xl">
+                  Regional Billing Prices
+                </Table.Th>
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-        {isFetchingNextPage && (
-          <div className="flex justify-center items-center py-4">
-            <Loader size="sm" />
-          </div>
-        )}
-      </div> */}
-        <Table
-          verticalSpacing="sm"
-          borderColor="transparent"
-          striped="even"
-          stripedColor="#F2F4F6"
-        >
-          <Table.Thead>
-            <Table.Tr className="bg-primary text-white">
-              <Table.Th className="w-[50px] rounded-ss-xl">
-                <Checkbox
-                  checked={allProductsSelected}
-                  indeterminate={indeterminate}
-                  onChange={(event) =>
-                    onSelectAllChange(event.currentTarget.checked, productIds)
-                  }
-                  classNames={{ input: "bg-white border-gray-300" }}
-                  disabled={updateStatusMutation.isPending}
-                />
-              </Table.Th>
-              <Table.Th>Product name</Table.Th>
-              <Table.Th>C1 Price</Table.Th>
-              <Table.Th>CSSP</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th className="border-l border-l-gray-200">
-                ICP EUR
-              </Table.Th>
-              <Table.Th>ICP USD</Table.Th>
-              <Table.Th>French EUR</Table.Th>
-              <Table.Th>French USD</Table.Th>
-              <Table.Th>RRSP</Table.Th>
-              <Table.Th className="rounded-se-xl">
-                Regional Billing Prices
-              </Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {products.map((product, index) => (
-              <Table.Tr
-                key={product.id}
-                className={`
+            </Table.Thead>
+            <Table.Tbody>
+              {products.map((product, index) => (
+                <Table.Tr
+                  key={product.id}
+                  className={`
                 ${index % 2 === 0 ? "bg-white" : "bg-[#F2F4F6]"}
                 "hover:bg-primary/10"
               `}
-              >
-                <Table.Td>
-                  <Checkbox
-                    checked={selectedProducts.includes(product.id)}
-                    onChange={(event) =>
-                      onRowCheckboxChange(
-                        product.id,
-                        event.currentTarget.checked
-                      )
-                    }
-                    classNames={{ input: "bg-white border-gray-300" }}
-                    disabled={updateStatusMutation.isPending}
-                  />
-                </Table.Td>
-                <Table.Td>{product.material_description}</Table.Td>
-                <Table.Td>{product.pricing.c1}</Table.Td>
-                <Table.Td>{product.pricing.cssp}</Table.Td>
-                <Table.Td>
-                  <Badge
-                    styles={{
-                      root: {
-                        backgroundColor:
-                          product.pricing.status === "hidden"
-                            ? "#FF8383"
-                            : "#2196F3",
-                      },
-                    }}
-                    variant="filled"
-                    radius="xl"
-                    className="px-3 py-1 font-normal"
-                  >
-                    {product.pricing.status}
-                  </Badge>
-                </Table.Td>
-                <Table.Td className="border-l border-l-gray-200">
-                  {product.pricing.icp_eur}
-                </Table.Td>
-                <Table.Td>{product.pricing.icp_usd}</Table.Td>
-                <Table.Td>{product.pricing.french_eur}</Table.Td>
-                <Table.Td>{product.pricing.french_usd}</Table.Td>
-                <Table.Td>{product.pricing.rrsp}</Table.Td>
-                <Table.Td>{product.pricing.regional_billing_price}</Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={(event) =>
+                        onRowCheckboxChange(
+                          product.id,
+                          event.currentTarget.checked
+                        )
+                      }
+                      classNames={{ input: "bg-white border-gray-300" }}
+                      disabled={updateStatusMutation.isPending}
+                    />
+                  </Table.Td>
+                  <Table.Td>{product.material_description}</Table.Td>
+                  <Table.Td>{product.pricing.c1}</Table.Td>
+                  <Table.Td>{product.pricing.cssp}</Table.Td>
+                  <Table.Td>
+                    <Badge
+                      styles={{
+                        root: {
+                          backgroundColor:
+                            product.pricing.status === "hidden"
+                              ? "#FF8383"
+                              : "#2196F3",
+                        },
+                      }}
+                      variant="filled"
+                      radius="xl"
+                      className="px-3 py-1 font-normal cursor-pointer"
+                      onClick={() => {
+                        setActiveProduct({
+                          id: product.id,
+                          currentStatus: product.pricing.status as
+                            | "visible"
+                            | "hidden",
+                        });
+                        open();
+                      }}
+                    >
+                      {product.pricing.status}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td className="border-l border-l-gray-200">
+                    {product.pricing.icp_eur}
+                  </Table.Td>
+                  <Table.Td>{product.pricing.icp_usd}</Table.Td>
+                  <Table.Td>{product.pricing.french_eur}</Table.Td>
+                  <Table.Td>{product.pricing.french_usd}</Table.Td>
+                  <Table.Td>{product.pricing.rrsp}</Table.Td>
+                  <Table.Td>{product.pricing.regional_billing_price}</Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </InfiniteScroll>
       </div>
 
       <div className="flex items-center justify-end gap-x-2">
@@ -383,6 +309,68 @@ const ProductsTable = ({
           Update
         </Button>
       </div>
+
+      <Modal.Root
+        opened={opened}
+        onClose={() => {
+          close();
+          setActiveProduct(null);
+        }}
+        withinPortal={false}
+        trapFocus={false}
+        className={opened ? "absolute top-0 left-0 h-full w-full" : "hidden"}
+      >
+        <Modal.Overlay
+          bg="linear-gradient(180deg, rgba(0, 37, 84, 0.7) 0%, rgba(0, 235, 178, 0.7) 100%)"
+          blur={3}
+        />
+        <Modal.Content className="!items-center min-w-[70%]">
+          <Modal.Body>
+            <div className="bg-white rounded-2xl p-6 mt-6">
+              <h2 className="text-xl font-semibold mb-6 text-primary">
+                Are you sure you want to change the status of this product?
+              </h2>
+
+              <Group justify="flex-end" mt="xl" gap={10}>
+                <Button
+                  variant="outline"
+                  className="border-primary bg-transparent border-s-e rounded-ee-xl border-2 text-primary text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:bg-opacity-40"
+                  onClick={() => {
+                    close();
+                    setActiveProduct(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-primary bg-primary border-s-e rounded-ee-xl border-2 text-white text-sm font-medium px-1 md:px-[10px] hover:bg-white hover:text-primary hover:bg-opacity-40"
+                  onClick={() => {
+                    if (!activeProduct) return;
+
+                    const newStatus =
+                      activeProduct.currentStatus === "hidden"
+                        ? "visible"
+                        : "hidden";
+
+                    updateStatusMutation.mutate({
+                      distributorId,
+                      productId: activeProduct.id,
+                      status: newStatus,
+                    });
+
+                    close();
+                    setActiveProduct(null);
+                  }}
+                >
+                  Confirm
+                </Button>
+              </Group>
+            </div>
+          </Modal.Body>
+        </Modal.Content>
+      </Modal.Root>
     </div>
   );
 };
