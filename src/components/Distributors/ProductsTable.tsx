@@ -20,6 +20,7 @@ import { selectStyles } from "../Shared/Styles";
 import { RotateCw, XIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { toast } from "react-toastify";
 
 interface ProductsTableProps {
   distributorId: number;
@@ -72,6 +73,8 @@ const ProductsTable = ({
   const updateStatusMutation = useUpdateProductsStatus({
     config: {
       onSuccess: () => {
+        toast.success("Products status updated successfully");
+        close();
         notifications.show({
           title: "Success",
           message: "Products status updated successfully",
@@ -360,7 +363,6 @@ const ProductsTable = ({
                       status: newStatus,
                     });
 
-                    close();
                     setActiveProduct(null);
                   }}
                 >

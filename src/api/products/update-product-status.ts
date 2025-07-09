@@ -43,6 +43,7 @@ export const useUpdateProductsStatus = ({
   const { onSuccess, ...restConfig } = config || {};
 
   return useMutation({
+    ...restConfig,
     mutationFn: updateProductsStatus,
     onSuccess: (data, variables, context) => {
       const { distributorId } = variables;
@@ -51,40 +52,39 @@ export const useUpdateProductsStatus = ({
       const newStatus = variables.status;
 
       // Manually update the cache
-      queryClient.setQueryData(
-        ["products", { distributorId }],
-        (oldData: any) => {
-          if (!oldData) return oldData;
+      // queryClient.setQueryData(
+      //   ["products", { distributorId }],
+      //   (oldData: any) => {
+      //     if (!oldData) return oldData;
 
-          return {
-            ...oldData,
-            pages: oldData.pages.map((page: any) => ({
-              ...page,
-              data: page.data.map((product: any) =>
-                updatedProductIds.includes(product.id)
-                  ? {
-                      ...product,
-                      pricing: {
-                        ...product.pricing,
-                        status: newStatus,
-                      },
-                    }
-                  : product
-              ),
-            })),
-          };
-        }
-      );
+      //     return {
+      //       ...oldData,
+      //       pages: oldData.pages.map((page: any) => ({
+      //         ...page,
+      //         data: page.data.map((product: any) =>
+      //           updatedProductIds.includes(product.id)
+      //             ? {
+      //                 ...product,
+      //                 pricing: {
+      //                   ...product.pricing,
+      //                   status: newStatus,
+      //                 },
+      //               }
+      //             : product
+      //         ),
+      //       })),
+      //     };
+      //   }
+      // );
 
       // Optional: background refetch
       queryClient.invalidateQueries({
         queryKey: ["products", { distributorId }],
-        exact: false,
-        refetchType: "inactive",
+        // exact: false,
+        // refetchType: "inactive",
       });
 
       onSuccess?.(data, variables, context);
     },
-    ...restConfig,
   });
 };

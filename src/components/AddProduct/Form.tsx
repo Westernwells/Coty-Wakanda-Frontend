@@ -636,8 +636,8 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="House"
               data={
                 housesData?.data?.map((house) => ({
-                  value: house.toString(),
-                  label: house.toString(),
+                  value: house?.id?.toString(),
+                  label: house?.name?.toString(),
                 })) || []
               }
               classNames={selectStyles}

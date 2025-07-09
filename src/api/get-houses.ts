@@ -2,7 +2,10 @@ import { axios } from "@/lib/axios";
 
 export type ApiResponse = {
     message: string;
-    data: string[];
+    data: {
+        id: string;
+        name: string;
+    }[];
 };
 
 export const getHouses = async (): Promise<ApiResponse> => {

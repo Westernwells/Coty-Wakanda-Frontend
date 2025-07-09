@@ -78,8 +78,8 @@ const MasterProductFilters = ({
   const hasError = brandsError || distributorsError || housesError;
   const houseOptions =
     housesData?.data?.map((house) => ({
-      value: house,
-      label: house,
+      value: house.id.toString(),
+      label: house.name.toString(),
     })) || [];
 
   if (hasError) {
@@ -170,7 +170,10 @@ const MasterProductFilters = ({
 
           <CustomSelect
             value={form?.values?.house ?? ""}
-            options={houseOptions}
+            options={houseOptions?.map((house) => ({
+              value: house.value.toString(),
+              label: house.label.toString(),
+            }))}
             onChange={(val) => form.setFieldValue("house", val)}
             placeholder="Filter by house"
             className="min-w-max max-w-lg w-full"
