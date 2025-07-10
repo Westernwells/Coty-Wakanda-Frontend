@@ -216,7 +216,7 @@ const MarketSettings = () => {
           <Modal.Body>
             <div className="bg-white rounded-2xl p-6 mt-6">
               <h2 className="text-xl font-semibold mb-6 text-primary">
-                Add Market
+                {id ? "Update Market" : "Add Market"}
               </h2>
               <div className="space-y-6">
                 <TextInput
@@ -270,7 +270,7 @@ const MarketSettings = () => {
                       close();
                     }}
                   >
-                    {id ? "Update" : " Add"}
+                    {id ? "Update Market" : "Add Market"}
                   </Button>
                 </Group>
               </div>

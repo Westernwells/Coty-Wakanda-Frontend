@@ -27,7 +27,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm, zodResolver } from "@mantine/form";
 import { useQueries } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import DateIcon from "../Icons/DateIcon";
 import { FormField } from "../Shared/Form/Field";
@@ -35,6 +35,7 @@ import { FileUploadSection } from "../Shared/Form/FileUploadSection";
 import { FormSection } from "../Shared/Form/Section";
 import { selectStyles, textInputStyles } from "../Shared/Styles";
 import { BrandTypeConfirmationModal } from "./brand-type-confirmation-modal";
+import { getLines } from "@/api/listManagement/lines/get-lines";
 
 const AddProductForm = forwardRef(function AddProductForm(
   {
@@ -105,6 +106,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     ref,
     () => ({
       submit: () => {
+        console.log("Submitting form");
         internalFormRef.current?.requestSubmit();
       },
       isSubmitting,
@@ -113,7 +115,7 @@ const AddProductForm = forwardRef(function AddProductForm(
   );
 
   const form = useForm<
-    Partial<ProductInput> & { division?: string; brand_category: string, }
+    Partial<ProductInput> & { division?: string; brand_category: string; }
   >({
     mode: "uncontrolled",
     initialValues: isEdit
@@ -123,18 +125,31 @@ const AddProductForm = forwardRef(function AddProductForm(
           brand_category:
             (productToEdit as unknown as { brand_category?: string })
               ?.brand_category ?? "",
-              brand_type: product?.division,
+          // house: 25,
+          brand_type: product?.division,
+          line: product?.line?.id?.toString() ?? "",
+          house: product?.house?.id?.toString() ?? "",
+          line_id: product?.line?.id?.toString() ?? ""
+          
         }
       : {
           price_benchmark: {},
           distributor_pricing: [],
           division: "",
           brand_category: "",
+          house: "",
         },
     validate: zodResolver(addProductSchema),
    
   });
 
+  useEffect(() => {
+    if (isEdit && product) {
+      // form.setFieldValue("brand_id", product?.brand?.id ?? "");
+      // form.setFieldValue("house", product?.house?.id?.toString() ?? "");
+      // form.setFieldValue("sub_brand_id", product?.brand_pillar?.id?.toString() ?? "");
+    }
+  }, [isEdit, product, form]);
 
   const [
     { data: marketsData, isLoading: marketsLoading },
@@ -150,6 +165,7 @@ const AddProductForm = forwardRef(function AddProductForm(
     { data: productDistributorsData, isLoading: productDistrubutorsLoading },
     { data: housesData, error: housesError },
     { data: articlesData, error: articlesError },
+    {data: linesData, error: linesError, isLoading: linesLoading}
 
   ] = useQueries({
     queries: [
@@ -199,6 +215,7 @@ const AddProductForm = forwardRef(function AddProductForm(
             filter: {
               brand_id: form.getValues().brand_id as string,
             },
+            do_not_paginate: 1,
           }),
         enabled: !!form.getValues().brand_id,
       },
@@ -223,9 +240,23 @@ const AddProductForm = forwardRef(function AddProductForm(
         queryKey: ["articles"],
         queryFn: () => getArticles(),
       },
+      {
+        queryKey: ["lines"],
+        queryFn: () => getLines({
+          cursor: 1,
+          filter:{
+            house_id: form.getValues().house as unknown as string,
+          },
+          page_size: 9999,
+          
+        }),
+        enabled: !!form.getValues().house,
+      },
     ],
   });
 
+
+  console.log("house data", housesData, housesError);
   const updateProduct = useUpdateProduct({
     mutationConfig: {
       onError: (error) => {
@@ -250,7 +281,16 @@ const AddProductForm = forwardRef(function AddProductForm(
     },
   });
 
+  form.watch("house", () => {
+    // form.setFieldValue("line", null);
+    queryClient.invalidateQueries({
+      queryKey: ["lines"],
+      refetchType: "all",
+    });
+    
+  });
   form.watch("brand_id", () => {
+    console.log("Brand ID changed, resetting sub_brand_id",form.getValues().brand_id?.toString() , product?.brand?.id?.toString());
     queryClient.invalidateQueries({
       queryKey: ["brand_pillars"],
       refetchType: "all",
@@ -259,6 +299,9 @@ const AddProductForm = forwardRef(function AddProductForm(
       queryKey: ["product-distributor"],
       refetchType: "all",
     });
+    if(form.getValues().brand_id?.toString() !== product?.brand?.id?.toString()) {
+      form.setFieldValue("sub_brand_id", null);
+    }
     
   });
 
@@ -307,16 +350,18 @@ const AddProductForm = forwardRef(function AddProductForm(
       gmmSubCategoriesLoading)
   )
     return <Loader />;
-
+console.log("form error", form.errors);
   return (
     <form
       ref={internalFormRef}
       onSubmit={form.onSubmit(async (values) => {
         if (isEdit && values.division !== initialDivision.current) {
+          console.log("Division changed, showing confirmation modal");
           setPendingSubmitValues(values);
           setShowDivisionModal(true);
           return;
         }
+        console.log("Submitting form with values:", values);
         setIsSubmitting(true);
         try {
           const { documents, ...toSubmit } = values;
@@ -338,7 +383,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                 )
               );
             }
-      
+           
             updateProduct.mutate(
               {
                 data: {
@@ -350,6 +395,10 @@ const AddProductForm = forwardRef(function AddProductForm(
                     .split("T")[0],
                   price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
+                  house_id: values.house,
+                  house: values.house
+                  // house: values.house?.id
+                
                 },
               },
               {
@@ -377,8 +426,10 @@ const AddProductForm = forwardRef(function AddProductForm(
                   // price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   documents: documents,
                   division: values.division,
-                  sub_brand_id: values.line,
+                  sub_brand_id: values.sub_brand_id,
                   price_benchmark: null,
+                  house_id: values.house,
+                  house: values.house
                 },
               },
               {
@@ -636,8 +687,8 @@ const AddProductForm = forwardRef(function AddProductForm(
               label="House"
               data={
                 housesData?.data?.map((house) => ({
-                  value: house?.id?.toString(),
-                  label: house?.name?.toString(),
+                  value: house?.id.toString(),
+                  label: house?.name.toString(),
                 })) || []
               }
               classNames={selectStyles}
@@ -661,7 +712,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={selectStyles}
             />
           </Grid.Col>
-          {/* <Grid.Col
+          <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -679,32 +730,47 @@ const AddProductForm = forwardRef(function AddProductForm(
               classNames={selectStyles}
               disabled={!form.getValues().brand_id}
             />
-          </Grid.Col> */}
-          <Grid.Col
+          </Grid.Col>
+             {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
             }}
           >
-            {/* <TextInput
-              {...form.getInputProps("line")}
-              label="Line"
-              classNames={textInputStyles}
-            /> */}
              <Select
-              {...form.getInputProps("line")}
+              {...form.getInputProps("sub_brand_id")}
               data={
                 brandPillarsData?.data?.map((brand) => ({
                   value: brand.id.toString(),
                   label: brand.name,
                 })) || []
               }
-              label="Line"
+              label="Brand Pillar"
               classNames={selectStyles}
               disabled={!form.getValues()?.brand_id}
             />
-          </Grid.Col>
+            </Grid.Col> */}
           <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+       
+             <Select
+              {...form.getInputProps("line_id")}
+              data={
+                linesData?.data?.map((brand) => ({
+                  value: brand.id.toString(),
+                  label: brand.name,
+                })) || []
+              }
+              label="Line"
+              classNames={selectStyles}
+              disabled={!form.getValues()?.house}
+            />
+          </Grid.Col>
+          {/* <Grid.Col
             span={{
               sm: 6,
               base: 12,
@@ -718,7 +784,7 @@ const AddProductForm = forwardRef(function AddProductForm(
               allowDecimal={false}
               allowNegative={false}
             />
-          </Grid.Col>
+          </Grid.Col> */}
           {/* <Grid.Col
             span={{
               sm: 6,
@@ -1342,7 +1408,7 @@ const AddProductForm = forwardRef(function AddProductForm(
       </FormSection>
 
       <FormSection title="Upload documents" className="mb-5">
-        <FileUploadSection
+        <FileUploadSection<Partial<ProductInput> & { division?: string; brand_category: string; }>
           form={form}
           multiple
           id="documents"
@@ -1409,6 +1475,7 @@ const AddProductForm = forwardRef(function AddProductForm(
                     .split("T")[0],
                   price_benchmark: (values.price_benchmark as PriceBenchmark) || null,
                   division: values.division,
+                  // house: toSubmit
                 },
               },
               {

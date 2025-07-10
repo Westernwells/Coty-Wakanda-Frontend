@@ -69,6 +69,11 @@ export type Category = {
   created_at: string;
 };
 
+export type Houses = {
+  id: number;
+  name: string;
+};
+
 export type Brand = {
   id: number;
   brand_type_id: number;
@@ -143,8 +148,22 @@ export interface Product {
   sku: string;
   material_description: string;
   ean_upc: string;
-  house: string;
-  line: string;
+  house?:  {
+    id: number;
+    name: string;
+    created_at: string | null;
+  } | null; 
+  line?: {
+    id: number;
+    name: string;
+    created_at: string | null;
+    house?: {
+      id: number;
+      name: string;
+      created_at: string | null;
+
+    } | null;  
+  } | null;
   line_id: string;
   line_number: string;
   article_type: string;
@@ -179,7 +198,8 @@ export interface Product {
   gmm_market: Market;
   gmm_segment: Segment;
   status?: string;
-  sub_brand_id?: string;
+  sub_brand_id?: string | null;
+  house_id?: string;
 }
 
 export interface Country {
@@ -195,6 +215,17 @@ export interface Country {
 export interface Subcategory {
   id: number;
   category_id?: number | string;
+  name: string;
+  created_at: string;
+}
+
+export interface Line {
+  id: number;
+  house: {
+    id: number;
+    name: string;
+    created_at: string | null;
+  };
   name: string;
   created_at: string;
 }
@@ -282,7 +313,15 @@ export interface DistributerPricing {
 export interface MasterProduct {
   house: string;
   description: string;
-  brand_line: string;
+  brand_line: {
+    id: number;
+    name: string;
+    created_at: string | null;
+    active: boolean;
+    house_id: number | null;
+    updated_at: string | null;
+  } | string | null;
+
   article_type: string;
   irc: string;
   icp_eur: string;
@@ -304,6 +343,7 @@ export interface MasterDistributor {
     rrsp: string | null;
     billing_price: string | null;
     c1: string | null;
+    billing_price_error: string | null;
   }[];
 }
 
@@ -319,14 +359,14 @@ export interface ProductInput {
   irc: string;
   material_description: string;
   ean_upc: string;
-  house: string;
-  line: string;
+  house:  string;
+  line?: string | any;
   line_id: string;
   line_number: string;
   article_type: string;
   division: string;
   segment_id: string;
-  sub_brand_id: string;
+  sub_brand_id: string | null;
   factory: string;
   commodity_id: string;
   gender: string;
@@ -359,7 +399,12 @@ export interface ProductInput {
 export interface ForecastData {
   product: Pick<
     Product,
-    "id" | "brand" | "sku" | "material_description" | "offering_number"
+    | "id"
+    | "brand"
+    | "sku"
+    | "material_description"
+    | "offering_number"
+    | "brand_pillar"
   >;
   distributor?: Pick<Distributor, "id" | "name" | "currency">;
   cost: number;

@@ -36,8 +36,6 @@ const PricingListSettings = () => {
     queryFn: () => getPricingList({ cursor, page_size: 20 }),
   });
 
-  console.log({ data });
-
   const deletePricingListMutation = useDeletePricingList({
     mutationConfig: {
       onSuccess: () => {

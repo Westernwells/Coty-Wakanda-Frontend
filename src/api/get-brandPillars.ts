@@ -17,6 +17,7 @@ export const getBrandPillars = async (params?: {
   filter: {
     brand_id: number | string;
   };
+  do_not_paginate?: 1;
 }): Promise<ApiResponse> => {
   const response = await axios.get("/brand-pillars", { params });
   return response.data;

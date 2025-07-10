@@ -70,7 +70,7 @@ const MasterDataViewModal = ({
       </div>
     );
   }
-
+  // console.log("distributors", distributors);
   if (products && products?.length > 0) {
     return (
       <div className=" bg-gray-50 mt-5">
@@ -116,8 +116,8 @@ const MasterDataViewModal = ({
                     "c1",
                     "french_usd",
                     "french_eur",
-                    "french_usd",
-                    "french_eur",
+                    "cssp_trex_usd",
+                    "cssp_trex_eur",
                   ]
                 }
                 scrollTop={scrollTop}

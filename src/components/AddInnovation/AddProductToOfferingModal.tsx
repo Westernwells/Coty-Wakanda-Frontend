@@ -30,6 +30,8 @@ import {
 } from "@/api/innovations/offerings/products/create-product";
 import { useUpdateOfferingProduct } from "@/api/innovations/offerings/products/update-product";
 import { Product } from "@/types";
+import { getLines } from "@/api/listManagement/lines/get-lines";
+import { getHouses } from "@/api/get-houses";
 
 // Updated interface for the product details in the modal
 export interface OfferingProductFormValues {
@@ -45,7 +47,7 @@ export interface OfferingProductFormValues {
   division: string;
   brand_category: string;
   ean_upc: string;
-  house: string;
+  house: string | number;
   line: string;
   line_id: string | number | undefined;
   article_type: string;
@@ -108,8 +110,8 @@ const productSchema = z.object({
   brand_category: z.string().optional(),
   ean_upc: z.string().optional(),
   house: z.string().optional(),
-  line: z.string().optional(),
-  line_id: z.union([z.number(), z.string()]).optional(),
+  line: z.number().optional(),
+  line_id: z.string(),
   article_type: z.string().optional(),
   offering_number: z.union([z.number(), z.string()]).optional(),
   launch_date: z.date().nullable().optional(),
@@ -172,9 +174,9 @@ export function AddProductToOfferingModal({
             division: initialData.division || "",
             brand_category: (initialData as any)?.brand_category || "",
             ean_upc: initialData.ean_upc || "",
-            house: initialData.house || "",
-            line: initialData.line || "",
-            line_id: initialData.line_id || "",
+            house: initialData?.line?.house?.id ?? "",
+            line: String(initialData.line?.id) || "",
+            line_id: initialData?.line?.id || "",
             article_type: initialData.article_type || "",
             offering_number: initialData.offering_number+ "" || "",
             launch_date: initialData.launch_date
@@ -265,7 +267,7 @@ export function AddProductToOfferingModal({
   // Add a useEffect hook to ensure form fields are properly populated in edit mode
   // Using a ref to track if we've already initialized the form to prevent continuous resets
   const formInitializedRef = useRef(false);
-  
+  console.log("initial data", initialData);
   useEffect(() => {
     // Only set form values once when the modal is first opened in edit mode
     if (editMode && initialData && opened && !formInitializedRef.current) {
@@ -287,9 +289,9 @@ export function AddProductToOfferingModal({
         division: initialData.division || "",
         brand_category: initialData.brand_category || "",
         ean_upc: initialData.ean_upc || "",
-        house: initialData.house || "",
-        line: initialData.line || "",
-        line_id: initialData.line_id || "",
+        house: String(initialData.line?.house?.id) || "",
+        line: String(initialData.line?.id) || "",
+        line_id: String(initialData?.line?.id) || "",
         article_type: initialData.article_type || "",
         offering_number: initialData.offering_number + "" || "",
         launch_date: initialData.launch_date ? new Date(initialData.launch_date) : null,
@@ -338,6 +340,9 @@ export function AddProductToOfferingModal({
     { data: brandPillarsData, isLoading: brandPillarsLoading },
     { data: productsListData, isLoading: productsLoading },
     { data: productDistributorsData, isLoading: productDistributorsLoading },
+    {data: linesData, error: linesError, isLoading: linesLoading},
+    { data: housesData, error: housesError },
+
   ] = useQueries({
     queries: [
       {
@@ -401,8 +406,26 @@ export function AddProductToOfferingModal({
           ),
         enabled: !!selectedBrandId && !!form.values.pref,
       },
+          {
+        queryKey: ["lines"],
+        queryFn: () => getLines({
+          cursor: 1,
+          filter:{
+            house_id: form.getValues().house as string,
+          },
+          page_size: 9999,
+        }),
+        enabled: !!form.getValues().house, // Only fetch lines if house is selected`
+      },
+            {
+        queryKey: ["houses"],
+        queryFn: () => getHouses(),
+      },
+      
     ],
   });
+
+  console.log("Lines Data:", form.getValues().house);
 
   // Reset sub_brand_id when brand_id changes
   useEffect(() => {
@@ -453,6 +476,24 @@ export function AddProductToOfferingModal({
         console.error("Failed to create product:", error);
       },
     },
+  });
+
+  form.watch("brand_id", (value) => {
+    if (value) {
+      queryClient.invalidateQueries({
+        queryKey: ["brand_pillars", value],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["product-distributor", value, form.values.pref],
+      });
+    }
+  });
+  form.watch("house", (value) => {
+    if (value) {
+      queryClient.invalidateQueries({
+        queryKey: ["lines"],
+      });
+    }
   });
 
   const updateProductMutation = useUpdateOfferingProduct({
@@ -556,8 +597,9 @@ export function AddProductToOfferingModal({
       division: values.division || "",
       brand_category: values.brand_category || "",
       ean_upc: values.ean_upc || "",
-      house: values.house || "",
-      line: values.line || "",
+      // house_id: Number(values.house) || "",
+      // house: Number(values.house) || "",
+      // line: values.line || "",
       line_id: values.line_id === "" ? undefined : values.line_id,
       article_type: values.article_type || "",
       offering_number: values.offering_number === "" ? undefined : values.offering_number + "",
@@ -605,7 +647,7 @@ export function AddProductToOfferingModal({
       });
     }
   };
-
+console.log("Form Values:", form.errors);
   return (
     <Modal.Root
       opened={opened}
@@ -710,14 +752,14 @@ export function AddProductToOfferingModal({
                     classNames={textInputStyles}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
+                {/* <Grid.Col span={{ base: 12, md: 6 }}>
                   <TextInput
                     label="House"
                     placeholder="Enter House"
                     {...form.getInputProps("house")}
                     classNames={textInputStyles}
                   />
-                </Grid.Col>
+                </Grid.Col> */}
                 <Grid.Col span={{ base: 12, md: 6 }}>
                   <Select
                     name="brand_id"
@@ -757,15 +799,58 @@ export function AddProductToOfferingModal({
                     clearable
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
+                {/* <Grid.Col span={{ base: 12, md: 6 }}>
                   <TextInput
                     label="Line"
                     placeholder="Enter Line"
                     {...form.getInputProps("line")}
                     classNames={textInputStyles}
                   />
-                </Grid.Col>
-                <Grid.Col span={{ base: 12, md: 6 }}>
+                </Grid.Col> */}
+                    <Grid.Col
+            span={{
+              sm: 6,
+              base: 12,
+            }}
+          >
+            {/* <TextInput
+              {...form.getInputProps("house")}
+              label="House"
+              classNames={textInputStyles}
+            /> */}
+             <Select
+              {...form.getInputProps("house")}
+              label="House"
+              data={
+                housesData?.data?.map((house) => ({
+                  value: house?.id.toString(),
+                  label: house?.name.toString(),
+                })) || []
+              }
+              classNames={selectStyles}
+            />
+          </Grid.Col>
+                        <Grid.Col
+                            span={{
+                              sm: 6,
+                              base: 12,
+                            }}
+                          >
+                       
+                             <Select
+                              {...form.getInputProps("line_id")}
+                              data={
+                                linesData?.data?.map((brand) => ({
+                                  value: brand.id.toString(),
+                                  label: brand.name,
+                                })) || []
+                              }
+                              label="Line"
+                              classNames={selectStyles}
+                              // disabled={!form.getValues()?.house}
+                            />
+                          </Grid.Col>
+                {/* <Grid.Col span={{ base: 12, md: 6 }}>
                   <NumberInput
                     label="Line ID"
                     placeholder="Enter Line ID"
@@ -775,7 +860,7 @@ export function AddProductToOfferingModal({
                     allowDecimal={false}
                     allowNegative={false}
                   />
-                </Grid.Col>
+                </Grid.Col> */}
                 <Grid.Col span={{ base: 12, md: 6 }}>
                 <Select
                     name="product_type"

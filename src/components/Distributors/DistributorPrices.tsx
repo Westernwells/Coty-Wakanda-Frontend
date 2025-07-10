@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { TableLoader } from "./ProductTable";
+import ExclamationTooltip from "../ExclamationToolTip";
 
 interface DistributorPricesProps {
   distributors: MasterDistributor[];
@@ -40,12 +41,9 @@ const DistributorPrices: React.FC<DistributorPricesProps> = ({
     rrsp: number;
   } | null>(null);
 
-
-
-const currentDistributorPrices = useMemo(() => {
+  const currentDistributorPrices = useMemo(() => {
     return distributors[currentIndex]?.data || [];
-  }
-  , [currentIndex, distributors]);
+  }, [currentIndex, distributors]);
 
   const nextDistributor = () => {
     setCurrentIndex((prev) => (prev + 1) % (distributors.length || 1));
@@ -179,13 +177,9 @@ const currentDistributorPrices = useMemo(() => {
       >
         <InfiniteScroll
           dataLength={currentDistributorPrices.length}
-          next={()=>{}}
+          next={() => {}}
           hasMore={hasMore}
-          loader={
-            isLoadingMore ? (
-              <TableLoader />
-            ) : null
-          }
+          loader={isLoadingMore ? <TableLoader /> : null}
           scrollableTarget="distributorTableScrollable"
           endMessage={
             <tr>
@@ -231,7 +225,10 @@ const currentDistributorPrices = useMemo(() => {
 
                     if (field === "billing_price") {
                       return (
-                        <td key={field} className="text-sm text-gray-900">
+                        <td
+                          key={field}
+                          className="text-sm text-gray-900 relative"
+                        >
                           {editingPrice?.irc === price.irc ? (
                             <input
                               type="number"
@@ -254,6 +251,9 @@ const currentDistributorPrices = useMemo(() => {
                               className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
                               ${Number(value).toFixed(2)}
+                               <div className="absolute top-1 right-0">
+                                <ExclamationTooltip message={price?.billing_price_error} />
+                              </div>
                             </div>
                           )}
                         </td>
@@ -262,7 +262,10 @@ const currentDistributorPrices = useMemo(() => {
 
                     if (field === "rrsp") {
                       return (
-                        <td key={field} className="text-sm text-gray-900">
+                        <td
+                          key={field}
+                          className="text-sm text-gray-900 relative"
+                        >
                           {editingRRSP?.irc === price.irc ? (
                             <input
                               type="number"
@@ -285,6 +288,9 @@ const currentDistributorPrices = useMemo(() => {
                               className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
                             >
                               ${Number(value).toFixed(2)}
+                              <div className="absolute top-1 right-0">
+                                <ExclamationTooltip />
+                              </div>
                             </div>
                           )}
                         </td>
@@ -292,26 +298,38 @@ const currentDistributorPrices = useMemo(() => {
                     }
                     if (field === "c1") {
                       return (
-                        <td key={field} className="text-sm text-gray-900">
-                             <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRRSPEdit(
-                                  price.irc as string,
-                                  Number(value)
-                                );
-                              }}
-                              className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
-                            >
-                              ${Number(value).toFixed(2)}
+                        <td
+                          key={field}
+                          className="text-sm text-gray-900 relative"
+                        >
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRRSPEdit(
+                                price.irc as string,
+                                Number(value)
+                              );
+                            }}
+                            className="cursor-pointer hover:bg-gray-100 rounded px-1 py-0.5"
+                          >
+                            ${Number(value).toFixed(2)}
+                            <div className="absolute top-1 right-0">
+                              <ExclamationTooltip />
                             </div>
+                          </div>
                         </td>
                       );
                     }
 
                     return (
-                      <td key={field} className="text-sm text-gray-900">
+                      <td
+                        key={field}
+                        className="text-sm text-gray-900 relative"
+                      >
                         {value ?? "-"}
+                        <div className="absolute top-1 right-0">
+                          <ExclamationTooltip />
+                        </div>
                       </td>
                     );
                   })}

@@ -12,6 +12,7 @@ import PricingListSettings from "@/components/ApplicationSettings/PricingListSet
 import BillingListSettings from "@/components/ApplicationSettings/BillingListSettings";
 import { z } from "zod";
 import { useState } from "react";
+import LinesSettings from "@/components/ApplicationSettings/LinesSettings";
 
 // Define search params schema
 export const settingsSearchSchema = z.object({
@@ -120,6 +121,12 @@ function RouteComponent() {
                     >
                       Sub Categories
                     </Tabs.Tab>
+                    <Tabs.Tab
+                      value="lines"
+                      className="text-base font-medium text-start"
+                    >
+                      Lines
+                    </Tabs.Tab>
                   </Tabs.List>
                 </Group>
 
@@ -134,6 +141,9 @@ function RouteComponent() {
                 </Tabs.Panel>
                 <Tabs.Panel value="sub-categories">
                   <SubCategorySettings />
+                </Tabs.Panel>
+                <Tabs.Panel value="lines">
+                  <LinesSettings />
                 </Tabs.Panel>
               </Tabs>
             </Tabs.Panel>
